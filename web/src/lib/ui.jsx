@@ -46,6 +46,7 @@ const SIDE = [['visao', 'Visão geral', 'home', '/painel'], ['buscas', 'Buscas',
   ['estudio', 'Estúdio de estilo', 'palette', '/estudio'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'],
   ['plano', 'Plano e cobrança', 'card', '/painel/plano'], ['conta', 'Minha conta', 'gear', '/painel/conta']]
 const TABS = ['visao', 'buscas', 'lugares', 'audiencia']
+const IC = ['#FF6A4D', '#7FB0FF', '#4FD8B0', '#B79CFF', '#FF8FB1', '#FFC400']
 export function Side({ active }) {
   const { me, reload } = useMe()
   const [more, setMore] = React.useState(false)
@@ -58,21 +59,21 @@ export function Side({ active }) {
       <div className="side">
         <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
         <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(c?.displayName)}</div><div><div className="b sm">@{c?.handle}</div><div className="xs mut">{c?.plan?.trialEnds ? 'Teste grátis' : 'Sem plano ativo'}</div></div></div>
-        {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><Icon n={i} s={18} c={k === active ? '#d93a1c' : '#404040'} />{l}</Link>)}
+        {items.map(({ k, l, i, to }, n) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic" style={{ '--c': IC[n % IC.length] }}><Icon n={i} s={16} c="#171713" /></span>{l}</Link>)}
         {me?.user?.role === 'admin' && <Link className="it" to="/admin"><Icon n="shield" s={18} c="#404040" />Administração</Link>}
         <button className="it" style={{ background: 'none', border: 0, textAlign: 'left', marginTop: 'auto' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button>
       </div>
       {/* celular: barra superior enxuta + abas fixas embaixo + folha "Mais" */}
       <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}><div className="b xs">@{c?.handle}</div><div className="av">{initial(c?.displayName)}</div></div></div>
       <nav className="mtabs" aria-label="Painel">
-        {items.filter((t) => TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#d93a1c' : '#6b6b6b'} /><span>{k === 'visao' ? 'Início' : l}</span></Link>)}
-        <button type="button" className={!TABS.includes(active) ? 'on' : ''} onClick={() => setMore(true)} aria-haspopup="dialog"><Icon n="menu" s={22} c={!TABS.includes(active) ? '#d93a1c' : '#6b6b6b'} /><span>Mais</span></button>
+        {items.filter((t) => TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{k === 'visao' ? 'Início' : l}</span></Link>)}
+        <button type="button" className={!TABS.includes(active) ? 'on' : ''} onClick={() => setMore(true)} aria-haspopup="dialog"><Icon n="menu" s={22} c={!TABS.includes(active) ? '#171713' : '#6b6b6b'} /><span>Mais</span></button>
       </nav>
       {more && (
         <div className="mmore" role="dialog" aria-label="Mais opções" onClick={() => setMore(false)}>
           <div className="mmore-sh" onClick={(e) => e.stopPropagation()}>
             <i className="mmore-grab" />
-            <div className="mmore-g">{items.filter((t) => !TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#d93a1c' : '#404040'} /><span>{l}</span></Link>)}
+            <div className="mmore-g">{items.filter((t) => !TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c="#171713" /><span>{l}</span></Link>)}
               {me?.user?.role === 'admin' && <Link to="/admin"><Icon n="shield" s={22} c="#404040" /><span>Administração</span></Link>}</div>
             <button type="button" className="btn ln blk" onClick={out}>Sair</button>
           </div>

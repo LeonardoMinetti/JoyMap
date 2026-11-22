@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Logo, Guard, Loading, Note, Switch, useTitle } from '../lib/ui.jsx'
+import { Logo, Guard, Loading, Note, Switch, Side, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import FakeMap from '../FakeMap.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -66,31 +66,42 @@ export function PhonePreview({ fake, themeOverride, width = 300, height = 620, i
 
 const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['simbolos', 'Símbolos', 'spark', '/estudio/simbolos'],
   ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa'], ['pins', 'Pins', 'flag', '/estudio/pins'], ['layout', 'Layout', 'menu', '/estudio/layout'], ['links', 'Links da bio', 'link', '/estudio/links'], ['endereco', 'Endereço', 'globe', '/estudio/endereco']]
-function StudioNav({ active }) {
+// O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
+function StudioHead({ active }) {
   const s = useStudio()
   const ref = React.useRef(null)
-  // no celular a barra rola na horizontal: mantém a aba ativa à vista
-  React.useEffect(() => { const e = ref.current?.querySelector('.it.on'); if (e && ref.current.scrollWidth > ref.current.clientWidth) ref.current.scrollTo({ left: e.offsetLeft - 56, behavior: 'auto' }) }, [active])
+  // no celular as abas rolam na horizontal: mantém a ativa à vista
+  React.useEffect(() => { const e = ref.current?.querySelector('.on'); if (e && ref.current.scrollWidth > ref.current.clientWidth) ref.current.scrollTo({ left: e.offsetLeft - 48, behavior: 'auto' }) }, [active])
   return (
-    <div className="side" ref={ref}>
-      <span style={{ padding: '4px 12px 4px' }}><Logo /></span>
-      <div className="eb" style={{ padding: '10px 12px 12px' }}>Estúdio de estilo</div>
-      {NAV.map(([k, l, i, to]) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><Icon n={i} s={18} c={k === active ? '#d93a1c' : '#404040'} />{l}</Link>)}
-      <div className="sp" />
-      <Link className="it" to="/painel"><Icon n="back" s={18} c="#404040" />Voltar ao painel</Link>
-      <div className="card soft col" style={{ gap: 6, padding: 12 }}><span className="xs mut">{s.dirty ? 'Alterações não publicadas' : 'Tudo publicado'}</span><button className="btn sm" disabled={!s.dirty} onClick={s.publish}>Publicar</button>{s.dirty && <button className="link xs" onClick={s.undo}>Desfazer</button>}</div>
+    <div className="stm-h">
+      <div className="stm-t">
+        <div><span className="eb">Painel</span><b className="d s26">Estúdio de estilo</b></div>
+        <div className="stm-act">
+          <span className={'stm-st' + (s.dirty ? ' dirty' : '')} role="status"><i />{s.dirty ? 'Alterações não publicadas' : 'Tudo publicado'}</span>
+          {s.dirty && <button type="button" className="link xs" onClick={s.undo}>Desfazer</button>}
+          <button type="button" className="btn sm" disabled={!s.dirty} onClick={s.publish}>Publicar</button>
+        </div>
+      </div>
+      <nav className="stm-tabs" ref={ref} aria-label="Seções do estúdio">
+        {NAV.map(([k, l, i, to]) => <Link key={k} className={'stm-tab' + (k === active ? ' on' : '')} to={to}><Icon n={i} s={16} c="currentColor" />{l}</Link>)}
+      </nav>
     </div>
   )
 }
-// layout: 'side' = controles 460 + prévia flexível; 'main' = controles flexíveis + prévia lateral; 'full' = sem prévia
+// layout: 'side' e 'main' = controles + prévia lateral; 'full' = sem prévia
 function Shell({ active, layout = 'side', previewWidth = 460, title, children, fake, tpl }) {
   useTitle(`Estúdio · ${title}`)
   const s = useStudio()
   return (
-    <div className="page"><div className="studio">
-      <StudioNav active={active} />
-      <div className={'ctl' + (layout !== 'side' ? ' wide' : '')}>{children}</div>
-      {layout !== 'full' && <div className="prev" style={layout === 'main' ? { flex: 'none', width: previewWidth, minWidth: 0 } : undefined}><div><PhonePreview fake={fake} />{s.usingSample && <div className="xs mut c" style={{ marginTop: 10, maxWidth: 300 }}>Prévia com lugares de exemplo. Confirme lugares para ver os seus.</div>}</div></div>}
+    <div className="page"><div className="app">
+      <Side active="estudio" />
+      <div className="main stm">
+        <StudioHead active={active} />
+        <div className={'stbody' + (layout === 'full' ? ' full' : '')}>
+          <div className="ctl">{children}</div>
+          {layout !== 'full' && <div className="prev"><div><PhonePreview fake={fake} />{s.usingSample && <div className="xs mut c" style={{ marginTop: 10, maxWidth: 300 }}>Prévia com lugares de exemplo. Confirme lugares para ver os seus.</div>}</div></div>}
+        </div>
+      </div>
     </div></div>
   )
 }
@@ -116,7 +127,7 @@ export function StudioHome() {
   const sq = (c, r = 12, w = 26) => <i key={c} className="sq" style={{ width: w, height: w, background: c, borderRadius: r }} />
   return (
     <Shell active="modelos" layout="main" previewWidth={460} title="Visão geral">
-      <div className="row jb wrap"><div><h1 className="d s44">Estúdio de estilo</h1><p className="mut sm">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real.</p></div><div className="row"><button className="btn ln sm" disabled={!s.dirty} onClick={s.undo}>Desfazer</button><button className="btn sm" disabled={!s.dirty} onClick={s.publish}>Publicar alterações</button></div></div>
+      <p className="mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real. Comece por um modelo ou escolha uma seção.</p>
       <div className="g3" style={{ gap: 14 }}>
         {mini('/estudio/cores', <div className="row" style={{ gap: 6 }}>{[T.accent, T.bg, T.fg].map((c) => sq(c))}</div>, 'Cores e tema', 'Paleta, fonte, cantos')}
         {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'Nome, cor e símbolo de cada uma')}
