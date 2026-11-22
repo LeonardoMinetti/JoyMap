@@ -1,0 +1,200 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { Link } from '../lib/router.jsx'
+import { Icon } from '../lib/icons.jsx'
+import MapCanvas from '../MapCanvas.jsx'
+import FakeMap from '../FakeMap.jsx'
+import { initial, catOf, symOf } from '../theme.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult } from './shared.jsx'
+
+// Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
+// inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
+export const HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+
+export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['perfil', 'Perfil', 'user']]
+const KEY = { '/': 'inicio', '/roteiros': 'roteiros', '/salvos': 'perfil' }
+// Abas inferiores (Início, Bairros, Categorias, Roteiros, Perfil). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
+export function PubTabs({ cur, href, onOpen, preview, navRef }) {
+  const c = KEY[cur] || cur
+  return (
+    <nav ref={navRef} className="ms-tabs" aria-label="Navegação do mapa">
+      {NAV_TABS.map(([k, l, ic]) => {
+        const inner = <><Icon n={ic} s={22} c="currentColor" />{l}</>
+        const on = c === k
+        if (onOpen || preview) return <button key={k} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} tabIndex={preview ? -1 : 0} onClick={() => onOpen?.(k)}>{inner}</button>
+        return <Link key={k} to={href(k === 'inicio' ? '/' : `/?p=${k}`)} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>{inner}</Link>
+      })}
+    </nav>
+  )
+}
+
+// Painel que sobe da base (Bairros, Categorias, Roteiros, Perfil)
+function Panel({ title, onClose, children, tall, bottom = TAB }) {
+  useEffect(() => { const k = (e) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [onClose])
+  return (
+    <>
+      <div className="ms-ovl" onClick={onClose} aria-hidden="true" />
+      <section className={'ms-panel' + (tall ? ' tall' : '')} style={{ bottom }} role="dialog" aria-label={title}>
+        <div className="ms-ph"><b className="pt">{title}</b><button type="button" className="ms-ib" aria-label="Fechar" onClick={onClose}><Icon n="close" s={20} c="currentColor" /></button></div>
+        <div className="ms-pb">{children}</div>
+      </section>
+    </>
+  )
+}
+
+export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, onShare, onRequest, requested, near }) {
+  const { creator } = data
+  const theme = creator.theme
+  const places = data.places
+  const colors = useMemoColors(theme)
+  const root = useRef(null)
+  const [hc, setHc] = useState(preview ? 840 : 700)
+  const [snap, setSnap] = useState(snap0)
+  const [y, setY] = useState(0)
+  const [ready, setReady] = useState(false)
+  const [drag, setDrag] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const tabRef = useRef(null)
+  const [tabH, setTabH] = useState(TAB + (preview ? SAFE : 0))
+  const [panel, setPanel] = useState(panel0)
+  const [routeId, setRouteId] = useState(null)
+  const route = routeId != null ? data.routes?.find((r) => r.id === routeId) : null
+  const shown = route ? shown0.filter((p) => route.placeIds.includes(p.id)) : shown0
+  const sel = shown.find((p) => p.id === selectedId)
+  const hs = Math.max(200, hc - HEAD - (tabs ? tabH : 0))
+  const offs = { full: 0, half: Math.round(hs * 0.5), low: Math.round(hs * 0.64), peek: hs - PEEK }
+
+  useEffect(() => {
+    const el = root.current
+    if (!el) return
+    const f2 = () => { setHc(el.clientHeight || 700); setReady(true) }
+    f2()
+    const ro = new ResizeObserver(f2); ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  useEffect(() => {
+    const el = tabRef.current
+    if (!el) return
+    const m = () => setTabH(el.offsetHeight || TAB)
+    m()
+    const ro = new ResizeObserver(m); ro.observe(el)
+    return () => ro.disconnect()
+  }, [tabs, panel])
+  useEffect(() => { setSnap(snap0) }, [snap0])
+  useEffect(() => { if (!drag) setY(offs[snap]) }, [snap, hs, drag])
+  useEffect(() => { if (!preview && selectedId != null) setSnap('peek') }, [selectedId])
+
+  // arrastar a folha pela alça
+  const grab = useRef(null)
+  const down = (e) => { if (preview) return; grab.current = { y0: y, p0: e.clientY, moved: false }; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId) }
+  const move = (e) => { const g = grab.current; if (!g) return; const dy = e.clientY - g.p0; if (Math.abs(dy) > 4) g.moved = true; setY(clamp(g.y0 + dy, 0, offs.peek)) }
+  const up = (e) => {
+    const g = grab.current; if (!g) return
+    grab.current = null; setDrag(false)
+    if (!g.moved) { setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'half'); return }
+    const v = clamp(g.y0 + (e.clientY - g.p0), 0, offs.peek)
+    setSnap(Object.entries(offs).filter(([k]) => k !== 'low').sort((a, b) => Math.abs(a[1] - v) - Math.abs(b[1] - v))[0][0])
+  }
+
+  const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
+  const hoods = Object.entries(places.reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const catCount = (id) => places.filter((p) => p.category === id).length
+  const hood = f.hoods?.length === 1 ? f.hoods[0] : null
+  const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
+  const visible = hs - y
+  const fitPad = { top: CHIPS_BOTTOM, bottom: Math.max(40, hc - HEAD - (drag ? y : offs[snap])) }
+  const isSaved = (id) => saved?.ids.includes(id)
+  const row = (p) => {
+    const cat = catOf(theme, p.category)
+    const { n, sym } = symOf(cat, creator.symbols)
+    return (
+      <div key={p.id} className="ms-row" role="button" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)} onKeyDown={(e) => e.key === 'Enter' && !preview && openFicha(p.id)}>
+        <div className="sp">
+          <b className="ms-n">{p.name}</b>
+          <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span>
+          <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.neighborhood || p.municipality) && <i>{p.neighborhood || p.municipality}</i>}</span>
+        </div>
+        <span className="ms-th"><PlacePhoto place={p} theme={theme} size={88} />
+          <button type="button" className={'ms-bm' + (isSaved(p.id) ? ' on' : '')} aria-label={isSaved(p.id) ? 'Remover dos salvos' : 'Salvar'} aria-pressed={!!isSaved(p.id)} tabIndex={preview ? -1 : 0} onClick={(e) => { e.stopPropagation(); !preview && saved?.toggle(p.id) }}><Icon n="heart" s={16} c="currentColor" /></button></span>
+      </div>
+    )
+  }
+  return (
+    <div className={'ms' + (preview ? ' ms-prev' : '')} ref={root}>
+      <div className="ms-map">
+        {!ready ? null : fake || !places.length
+          ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
+          : <MapCanvas places={shown} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
+      </div>
+      <header className="ms-top">
+        {searchOpen
+          ? <><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button type="button" className="ms-ib" aria-label="Fechar busca" onClick={() => { setSearchOpen(false); f.setQ?.('') }}><Icon n="close" s={20} c="currentColor" /></button></>
+          : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>
+            <button type="button" className="ms-ib" aria-label="Buscar" tabIndex={preview ? -1 : 0} onClick={() => !preview && setSearchOpen(true)}><Icon n="search" s={20} c="currentColor" /></button>
+            <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button></>}
+      </header>
+      <div className="ms-chips" role="group" aria-label="Filtros">
+        {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
+        {hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>}
+        {f.toggleNear && <button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button>}
+        <button type="button" className={'ms-chip' + (!f.cats.length ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([])}>Todos</button>
+        {usedCats.map((c) => <button key={c.id} type="button" className={'ms-chip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([c.id])}><span className="ms-dot" style={{ background: c.color }} />{c.name}</button>)}
+      </div>
+      {sel && snap !== 'full' && (
+        <div className="ms-card" style={{ bottom: (tabs ? tabH : 0) + visible + 10 }} role="button" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha?.(sel.id)} onKeyDown={(e) => e.key === 'Enter' && !preview && openFicha?.(sel.id)}>
+          <PlacePhoto place={sel} theme={theme} size={56} />
+          <div className="sp"><b className="ms-n">{sel.name}</b><span className="ms-s">{sub(sel, theme)}</span></div>
+          <button type="button" className={'ms-bm solo' + (isSaved(sel.id) ? ' on' : '')} aria-label={isSaved(sel.id) ? 'Remover dos salvos' : 'Salvar'} onClick={(e) => { e.stopPropagation(); !preview && saved?.toggle(sel.id) }}><Icon n="heart" s={18} c="currentColor" /></button>
+        </div>)}
+      <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: HEAD, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
+        <div className="ms-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="button" tabIndex={preview ? -1 : 0} aria-label="Arrastar para abrir ou fechar a lista" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek') }}>
+          <i className="ms-bar" />
+          <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
+        </div>
+        <div className="ms-scroll">
+          {theme.bio && <p className="ms-bio">{theme.bio}</p>}
+          {creator.links?.length > 0 && <div className="plinks">{creator.links.map((l, i) => <a key={i} className={theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line'} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer">{l.title}</a>)}</div>}
+          {shown.length === 0 && !preview
+            ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
+            : <div className="ms-list">{shown.map(row)}</div>}
+          {!preview && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
+        </div>
+      </section>
+      {panel === 'bairros' && (
+        <Panel bottom={tabs ? tabH : 0} title="Bairros" onClose={() => setPanel(null)}>
+          <button type="button" className={'ms-opt' + (!hood ? ' on' : '')} onClick={() => pick(() => f.setHoods([]))}><span className="sp">Todos os bairros</span><i>{places.length}</i></button>
+          {hoods.map(([h, n]) => <button key={h} type="button" className={'ms-opt' + (hood === h ? ' on' : '')} onClick={() => pick(() => f.setHoods([h]))}><span className="sp">{h}</span><i>{n}</i></button>)}
+        </Panel>)}
+      {panel === 'categorias' && (
+        <Panel bottom={tabs ? tabH : 0} title="Categorias" onClose={() => setPanel(null)}>
+          <button type="button" className={'ms-opt' + (!f.cats.length ? ' on' : '')} onClick={() => pick(() => f.setCats([]))}><span className="sp">Todas as categorias</span><i>{places.length}</i></button>
+          {usedCats.map((c) => { const { n, sym } = symOf(c, creator.symbols); return <button key={c.id} type="button" className={'ms-opt' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => pick(() => f.setCats([c.id]))}><span className="ms-oi" style={{ background: c.color }}><Icon n={n} sym={sym} s={16} c="#fff" /></span><span className="sp">{c.name}</span><i>{catCount(c.id)}</i></button> })}
+        </Panel>)}
+      {panel === 'roteiros' && (
+        <Panel bottom={tabs ? tabH : 0} title="Roteiros" onClose={() => setPanel(null)}>
+          {(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}
+          {(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
+            <button key={r.id} type="button" className="ms-route" onClick={() => pick(() => setRouteId(r.id))}>
+              <b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
+              <span className="ms-stack">{rp.slice(0, 3).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 3 && <em>+{rp.length - 3}</em>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
+            </button>) })}
+        </Panel>)}
+      {panel === 'perfil' && (
+        <Panel bottom={tabs ? tabH : 0} title="Perfil" onClose={() => setPanel(null)} tall>
+          <div className="ms-pf">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle} · {places.length} lugares</span></div></div>
+          {theme.bio && <p className="ms-bio">{theme.bio}</p>}
+          {creator.links?.length > 0 && <div className="plinks">{creator.links.map((l, i) => <a key={i} className={theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line'} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer">{l.title}</a>)}</div>}
+          <div className="prow" style={{ gap: 8 }}>
+            {theme.social?.instagram && <a className="pb sm sec sp" href={preview ? undefined : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={16} c="currentColor" />Instagram</a>}
+            {theme.social?.tiktok && creator.tiktok && <a className="pb sm sec sp" href={preview ? undefined : `https://www.tiktok.com/@${creator.tiktok}`} target="_blank" rel="noopener noreferrer"><Icon n="tiktok" s={16} c="currentColor" />TikTok</a>}
+            <button type="button" className="pb sm sec sp" onClick={() => !preview && onShare?.()}><Icon n="share" s={16} c="currentColor" />Compartilhar</button>
+          </div>
+          <div className="ms-sec">Salvos neste aparelho ({places.filter((p) => isSaved(p.id)).length})</div>
+          {places.filter((p) => isSaved(p.id)).map((p) => <button key={p.id} type="button" className="ms-opt" onClick={() => { setPanel(null); openFicha?.(p.id) }}><PlacePhoto place={p} theme={theme} size={40} /><span className="sp">{p.name}</span></button>)}
+          {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}
+          <div className="pfoot">Mapa feito com <b>wagli</b></div>
+        </Panel>)}
+      {tabs && <PubTabs navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
+    </div>
+  )
+}

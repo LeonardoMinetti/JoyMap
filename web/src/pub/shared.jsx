@@ -1,0 +1,157 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import { api, track } from '../api.js'
+import { toast } from '../lib/router.jsx'
+import { Icon } from '../lib/icons.jsx'
+import MapCanvas from '../MapCanvas.jsx'
+import FakeMap from '../FakeMap.jsx'
+import { FONTS, catOf, fmtDate, onAccent, symOf } from '../theme.jsx'
+
+export const pubVars = (theme) => {
+  const f = FONTS[theme.font] || FONTS.sans
+  return { '--acc': theme.accent, '--bg': theme.bg, '--fg': theme.fg, '--r': `${theme.radius}px`, '--onacc': onAccent(theme), '--pf': f.css, '--pt': f.upper ? 'uppercase' : 'none', '--pscale': theme.font === 'disp' ? 1.25 : 1 }
+}
+export const sub = (p, theme) => `${p.neighborhood || p.municipality || 'São Paulo'} · ${catOf(theme, p.category).name}`
+const tint = (c) => `color-mix(in srgb, ${c} 20%, #ffffff)`
+
+// Foto do lugar: ainda não há fonte de fotos licenciadas, então mostramos o espaço reservado do protótipo.
+export function PlacePhoto({ place, theme, size, label = 'foto', style, aspect }) {
+  const c = catOf(theme, place.category)
+  if (place.photo) return <div className="pph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={place.photo} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>
+  return <div className="pph" style={{ background: tint(c.color), ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>{label}</div>
+}
+
+const hav = (a, b) => { const r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r; const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)) }
+export const NEAR_KM = 5
+
+// Dados do mapa público + sessão
+export function usePubData(slug, given) {
+  const [state, setState] = useState(given ? { data: given } : { loading: true })
+  useEffect(() => {
+    if (given) return setState({ data: given })
+    api(`/public/${slug}`).then((data) => { setState({ data }); track(slug, 'session') }).catch(() => setState({ error: true }))
+  }, [slug, given])
+  return state
+}
+
+// Filtros e busca (E6, E10)
+export function useFilters(places, { slug, preview } = {}) {
+  const [q, setQ] = useState('')
+  const [cats, setCats] = useState([])
+  const [hoods, setHoods] = useState([])
+  const [video, setVideo] = useState(false)
+  const [near, setNear] = useState(null)
+  const shown = useMemo(() => {
+    const t = q.trim().toLowerCase()
+    let list = places.filter((p) => (!cats.length || cats.includes(p.category)) && (!hoods.length || hoods.includes(p.neighborhood || p.municipality)) && (!video || p.tiktokId) && (!t || `${p.name} ${p.address || ''} ${p.neighborhood || ''} ${p.municipality || ''}`.toLowerCase().includes(t)))
+    if (near) list = list.map((p) => ({ ...p, km: hav(near, p) })).filter((p) => p.km <= NEAR_KM).sort((a, b) => a.km - b.km)
+    return list
+  }, [places, q, cats, hoods, video, near])
+  useEffect(() => {
+    if (preview || !slug || !q.trim()) return
+    const h = setTimeout(() => track(slug, 'search', { term: q.trim(), results: shown.length }), 900)
+    return () => clearTimeout(h)
+  }, [q])
+  const toggleNear = (on) => {
+    if (!on) return setNear(null)
+    if (!navigator.geolocation) return toast('Seu navegador não informa a localização.')
+    navigator.geolocation.getCurrentPosition((g) => setNear({ lat: g.coords.latitude, lon: g.coords.longitude }), () => toast('Não foi possível usar a sua localização.'), { timeout: 8000 })
+  }
+  const active = !!(q.trim() || cats.length || hoods.length || video || near)
+  const clear = () => { setQ(''); setCats([]); setHoods([]); setVideo(false); setNear(null) }
+  return { q, setQ, cats, setCats, hoods, setHoods, video, setVideo, near, toggleNear, shown, active, clear }
+}
+
+export function useSaved(slug) {
+  const key = `wagli_saved_${slug}`
+  const [ids, setIds] = useState(() => { try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] } })
+  const toggle = (id) => setIds((cur) => {
+    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+    try { localStorage.setItem(key, JSON.stringify(next)) } catch { toast('Não foi possível guardar neste aparelho.') }
+    return next
+  })
+  return { ids, toggle }
+}
+
+// E10 · Sem resultado
+export function NoResult({ term, cats, onPick, onRequest, requested }) {
+  return (
+    <div className="pstate" style={{ padding: '36px 8px' }}>
+      <div className="pcircle"><Icon n="search" s={30} c="currentColor" /></div>
+      <h2 className="pt" style={{ '--fs': '28px' }}>{term ? `Nada por "${term}"` : 'Nada por aqui'}</h2>
+      <p className="mut sm" style={{ maxWidth: 280 }}>Este mapa ainda não tem indicações {term ? 'com esse termo' : 'assim'}. {onRequest ? 'Você pode avisar o criador.' : ''}</p>
+      {onRequest && <button className="pb" disabled={requested} onClick={onRequest}>{requested ? 'Pedido enviado' : 'Pedir uma indicação'}</button>}
+      {onRequest && <span className="xs mut" style={{ maxWidth: 280 }}>O pedido é contado de forma anônima e aparece para o criador só como número.</span>}
+      {!!cats?.length && <div style={{ alignSelf: 'stretch', textAlign: 'left', marginTop: 8 }}><div className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Que tal estes?</div><div className="pchips">{cats.map((c) => <button key={c.id} className="pchip" onClick={() => onPick(c.id)}>{c.name}</button>)}</div></div>}
+    </div>
+  )
+}
+
+// E1 · Página do criador (também é a prévia do Estúdio)
+export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, onShare, saved, coverVer, onRequest, requested, onFilters, openFicha }) {
+  const { creator } = data
+  const theme = creator.theme
+  const blocks = theme.layout.blocks.filter((b) => b.on)
+  const usedCats = theme.categories.filter((c) => data.places.some((p) => p.category === c.id))
+  const sel = shown.find((p) => p.id === selectedId)
+  const H = { sm: 240, md: 330, lg: 440 }[theme.layout.mapHeight] || 330
+  const colors = useMemoColors(theme)
+  const stop = (e) => e.stopPropagation()
+  const links = creator.links
+  const lc = (i) => (theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line')
+  const body = {
+    header: (
+      <div key="header" className="col" style={{ gap: 10 }}>
+        <div className="phead">
+          <div className="pav" style={preview ? { width: 44, height: 44, fontSize: 20 } : undefined}>{creator.displayName.slice(0, 1).toUpperCase()}</div>
+          <div className="sp"><h1 className="pt" style={{ '--fs': preview ? '19px' : '30px' }}>{creator.displayName}</h1><div className="xs mut" style={{ marginTop: 4 }}>@{creator.handle} · {data.places.length} lugares</div></div>
+          <button className="picon" aria-label="Compartilhar" onClick={preview ? undefined : onShare}><Icon n="share" s={18} c="currentColor" /></button>
+        </div>
+        {theme.bio && <p className="sm" style={{ margin: 0 }}>{theme.bio}</p>}
+      </div>),
+    links: (links.length > 0 || theme.social.instagram || (theme.social.tiktok && creator.tiktok)) && (
+      <div key="links" className="col" style={{ gap: 10 }}>
+        {links.length > 0 && <div className={'plinks' + (links.length === 1 ? ' one' : '')}>{links.map((l, i) => <a key={i} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer" className={lc(i)}>{l.title}</a>)}</div>}
+        {(theme.social.instagram || (theme.social.tiktok && creator.tiktok)) && <div className="psocial">
+          {theme.social.instagram && <a className="picon" aria-label="Instagram" href={preview ? undefined : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={18} c="currentColor" /></a>}
+          {theme.social.tiktok && creator.tiktok && <a className="picon" aria-label="TikTok" href={preview ? undefined : `https://www.tiktok.com/@${creator.tiktok}`} target="_blank" rel="noopener noreferrer"><Icon n="tiktok" s={18} c="currentColor" /></a>}
+        </div>}
+      </div>),
+    filters: usedCats.length > 0 && (
+      <div key="filters" className="pchips"><button className={'pchip' + (!f.cats.length ? ' on' : '')} onClick={() => f.setCats([])}>Todos</button>{usedCats.map((c) => <button key={c.id} className={'pchip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => f.setCats([c.id])}>{c.name}</button>)}</div>),
+    map: (
+      <div key="map" className="col" style={{ gap: 10 }}>
+        <div className="pmap" style={{ height: preview ? Math.round(H * 0.72) : H }}>
+          {fake || !data.places.length ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
+            : <MapCanvas places={shown} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} interactive={!preview} style={{ height: '100%' }} />}
+          {!preview && <button className="pb sm expand" style={{ background: 'var(--bg)', color: 'var(--fg)', borderColor: 'var(--line)' }} onClick={() => go('/mapa')}><Icon n="ext" s={14} c="currentColor" />Tela cheia</button>}
+        </div>
+        {sel ? (
+          <div role="button" tabIndex={0} className="pin" onClick={() => !preview && openFicha(sel.id)} onKeyDown={(e) => e.key === 'Enter' && !preview && openFicha(sel.id)}><PlacePhoto place={sel} theme={theme} size={48} /><span className="sp"><b>{sel.name}</b><span className="xs mut">{sub(sel, theme)}{sel.postedOn ? ` · indicado em ${fmtDate(sel.postedOn).slice(0, 5)}` : ''}</span></span>
+            <a className="pb sm" href={`https://www.google.com/maps/dir/?api=1&destination=${sel.lat},${sel.lon}`} target="_blank" rel="noopener noreferrer" onClick={(e) => { stop(e); onSelect?.(sel.id, 'route') }}>Rota</a></div>
+        ) : preview && <div className="pin">{(shown[0] || data.places[0]) ? <PlacePhoto place={shown[0] || data.places[0]} theme={theme} size={48} /> : <div className="pph" style={{ width: 48, height: 48, background: 'var(--soft)' }}>foto</div>}<span className="sp"><b>{(shown[0] || data.places[0])?.name || 'Seu lugar aparece aqui'}</b><span className="xs mut">{shown[0] ? sub(shown[0], theme) : 'Bairro · indicado em dd/mm'}</span></span><span className="pb sm">Rota</span></div>}
+      </div>),
+    list: (
+      <div key="list" className="col" style={{ gap: 10 }}>
+        <div className="prow"><h2 className="pt sp" style={{ '--fs': '20px' }}>Lugares</h2>{shown.length > 6 && !preview && <button className="pb sm sec" onClick={() => go('/lista')}>Ver todos ({shown.length})</button>}</div>
+        {shown.length === 0 && !preview ? <NoResult term={f.q.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q.trim() ? onRequest : null} requested={requested} />
+          : theme.layout.listStyle === 'rows'
+            ? <div className="col" style={{ gap: 8 }}>{shown.slice(0, 6).map((p) => <button key={p.id} className="pin" onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} size={44} /><span className="sp"><b>{p.name}</b><span className="xs mut">{sub(p, theme)}</span></span></button>)}</div>
+            : <div className="pgrid">{shown.slice(0, preview ? 2 : 6).map((p) => <button key={p.id} className="pcard" onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} /><b className="pt" style={{ '--fs': '17px' }}>{p.name}</b><span className="xs mut">{p.neighborhood || p.municipality || ''}</span></button>)}</div>}
+      </div>),
+    routes: data.routes.length > 0 && (
+      <div key="routes" className="col" style={{ gap: 10 }}>
+        <div className="prow"><h2 className="pt sp" style={{ '--fs': '20px' }}>Roteiros</h2>{!preview && <button className="pb sm sec" onClick={() => go('/roteiros')}>Ver todos</button>}</div>
+        {data.routes.slice(0, 3).map((r) => <button key={r.id} className="pin" onClick={() => !preview && go(`/roteiros/${r.id}`)}><span className="sp"><b className="pt" style={{ '--fs': '18px' }}>{r.name}</b><span className="xs mut">{r.placeIds.length} lugares{r.note ? ` · ${r.note}` : ''}</span></span><Icon n="next" s={18} c="currentColor" /></button>)}
+      </div>),
+  }
+  return (
+    <>
+      {theme.layout.cover && creator.cover && <div className="pcover" style={{ backgroundImage: `url(${creator.coverUrl || `/api/public/${creator.slug}/cover`}?v=${coverVer || 0})` }} />}
+      <div className="pbody">{blocks.map((b) => body[b.id]).filter(Boolean)}</div>
+      <div className="pfoot">Mapa feito com <b>wagli</b></div>
+    </>
+  )
+}
+export function useMemoColors(theme) {
+  return useMemo(() => { const m = {}; for (const c of theme.categories) if (!/^custom:/.test(c.icon)) m[c.icon] = c.color; return m }, [theme.categories])
+}

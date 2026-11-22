@@ -1,70 +1,92 @@
-import React from 'react'
-
-export const ICON_PATHS = {
-  rest: 'M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-3 5-3 8h3v10',
-  cafe: 'M4 8h13v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8zM17 9h2a2 2 0 0 1 0 4h-2M7 3v2M11 3v2',
-  bar: 'M4 4h16l-8 9-8-9zM12 13v7M8 20h8',
-  bread: 'M5 10a4 4 0 0 1 0-6h14a4 4 0 0 1 0 6v8a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-8z',
-  cake: 'M4 20h16M5 20v-7h14v7M12 13V8M12 8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z',
-  pizza: 'M12 3 3 19a14 14 0 0 0 18 0L12 3zM9 12h.01M14 14h.01M12 8h.01',
-  fish: 'M3 12c3-5 8-6 12-3l6-2-1 5 1 5-6-2c-4 3-9 2-12-3zM16 11h.01',
-  burger: 'M4 11a8 8 0 0 1 16 0H4zM3 15h18M5 15c0 3 1 4 3 4h8c2 0 3-1 3-4',
-  heart: 'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z',
-  star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
-  flag: 'M5 21V4h12l-2 4 2 4H5',
-  store: 'M4 9l1-5h14l1 5M4 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 4 0M5 12v8h14v-8',
-  clock: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
-  spark: 'M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z',
-  search: 'M21 21l-4.3-4.3M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z',
-  share: 'M12 3v13M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5',
-  route: 'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6',
-  play: 'M8 5v14l11-7z',
-  ext: 'M14 4h6v6M20 4 10 14M18 14v5H5V6h5',
-  back: 'M15 18l-6-6 6-6',
-  close: 'M6 6l12 12M18 6 6 18',
-  plus: 'M12 5v14M5 12h14',
-  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
-  check: 'M20 6 9 17l-5-5',
-  pin: 'M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11zM12 7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',
-  flagx: 'M12 4l9 16H3L12 4zM12 10v4M12 17h.01',
-}
-
-export function Icon({ n, s = 18, c = 'currentColor' }) {
-  return (
-    <svg width={s} height={s} viewBox="0 0 24 24" aria-hidden="true" style={{ display: 'block', fill: 'none', stroke: c, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-      <path d={ICON_PATHS[n] || ICON_PATHS.pin} />
-    </svg>
-  )
-}
+import { ICON_PATHS } from './lib/icons.jsx'
+import { isLib, libHtml, libIcon } from './iconlib.js'
 
 export const FONTS = {
-  sans: { label: 'Sem serifa', css: 'Archivo, Arial, sans-serif', title: '' },
-  disp: { label: 'Condensada', css: '"Sofia Sans Condensed", "Arial Narrow", Arial, sans-serif', title: 'uppercase' },
-  serif: { label: 'Com serifa', css: 'Georgia, "Times New Roman", serif', title: '' },
-  mono: { label: 'Monoespaçada', css: '"Courier New", monospace', title: '' },
+  sans: { label: 'Sem serifa', css: 'Archivo, Arial, sans-serif', upper: false, weight: 700, size: 16 },
+  disp: { label: 'Condensada', css: '"Sofia Sans Condensed", "Arial Narrow", Arial, sans-serif', upper: true, weight: 700, size: 20 },
+  serif: { label: 'Com serifa', css: 'Georgia, "Times New Roman", serif', upper: false, weight: 700, size: 17 },
+  fraunces: { label: 'Editorial suave', css: 'Fraunces, Georgia, serif', upper: false, weight: 700, size: 18 },
+  playfair: { label: 'Clássica', css: '"Playfair Display", Georgia, serif', upper: false, weight: 700, size: 18 },
+  mono: { label: 'Monoespaçada', css: '"Courier New", monospace', upper: false, weight: 700, size: 15 },
 }
-const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas'
+// Cada tom é um estilo nativo do OpenFreeMap (ver basemap.js). `tint` = cor de fundo enquanto o mapa carrega.
 export const TONES = {
-  light: { label: 'Claro', layer: 'World_Light_Gray_Base', tint: '#ffffff', filter: 'none' },
-  dark: { label: 'Escuro', layer: 'World_Dark_Gray_Base', tint: '#ffffff', filter: 'none' },
-  sepia: { label: 'Papel', layer: 'World_Light_Gray_Base', tint: '#f1e3c6', filter: 'sepia(.7) saturate(1.2) brightness(.98) contrast(1.1)' },
-  mint: { label: 'Menta', layer: 'World_Light_Gray_Base', tint: '#cdeade', filter: 'sepia(1) hue-rotate(100deg) saturate(.7) brightness(.95) contrast(1.2)' },
-  blue: { label: 'Maré', layer: 'World_Light_Gray_Base', tint: '#cfdcf7', filter: 'sepia(1) hue-rotate(185deg) saturate(.8) brightness(.95) contrast(1.2)' },
+  light: { label: 'Claro', tint: '#f3f3f1' },
+  bright: { label: 'Vivo', tint: '#f6f1e6' },
+  liberty: { label: 'Clássico', tint: '#f3efe6' },
+  fiord: { label: 'Azul-noite', tint: '#4a5a7c' },
+  dark: { label: 'Escuro', tint: '#161616' },
 }
-export const tileUrl = (tone) => `${ESRI}/${(TONES[tone] || TONES.light).layer}/MapServer/tile/{z}/{y}/{x}`
 export const SHAPES = { drop: 'Gota', circle: 'Círculo', square: 'Quadrado', hex: 'Hexágono' }
-export const ACCENTS = ['#ff4b2b', '#2d7ff9', '#12b76a', '#9b5cff', '#ff5c8a', '#171717', '#e03bb0', '#a16207']
-
-export function pinHtml(color, shape, icon, selected) {
-  const z = selected ? 40 : 30
-  const base = `width:${z}px;height:${z}px;background:${color};display:grid;place-items:center;`
-  const svg = `<svg width="${selected ? 20 : 15}" height="${selected ? 20 : 15}" viewBox="0 0 24 24" style="display:block;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="${ICON_PATHS[icon] || ICON_PATHS.rest}"/></svg>`
-  const ring = selected ? 'outline:3px solid #171717;outline-offset:2px;' : ''
-  const sh = '0 2px 6px rgba(0,0,0,.3)'
-  if (shape === 'drop') return `<div style="${base}margin:${-z - 4}px 0 0 ${-z / 2}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:${sh};${ring}"><span style="display:grid;transform:rotate(45deg)">${svg}</span></div>`
-  if (shape === 'square') return `<div style="${base}margin:${-z / 2}px 0 0 ${-z / 2}px;border-radius:9px;border:3px solid #fff;box-shadow:${sh};${ring}">${svg}</div>`
-  if (shape === 'hex') return `<div style="${base}margin:${-z / 2}px 0 0 ${-z / 2}px;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)">${svg}</div>`
-  return `<div style="${base}margin:${-z / 2}px 0 0 ${-z / 2}px;border-radius:50%;border:3px solid #fff;box-shadow:${sh};${ring}">${svg}</div>`
+export const ACCENTS = ['#ff4b2b', '#2d7ff9', '#12b76a', '#9b5cff', '#ff5c8a', '#171717']
+export const CAT_COLORS = ['#e03bb0', '#ff5c8a', '#36c5a0', '#2aa6f5', '#ff8a3d']
+export const RADIUS_MODES = { retos: { label: 'Retos', r: 4 }, suaves: { label: 'Suaves', r: 14 }, redondos: { label: 'Redondos', r: 24 } }
+export const radiusMode = (r) => Object.entries(RADIUS_MODES).reduce((best, [k, v]) => (Math.abs(v.r - r) < Math.abs(RADIUS_MODES[best].r - r) ? k : best), 'suaves')
+export const BUILTIN_ICONS = ['rest', 'cafe', 'bar', 'bread', 'cake', 'pizza', 'fish', 'burger', 'heart', 'star', 'flag', 'store', 'clock', 'spark']
+export const SYMBOL_LIBRARY = [
+  ['rest', 'Restaurante', 'Comida'], ['cafe', 'Café', 'Comida'], ['bar', 'Drinks', 'Bebidas'], ['bread', 'Padaria', 'Comida'], ['cake', 'Doces', 'Comida'], ['pizza', 'Pizza', 'Comida'],
+  ['fish', 'Japonês', 'Comida'], ['burger', 'Hambúrguer', 'Comida'], ['heart', 'Favorito', 'Formas'], ['star', 'Destaque', 'Formas'], ['flag', 'Imperdível', 'Passeios'],
+  ['store', 'Loja', 'Compras'], ['clock', 'Aberto tarde', 'Passeios'], ['spark', 'Novo', 'Formas'], ['image', 'Cenário', 'Viagem'],
+]
+export const PALETTES = {
+  warm: { rest: '#ff4b2b', cafe: '#a16207', bar: '#7c3aed', bread: '#f59e0b', cake: '#ec4899', pizza: '#dc2626', fish: '#2d7ff9', burger: '#ea580c' },
+  cool: { rest: '#2d7ff9', cafe: '#0e7490', bar: '#6d28d9', bread: '#0891b2', cake: '#db2777', pizza: '#4f46e5', fish: '#0284c7', burger: '#1d4ed8' },
+  candy: { rest: '#ff5c8a', cafe: '#d98a00', bar: '#9b5cff', bread: '#ff8a3d', cake: '#e03bb0', pizza: '#16a085', fish: '#2aa6f5', burger: '#ff6b6b' },
+  mono: null,
 }
+export const TEMPLATES = [
+  { id: 'solar', name: 'Solar', t: { accent: '#ff4b2b', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'drop', font: 'sans', radius: 14 }, pal: 'warm' },
+  { id: 'noite', name: 'Noite', t: { accent: '#a78bfa', bg: '#343843', fg: '#f6f6f8', tone: 'fiord', shape: 'circle', font: 'disp', radius: 14 }, pal: 'candy' },
+  { id: 'mare', name: 'Maré', t: { accent: '#2d7ff9', bg: '#f4f8ff', fg: '#171717', tone: 'bright', shape: 'hex', font: 'sans', radius: 14 }, pal: 'cool' },
+  { id: 'doce', name: 'Doce', t: { accent: '#e03bb0', bg: '#fff5fb', fg: '#171717', tone: 'liberty', shape: 'circle', font: 'disp', radius: 22 }, pal: 'candy' },
+  { id: 'mono', name: 'Mono', t: { accent: '#171717', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'square', font: 'mono', radius: 2 }, pal: 'mono' },
+]
+export function applyTemplate(theme, tpl) {
+  const p = PALETTES[tpl.pal]
+  return { ...theme, ...tpl.t, categories: theme.categories.map((c) => ({ ...c, color: p ? p[c.icon] || c.color : tpl.t.accent })) }
+}
+
+// ---------- contraste (WCAG) ----------
+const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }
+export const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255) }
+export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
+export const onColor = (bg) => (contrast('#ffffff', bg) >= contrast('#171717', bg) ? '#ffffff' : '#171717')
+export const onAccent = (theme) => (theme.contrastAuto ? onColor(theme.accent) : '#ffffff')
 
 export const catOf = (theme, id) => theme.categories.find((c) => c.id === id) || { id, name: 'Outros', color: theme.accent, icon: 'rest' }
+// símbolo da categoria: ícone do conjunto ou desenho próprio aprovado
+export function symOf(cat, symbols) {
+  if (isLib(cat.icon)) return { n: 'rest', sym: { lib: cat.icon } } // ícone das bibliotecas (3D, emoji, contorno)
+  const m = /^custom:(\d+)$/.exec(cat.icon || '')
+  if (!m) return { n: cat.icon in ICON_PATHS ? cat.icon : 'rest', sym: null }
+  const list = Array.isArray(symbols) ? symbols : Object.entries(symbols || {}).map(([id, s]) => ({ id: Number(id), ...s }))
+  const s = list.find((x) => x.id === Number(m[1]) && (!x.status || x.status === 'approved'))
+  return s ? { n: 'rest', sym: s } : { n: 'rest', sym: null }
+}
+
+export function pinHtml({ color, shape, n, sym: sym0, selected, size = 55, border = true, selStyle = 'outline' }) {
+  const base = Math.round(20 + size * 0.18) // 55% ≈ 30px
+  const grow = selected && selStyle !== 'color'
+  const z = grow ? base + 10 : base
+  const bg0 = selected && selStyle === 'color' ? '#171717' : color
+  const is = Math.round(z * 0.5)
+  const lib = sym0 && sym0.lib ? libIcon(sym0.lib) : null
+  const bg = lib && lib.color ? '#fff' : bg0 // emojis coloridos ficam sobre fundo branco, com a cor da categoria no contorno
+  const sym = sym0 && sym0.d ? sym0 : null
+  const fill = sym && sym.mode === 'fill'
+  const svg = lib ? libHtml(lib, lib.color ? Math.round(z * 0.66) : is) : `<svg width="${is}" height="${is}" viewBox="${sym ? sym.vb : '0 0 24 24'}" style="display:block;fill:${fill ? '#fff' : 'none'};stroke:${fill ? 'none' : '#fff'};stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="${sym ? sym.d : ICON_PATHS[n] || ICON_PATHS.rest}"/></svg>`
+  const ring = selected && selStyle === 'outline' ? 'outline:3px solid #171717;outline-offset:2px;' : ''
+  const cls = selected && selStyle === 'pulse' ? ' pin-pulse' : ''
+  const b = border ? `3px solid ${lib && lib.color ? bg0 : '#fff'}` : '0'
+  const sh = '0 2px 6px rgba(0,0,0,.3)'
+  const box = `width:${z}px;height:${z}px;background:${bg};display:grid;place-items:center;`
+  if (shape === 'drop') return `<div class="pinshape${cls}" style="${box}margin:${-z - 4}px 0 0 ${-z / 2}px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:${b};box-shadow:${sh};${ring}"><span style="display:grid;transform:rotate(45deg)">${svg}</span></div>`
+  if (shape === 'square') return `<div class="pinshape${cls}" style="${box}margin:${-z / 2}px 0 0 ${-z / 2}px;border-radius:9px;border:${b};box-shadow:${sh};${ring}">${svg}</div>`
+  if (shape === 'hex') return `<div class="pinshape${cls}" style="${box}margin:${-z / 2}px 0 0 ${-z / 2}px;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)">${svg}</div>`
+  return `<div class="pinshape${cls}" style="${box}margin:${-z / 2}px 0 0 ${-z / 2}px;border-radius:50%;border:${b};box-shadow:${sh};${ring}">${svg}</div>`
+}
+
+export const fmtDate = (d) => (d ? d.split('-').reverse().join('/') : '')
+export const fmtDM = (d) => (d ? d.split('-').reverse().slice(0, 2).join('/') : '')
+export const initial = (s) => String(s || '?').trim().slice(0, 1).toUpperCase()
+export const num = (n) => Number(n || 0).toLocaleString('pt-BR')

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { openDb } from '../server/db.js'
-import { createApp, sanitizeTheme } from '../server/app.js'
+import { createApp, sanitizeTheme, sanitizeSvg } from '../server/app.js'
 import { extract, normalizeAddress, tiktokId, dateFromTiktokId } from '../server/extract.js'
 import { pickResult, simplify } from '../server/geocode.js'
 
@@ -50,10 +50,26 @@ test('tema: valida cores, fonte e categorias', () => {
   assert.deepEqual(t.categories[0], { id: 'caf', name: 'Cafés', color: '#123456', icon: 'rest' })
 })
 
+test('tema: layout, pins e links têm limites; cabeçalho nunca some; símbolo próprio só como path', () => {
+  const t = sanitizeTheme({ pinSize: 999, selected: 'x', layout: { blocks: [{ id: 'map', on: true }, { id: 'header', on: false }, { id: 'zzz', on: true }], listStyle: 'rows' }, categories: [{ id: 'a', name: 'A', color: '#111111', icon: 'custom:7' }] })
+  assert.equal(t.pinSize, 100)
+  assert.equal(t.selected, 'outline')
+  assert.equal(t.layout.blocks[0].id, 'map')
+  assert.equal(t.layout.blocks.find((b) => b.id === 'header').on, true)
+  assert.equal(t.layout.blocks.length, 6)
+  assert.equal(t.layout.listStyle, 'rows')
+  assert.equal(t.categories[0].icon, 'custom:7')
+  assert.equal(sanitizeTheme({ showLinks: false }).layout.blocks.find((b) => b.id === 'links').on, false)
+  assert.deepEqual(sanitizeSvg('<svg viewBox="0 0 10 10"><path d="M1 1L9 9"/></svg>'), { d: 'M1 1L9 9', vb: '0 0 10 10', mode: 'fill' })
+  assert.throws(() => sanitizeSvg('<svg><script>alert(1)</script><path d="M1 1"/></svg>'), /svg_inseguro/)
+  assert.throws(() => sanitizeSvg('<svg><circle r="2"/></svg>'), /svg_sem_path/)
+  assert.throws(() => sanitizeSvg(`<svg>${'x'.repeat(60000)}</svg>`), /svg_grande/)
+})
+
 // ---------- fluxo completo da API ----------
 const nominatim = async (url) => {
   const body = String(url).includes('nominatim')
-    ? [{ lat: '-23.5544', lon: '-46.6574', category: 'place', type: 'house', address: { city: 'São Paulo', house_number: '77', suburb: 'Consolação' } }]
+    ? [{ lat: '-23.5544', lon: '-46.6574', name: 'Brasa Demo', display_name: 'Brasa Demo, Rua X, Moema', category: 'place', type: 'house', address: { city: 'São Paulo', road: 'Rua X', house_number: '77', suburb: 'Consolação' } }]
     : {}
   return new Response(JSON.stringify(body), { status: 200 })
 }
@@ -66,49 +82,81 @@ async function login(app, email) {
   return { cookie, token }
 }
 const call = (app, cookie, path, method = 'GET', body) => app.request(path, { method, headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+const post = (app, path, body) => app.request(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+const waitGeo = async (app, cookie) => {
+  for (let i = 0; i < 40; i++) {
+    const l = (await (await call(app, cookie, '/api/creator/places')).json()).places
+    if (!l.some((p) => p.geoStatus === 'pending')) return l
+    await new Promise((r) => setTimeout(r, 100))
+  }
+}
 
-test('fluxo: link mágico → candidatura → aprovação → posts → publicação → mapa público → métricas', async () => {
+test('fluxo: candidatura → análise → aprovação → onboarding → posts → publicação → mapa público → métricas', async () => {
   const db = openDb(':memory:')
   const app = createApp(db, { minFollowers: 1000, adminEmail: 'admin@x.com', fetchImpl: nominatim })
+
+  // candidatura é pública e só cria cadastro em análise (sem seguidores ainda)
+  assert.equal((await post(app, '/api/apply', { handle: 'dudacomesp', email: 'duda@x.com', acceptTerms: false })).status, 400)
+  assert.equal((await post(app, '/api/apply', { handle: 'dudacomesp', email: 'duda@x.com', tiktok: '@duda.tt', acceptTerms: true })).status, 200)
+  assert.equal((await post(app, '/api/apply', { handle: 'outra', email: 'duda@x.com', acceptTerms: true })).status, 409)
+  assert.equal((await post(app, '/api/apply', { handle: 'dudacomesp', email: 'b@x.com', acceptTerms: true })).status, 409)
+  await post(app, '/api/apply', { handle: 'pequena', email: 'pequena@x.com', acceptTerms: true })
 
   // link de uso único
   const a = await login(app, 'duda@x.com')
   const reuse = await app.request(`/api/auth/verify?token=${a.token}`)
   assert.match(reuse.headers.get('location'), /erro=link/)
+  const meA = await (await call(app, a.cookie, '/api/me')).json()
+  assert.equal(meA.creator.status, 'pending')
+  assert.equal(meA.creator.tiktok, 'duda.tt')
+  assert.equal((await call(app, a.cookie, '/api/creator/places')).status, 403) // sem aprovação não edita
 
-  // sem aprovação não edita
-  assert.equal((await call(app, a.cookie, "/api/creator/places")).status, 403)
-
-  // abaixo do mínimo → lista de espera
-  const low = await login(app, 'pequena@x.com')
-  const w = await (await call(app, low.cookie, '/api/apply', 'POST', { handle: 'pequena', followers: 10, acceptTerms: true })).json()
-  assert.equal(w.creator.status, 'waitlist')
-
-  // atende → pendente; admin aprova
-  const ap = await (await call(app, a.cookie, '/api/apply', 'POST', { handle: 'dudacomesp', displayName: 'Duda', followers: 5000, acceptTerms: true })).json()
-  assert.equal(ap.creator.status, 'pending')
-  assert.equal((await call(app, a.cookie, '/api/apply', 'POST', { handle: 'x', followers: 5000, acceptTerms: true })).status, 409)
+  // admin informa seguidores; abaixo do mínimo não aprova (sem force) e vai para a lista de espera
   const adm = await login(app, 'admin@x.com')
   assert.equal((await call(app, a.cookie, '/api/admin/creators')).status, 403)
-  await call(app, adm.cookie, `/api/admin/creators/${ap.creator.id}/decision`, 'POST', { status: 'approved' })
+  const list = (await (await call(app, adm.cookie, '/api/admin/creators')).json()).creators
+  const duda = list.find((k) => k.handle === 'dudacomesp'), peq = list.find((k) => k.handle === 'pequena')
+  assert.equal(duda.criterion, 'unknown')
+  assert.equal((await call(app, adm.cookie, `/api/admin/creators/${peq.id}/decision`, 'POST', { status: 'approved', followers: 10 })).status, 409)
+  await call(app, adm.cookie, `/api/admin/creators/${peq.id}/decision`, 'POST', { status: 'waitlist', followers: 10 })
+  assert.equal((await (await call(app, adm.cookie, '/api/admin/creators')).json()).creators.find((k) => k.handle === 'pequena').criterion, 'below')
+  assert.equal((await call(app, adm.cookie, `/api/admin/creators/${duda.id}/decision`, 'POST', { status: 'approved', followers: 5000, verified: true })).status, 200)
+
+  // onboarding: contas não são "conectadas" sem credenciais; trial de 30 dias sem cartão
+  assert.equal((await call(app, a.cookie, '/api/creator/connect/instagram', 'POST')).status, 501)
+  await call(app, a.cookie, '/api/creator/accounts', 'PUT', { network: 'instagram', state: 'skipped' })
+  assert.equal((await call(app, a.cookie, '/api/creator/accounts', 'PUT', { network: 'instagram', state: 'connected' })).status, 400)
+  const trial = await (await call(app, a.cookie, '/api/creator/trial', 'POST', { billing: 'annual' })).json()
+  assert.match(trial.trialEnds, /^\d{4}-\d{2}-\d{2}$/)
+  const me2 = await (await call(app, a.cookie, '/api/me')).json()
+  assert.equal(me2.creator.onboarding, 'welcome')
+  assert.equal(me2.creator.accounts.instagram, 'skipped')
 
   // posts → lugares
   const posts = [
     { url: 'https://www.tiktok.com/@dudacomesp/video/7405595760361737477', caption: 'Conhecemos o @carola.restobar e amamos! 📍Rua Fernando de Albuquerque, 77 - Consolação' },
     { url: 'https://www.tiktok.com/@dudacomesp/video/7405595760361737478', caption: 'Só hashtags #restaurante' },
   ]
-  const created = await (await call(app, a.cookie, '/api/creator/posts', 'POST', { posts })).json()
-  assert.equal(created.created, 2)
-  for (let i = 0; i < 30; i++) { // espera a fila de geocodificação
-    const l = await (await call(app, a.cookie, '/api/creator/places')).json()
-    if (l.places.some((p) => p.geoStatus === 'found')) break
-    await new Promise((r) => setTimeout(r, 100))
-  }
-  const list = (await (await call(app, a.cookie, '/api/creator/places')).json()).places
-  const carola = list.find((p) => p.name === 'Carola Restobar')
-  const unresolved = list.find((p) => p.status === 'unresolved')
+  assert.equal((await (await call(app, a.cookie, '/api/creator/posts', 'POST', { posts })).json()).created, 2)
+  const list1 = await waitGeo(app, a.cookie)
+  const carola = list1.find((p) => p.name === 'Carola Restobar')
+  const unresolved = list1.find((p) => p.status === 'unresolved')
   assert.equal(carola.geoQuality, 'address_exact')
+  assert.equal(carola.nameSrc, 'mention_handle')
+  assert.equal(carola.neighborhood, 'Consolação')
   assert.ok(unresolved)
+  const prog = await (await call(app, a.cookie, '/api/creator/progress')).json()
+  assert.deepEqual([prog.posts, prog.places, prog.located, prog.done], [2, 1, 1, true])
+
+  // adicionar lugar pela busca, mesclar duplicata, manter separados
+  const found = (await (await call(app, a.cookie, '/api/creator/search-place?q=Brasa+Demo')).json()).results
+  assert.equal(found[0].name, 'Brasa Demo')
+  const added = (await (await call(app, a.cookie, '/api/creator/places', 'POST', { ...found[0], postUrl: 'https://www.instagram.com/p/abc/', category: 'rest' })).json()).place
+  assert.equal(added.status, 'confirmed')
+  assert.equal((await call(app, a.cookie, '/api/creator/places/merge', 'POST', { keep: carola.id, drop: added.id })).status, 200)
+  const afterMerge = (await (await call(app, a.cookie, '/api/creator/places')).json()).places
+  assert.equal(afterMerge.some((p) => p.id === added.id), false)
+  assert.equal(afterMerge.find((p) => p.id === carola.id).postUrl.includes('tiktok'), true)
 
   // não publicado → 404; confirma e publica
   assert.equal((await app.request('/api/public/dudacomesp')).status, 404)
@@ -117,22 +165,136 @@ test('fluxo: link mágico → candidatura → aprovação → posts → publica�
   const pub = await (await app.request('/api/public/dudacomesp')).json()
   assert.equal(pub.places.length, 1)
   assert.equal(pub.places[0].tiktokId, '7405595760361737477')
+  assert.equal('confidence' in pub.places[0], false) // dados internos não vazam
   assert.equal(pub.creator.theme.categories.length, 8)
 
-  // evento: termo é higienizado; estatísticas agregadas
-  await app.request('/api/e', { method: 'POST', body: JSON.stringify({ slug: 'dudacomesp', type: 'search', term: 'vegetariano fale com a@b.com', results: 0, sid: 's1' }) })
-  await app.request('/api/e', { method: 'POST', body: JSON.stringify({ slug: 'dudacomesp', type: 'route_click', placeId: carola.id, sid: 's1' }) })
+  // rotas (roteiros) só com lugares do próprio criador
+  await call(app, a.cookie, '/api/creator/routes', 'PUT', { routes: [{ name: 'Domingo', placeIds: [carola.id, 99999] }] })
+  const pub2 = await (await app.request('/api/public/dudacomesp')).json()
+  assert.deepEqual(pub2.routes[0].placeIds, [carola.id])
+
+  // eventos: termo higienizado; agregados; amostra mínima para audiência
+  const ev = (b) => post(app, '/api/e', { slug: 'dudacomesp', ...b })
+  await ev({ type: 'session', sid: 's1', dev: 'm', ref: 'instagram', ret: false })
+  await ev({ type: 'search', term: 'vegetariano fale com a@b.com', results: 0, sid: 's1' })
+  await ev({ type: 'request', term: 'vegetariano', sid: 's1' })
+  await ev({ type: 'route_click', placeId: carola.id, sid: 's1' })
   const stats = await (await call(app, a.cookie, '/api/creator/stats')).json()
   assert.equal(stats.sessions, 1)
   assert.equal(stats.routeClicks, 1)
+  assert.equal(stats.requests, 1)
   assert.equal(stats.searches[0].term, 'vegetariano fale com')
-  assert.equal(stats.searches[0].empty, 1)
+  assert.equal(stats.opportunity.empty, 1)
+  assert.equal(stats.audience.enough, false)
+  assert.equal(stats.audience.mobilePct, null)
+  assert.equal(stats.audience.cities, null)
 
-  // despublicar tira do ar; slug e consentimentos validados
-  await call(app, a.cookie, '/api/creator/publish', 'POST', { published: false })
-  assert.equal((await app.request('/api/public/dudacomesp')).status, 404)
+  // denúncia → fila de moderação → ocultar lugar avisa o criador
+  assert.equal((await post(app, '/api/report', { slug: 'dudacomesp', placeId: carola.id, reason: 'inventado' })).status, 400)
+  await post(app, '/api/report', { slug: 'dudacomesp', placeId: carola.id, reason: 'Informação errada', details: 'fechou' })
+  await post(app, '/api/report', { slug: 'dudacomesp', placeId: carola.id, reason: 'Informação errada' })
+  const rep = await (await call(app, adm.cookie, '/api/admin/reports?status=open')).json()
+  assert.equal(rep.groups.length, 1)
+  assert.equal(rep.groups[0].count, 2)
+  await call(app, adm.cookie, '/api/admin/reports/act', 'POST', { ids: rep.groups[0].ids, action: 'hide_place' })
+  assert.equal((await (await app.request('/api/public/dudacomesp')).json()).places.length, 0)
+  assert.equal((await (await call(app, a.cookie, '/api/me')).json()).notices.length, 1)
+  assert.equal((await (await call(app, adm.cookie, '/api/admin/reports?status=resolved')).json()).groups.length, 1)
+
+  // slug, consentimentos com histórico, pausa, exportação e exclusão
   assert.equal((await call(app, a.cookie, '/api/creator/slug', 'PUT', { slug: 'admin' })).status, 400)
+  assert.equal((await call(app, a.cookie, '/api/creator/slug', 'PUT', { slug: 'estudio' })).status, 400)
   const cons = await (await call(app, a.cookie, '/api/creator/consents', 'PUT', { network: true })).json()
   assert.equal(cons.consents.network, true)
-  assert.equal(cons.consents.aggregatesForRestaurants, false)
+  assert.equal((await (await call(app, a.cookie, '/api/creator/consents/log')).json()).log[0].key, 'network')
+  await call(app, a.cookie, '/api/creator/publish', 'POST', { published: false })
+  assert.equal((await app.request('/api/public/dudacomesp')).status, 404)
+  const exp = await call(app, a.cookie, '/api/creator/export?format=csv')
+  assert.match(await exp.text(), /Carola Restobar/)
+  assert.equal((await call(app, a.cookie, '/api/creator/account', 'DELETE', { confirm: 'nao' })).status, 400)
+  assert.equal((await call(app, a.cookie, '/api/creator/account', 'DELETE', { confirm: 'EXCLUIR' })).status, 200)
+  assert.equal((await call(app, a.cookie, '/api/me')).status, 200)
+  assert.equal((await (await call(app, a.cookie, '/api/me')).json()).user, null)
+})
+
+test('rede e restaurantes: só entra quem consentiu; reivindicação passa por aprovação', async () => {
+  const db = openDb(':memory:')
+  const app = createApp(db, { minFollowers: 0, adminEmail: 'admin@x.com', fetchImpl: nominatim })
+  const adm = await login(app, 'admin@x.com')
+  const mk = async (email, handle, consents) => {
+    await post(app, '/api/apply', { handle, email, acceptTerms: true })
+    const s = await login(app, email)
+    const id = (await (await call(app, s.cookie, '/api/me')).json()).creator.id
+    await call(app, adm.cookie, `/api/admin/creators/${id}/decision`, 'POST', { status: 'approved', followers: 10 })
+    await call(app, s.cookie, '/api/creator/posts', 'POST', { posts: [{ caption: 'Amamos o @casa.mare 📍Rua Fernando de Albuquerque, 77 - Consolação' }] })
+    await waitGeo(app, s.cookie)
+    await call(app, s.cookie, '/api/creator/places/confirm-high', 'POST')
+    await call(app, s.cookie, '/api/creator/consents', 'PUT', consents)
+    await call(app, s.cookie, '/api/creator/publish', 'POST', { published: true })
+    return s
+  }
+  await mk('a@x.com', 'criadora', { network: true, aggregatesForRestaurants: true })
+  await mk('b@x.com', 'criador', { network: false, aggregatesForRestaurants: false })
+  const net = await (await app.request('/api/network')).json()
+  assert.equal(net.creators.length, 1)
+  assert.equal(net.places[0].creators.length, 1)
+
+  const found = (await (await app.request('/api/restaurants/search?q=casa')).json()).results[0]
+  assert.equal(found.creators, 1) // só conta quem aceitou dados agregados
+  const owner = await login(app, 'dono@x.com')
+  assert.equal((await call(app, owner.cookie, '/api/claims', 'POST', { key: found.key, method: 'google' })).status, 400)
+  assert.equal((await call(app, owner.cookie, '/api/claims', 'POST', { key: found.key, method: 'manual', contact: 'contato@casa.com' })).status, 200)
+  assert.equal((await (await call(app, owner.cookie, '/api/restaurant/panel')).json()).places.length, 0)
+  const claim = (await (await call(app, adm.cookie, '/api/admin/claims')).json()).claims[0]
+  await call(app, adm.cookie, `/api/admin/claims/${claim.id}`, 'POST', { status: 'approved' })
+  const panel = (await (await call(app, owner.cookie, '/api/restaurant/panel')).json()).places[0]
+  assert.equal(panel.creators, 1)
+  assert.equal(panel.perception.state, 'insufficient')
+})
+
+test('símbolo próprio passa por aprovação; domínio próprio só ativa com CNAME correto; capa limitada', async () => {
+  const db = openDb(':memory:')
+  let cname = []
+  const app = createApp(db, { minFollowers: 0, adminEmail: 'admin@x.com', baseUrl: 'https://mapa.exemplo', resolveCname: async () => cname })
+  await post(app, '/api/apply', { handle: 'estilo', email: 'e@x.com', acceptTerms: true })
+  const s = await login(app, 'e@x.com'); const adm = await login(app, 'admin@x.com')
+  await call(app, adm.cookie, `/api/admin/creators/${(await (await call(app, s.cookie, '/api/me')).json()).creator.id}/decision`, 'POST', { status: 'approved', followers: 1 })
+
+  assert.equal((await call(app, s.cookie, '/api/creator/symbols', 'POST', { name: 'X', svg: '<svg><script/></svg>' })).status, 400)
+  const up = await (await call(app, s.cookie, '/api/creator/symbols', 'POST', { name: 'Estrela', svg: '<svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4 5 1 6-6-3-6 3 1-6-4-5 6-1z"/></svg>' })).json()
+  const pend = (await (await call(app, adm.cookie, '/api/admin/symbols')).json()).symbols
+  assert.equal(pend.length, 1)
+  await call(app, adm.cookie, `/api/admin/symbols/${up.id}`, 'POST', { status: 'approved' })
+
+  assert.equal((await call(app, s.cookie, '/api/creator/domain', 'PUT', { domain: 'sem ponto' })).status, 400)
+  const d = await (await call(app, s.cookie, '/api/creator/domain', 'PUT', { domain: 'https://mapa.dudacome.com.br/x' })).json()
+  assert.equal(d.domain, 'mapa.dudacome.com.br')
+  assert.equal(d.target, 'mapa.exemplo')
+  assert.equal((await (await call(app, s.cookie, '/api/creator/domain/check', 'POST')).json()).status, 'pending')
+  cname = ['mapa.exemplo.']
+  assert.equal((await (await call(app, s.cookie, '/api/creator/domain/check', 'POST')).json()).status, 'active')
+
+  assert.equal((await call(app, s.cookie, '/api/creator/cover', 'PUT', { mime: 'text/html', data: 'AAAA' })).status, 400)
+  assert.equal((await call(app, s.cookie, '/api/creator/cover', 'PUT', { mime: 'image/png', data: Buffer.alloc(700 * 1024).toString('base64') })).status, 400)
+  assert.equal((await call(app, s.cookie, '/api/creator/cover', 'PUT', { mime: 'image/png', data: Buffer.from('png').toString('base64') })).status, 200)
+})
+
+test('mapa de demonstração: público, sem login, dados fictícios e slug reservado', async () => {
+  const db = openDb(':memory:')
+  const app = createApp(db, { baseUrl: 'http://x.test', dev: true })
+  const r = await app.request('/api/public/demo')
+  assert.equal(r.status, 200)
+  const d = await r.json()
+  assert.equal(d.creator.demo, true)
+  assert.ok(d.places.length >= 8 && d.places.every((p) => /Exemplo/.test(p.name)))
+  assert.ok(d.creator.theme.categories.some((c) => /^lib:fluent3d:/.test(c.icon)))
+  assert.ok(d.routes.length >= 2 && d.routes.every((r) => r.placeIds.every((id) => d.places.some((p) => p.id === id))))
+})
+
+test('mapa de demonstração: eventos não geram métricas e não dão erro', async () => {
+  const db = openDb(':memory:')
+  const app = createApp(db, { baseUrl: 'http://x.test', dev: true })
+  const r = await app.request('/api/e', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ slug: 'demo', type: 'session' }) })
+  assert.equal(r.status, 200)
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM events').get().n, 0)
 })

@@ -17,6 +17,7 @@ export function simplify(address, city) {
 }
 
 const muniOf = (r) => r.address?.city || r.address?.town || r.address?.municipality || r.address?.village
+const hoodOf = (r) => r.address?.suburb || r.address?.neighbourhood || r.address?.city_district || null
 
 export function pickResult(results, expected, address) {
   const ok = results.filter((r) => strip(muniOf(r) || '').toLowerCase() === strip(expected).toLowerCase())
@@ -26,7 +27,7 @@ export function pickResult(results, expected, address) {
   const cat = `${top.category}/${top.type}`
   let quality = house ? 'address_exact' : /^(leisure|natural|boundary|place)\//.test(cat) ? 'area' : 'street_approx'
   if (quality === 'address_exact' && /sem número/i.test(address)) quality = 'street_approx'
-  return { status: 'found', lat: Number(top.lat), lon: Number(top.lon), quality, municipality: muniOf(top) }
+  return { status: 'found', lat: Number(top.lat), lon: Number(top.lon), quality, municipality: muniOf(top), neighborhood: hoodOf(top) }
 }
 
 async function search(db, params, fetchImpl) {
@@ -60,11 +61,31 @@ export function enqueueGeocode(db, placeId, fetchImpl = fetch) {
     if (!p || !p.address) return
     try {
       const g = await geocodeAddress(db, p.address, fetchImpl)
-      db.prepare('UPDATE places SET geo_status=?, lat=?, lon=?, geo_quality=?, municipality=? WHERE id=?')
-        .run(g.status, g.lat ?? null, g.lon ?? null, g.quality ?? null, g.municipality ?? null, placeId)
+      db.prepare('UPDATE places SET geo_status=?, lat=?, lon=?, geo_quality=?, municipality=?, neighborhood=COALESCE(?, neighborhood) WHERE id=?')
+        .run(g.status, g.lat ?? null, g.lon ?? null, g.quality ?? null, g.municipality ?? null, g.neighborhood ?? null, placeId)
     } catch {
       db.prepare("UPDATE places SET geo_status='not_found' WHERE id=?").run(placeId)
     }
   })
   return chain
+}
+
+// Busca de lugar por nome (tela "Adicionar lugar"): mesma fila de 1 req/s, resultados no estado de São Paulo.
+export function searchPlaces(db, q, fetchImpl = fetch) {
+  const run = chain.then(async () => {
+    const res = await search(db, { q: `${q}, São Paulo`, limit: '6', viewbox: '-47.2,-22.9,-45.9,-24.2', bounded: '0' }, fetchImpl)
+    return res.map((r) => {
+      const a = r.address || {}
+      const road = [a.road, a.house_number].filter(Boolean).join(', ')
+      const muni = muniOf(r) || null
+      return {
+        name: r.name || String(r.display_name || '').split(',')[0],
+        address: [road, hoodOf(r)].filter(Boolean).join(' - ') || String(r.display_name || '').split(',').slice(0, 3).join(',').trim(),
+        lat: Number(r.lat), lon: Number(r.lon), municipality: muni, neighborhood: hoodOf(r),
+        quality: a.house_number ? 'address_exact' : 'street_approx',
+      }
+    }).filter((r) => Number.isFinite(r.lat))
+  })
+  chain = run.catch(() => {})
+  return run
 }

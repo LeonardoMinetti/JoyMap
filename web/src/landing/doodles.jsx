@@ -1,0 +1,126 @@
+import React from 'react'
+
+// Ilustrações de comida desenhadas à mão (traço de tinta + aquarela chapada + sombra cinza deslocada) e formas geométricas.
+// Elementos decorativos flutuantes: não são lidos por leitores de tela e não recebem toque.
+const INK = '#171713', SH = '#c9c9c1'
+const sh = (d, extra = {}) => <path d={d} fill={SH} opacity=".75" transform="translate(3 4)" {...extra} />
+
+const ART = {
+  ramen: <>
+    <circle cx="52" cy="54" r="36" fill={SH} opacity=".7" />
+    <circle cx="47" cy="49" r="36" fill="#fff" stroke={INK} strokeWidth="1.6" />
+    <circle cx="47" cy="49" r="29" fill="#C99A3C" />
+    <g fill="none" stroke="#F2DB80" strokeWidth="2.4" strokeLinecap="round"><path d="M24 58q5-7 10 0t10 0t10 0t10 0" /><path d="M28 66q5-7 10 0t10 0t10 0" /><path d="M26 50q5-7 10 0t10 0" /></g>
+    <g stroke={INK} strokeWidth="1.3"><ellipse cx="35" cy="38" rx="10" ry="7.5" transform="rotate(-25 35 38)" fill="#fff" /><ellipse cx="45" cy="52" rx="10" ry="7.5" transform="rotate(-15 45 52)" fill="#fff" /></g>
+    <circle cx="35" cy="38" r="4.3" fill="#F7A81B" /><circle cx="45" cy="52" r="4.3" fill="#F7A81B" />
+    <path d="M55 33q11-5 17 4q-2 11-13 14q-9-5-4-18z" fill="#F4B3A0" stroke="#C97C66" strokeWidth="1.2" />
+    <g fill="#4CAF50">{[[58, 42], [62, 46], [66, 41], [60, 49], [65, 47], [69, 44]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="1.9" />)}</g>
+    <path d="M58 62l17-9l6 13l-15 9z" fill="#26412F" stroke={INK} strokeWidth="1" />
+    <g strokeLinecap="round"><path d="M60 6L92 80M69 4L97 78" stroke={INK} strokeWidth="5" /><path d="M60 6L92 80M69 4L97 78" stroke="#D6402B" strokeWidth="2.8" /></g>
+    <ellipse cx="13" cy="68" rx="7.5" ry="14" transform="rotate(18 13 68)" fill="#D6402B" stroke={INK} strokeWidth="1.4" /><path d="M16 80l6 16" stroke={INK} strokeWidth="4" strokeLinecap="round" /><path d="M16 80l6 16" stroke="#D6402B" strokeWidth="2.2" strokeLinecap="round" />
+  </>,
+  sushi: <>
+    {sh('M20 48h62a14 14 0 0 1 0 28H20a14 14 0 0 1 0-28z')}
+    <rect x="16" y="46" width="68" height="28" rx="14" fill="#fff" stroke={INK} strokeWidth="1.6" />
+    <path d="M12 50q38-26 76 0q-10 15-38 15q-28 0-38-15z" fill="#F7824A" stroke={INK} strokeWidth="1.6" />
+    <g fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" opacity=".8"><path d="M30 46q5 6 3 13M44 42q5 7 3 16M58 42q5 7 3 16M72 46q4 5 2 11" /></g>
+    <rect x="43" y="40" width="14" height="40" fill="#26412F" stroke={INK} strokeWidth="1.2" />
+  </>,
+  pizza: <>
+    {sh('M12 22Q50 6 88 22L50 92z')}
+    <path d="M12 22Q50 6 88 22L50 92z" fill="#F6C453" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M9 20Q50 2 91 20q-1 9-6 12Q50 17 15 32q-6-3-6-12z" fill="#E39A3F" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <g stroke={INK} strokeWidth="1.2"><circle cx="38" cy="44" r="6.5" fill="#D6402B" /><circle cx="58" cy="48" r="6.5" fill="#D6402B" /><circle cx="49" cy="68" r="6" fill="#D6402B" /></g>
+    <path d="M60 30q8-6 12 2q-6 6-12-2z" fill="#4CAF50" stroke={INK} strokeWidth="1" />
+  </>,
+  coffee: <>
+    <ellipse cx="52" cy="82" rx="40" ry="11" fill={SH} opacity=".7" />
+    <ellipse cx="49" cy="78" rx="38" ry="10.5" fill="#fff" stroke={INK} strokeWidth="1.6" />
+    <path d="M70 42c20-2 20 22 0 24" fill="none" stroke={INK} strokeWidth="6" strokeLinecap="round" /><path d="M70 42c20-2 20 22 0 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+    <path d="M22 38h50v14q0 22-25 22q-25 0-25-22z" fill="#fff" stroke={INK} strokeWidth="1.6" />
+    <path d="M22 50h50" stroke="#2D7FF9" strokeWidth="4" />
+    <ellipse cx="47" cy="38" rx="25" ry="6" fill="#7B4A2A" stroke={INK} strokeWidth="1.4" />
+    <g fill="none" stroke="#9a9a92" strokeWidth="2" strokeLinecap="round"><path d="M36 28q-5-6 0-12t0-10" /><path d="M48 28q-5-6 0-12t0-10" /><path d="M60 28q-5-6 0-12t0-10" /></g>
+  </>,
+  taco: <>
+    {sh('M10 74a40 40 0 0 1 80 0z')}
+    <path d="M8 72a40 40 0 0 1 80 0z" fill="#F6C453" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M14 56q4-10 10-4q4-9 11-3q4-9 11-2q5-9 12-1q6-7 12 2q6-4 10 6" fill="none" stroke={INK} strokeWidth="4.5" strokeLinecap="round" /><path d="M14 56q4-10 10-4q4-9 11-3q4-9 11-2q5-9 12-1q6-7 12 2q6-4 10 6" fill="none" stroke="#5CB85C" strokeWidth="2.6" strokeLinecap="round" />
+    <g stroke={INK} strokeWidth="1"><circle cx="30" cy="62" r="4.5" fill="#E8412B" /><circle cx="48" cy="58" r="4.5" fill="#E8412B" /><circle cx="64" cy="63" r="4.5" fill="#E8412B" /></g>
+    <g fill="#7B4A2A"><circle cx="38" cy="66" r="2" /><circle cx="56" cy="67" r="2" /><circle cx="72" cy="68" r="2" /></g>
+  </>,
+  donut: <>
+    <circle cx="54" cy="56" r="37" fill={SH} opacity=".7" />
+    <circle cx="50" cy="52" r="37" fill="#D98B5F" stroke={INK} strokeWidth="1.6" />
+    <path d="M17 46q-2-18 16-26q12-6 26-1q22 4 24 26q2 10-8 14q-3 10-14 8q-6 10-18 4q-12 6-20-6q-12-4-6-19z" fill="#FF7FA8" stroke={INK} strokeWidth="1.4" />
+    <circle cx="50" cy="52" r="11.5" fill="#fff" stroke={INK} strokeWidth="1.5" />
+    <g strokeLinecap="round" strokeWidth="3"><path d="M30 36l4-2" stroke="#2D7FF9" /><path d="M62 32l4 2" stroke="#FFC400" /><path d="M72 52l4 0" stroke="#36C5A0" /><path d="M34 68l3 3" stroke="#fff" /><path d="M64 70l3-3" stroke="#8B5CF6" /><path d="M46 26l1 4" stroke="#fff" /><path d="M26 54l-3 2" stroke="#FFC400" /></g>
+  </>,
+  melon: <>
+    {sh('M8 36a42 42 0 0 0 84 0z')}
+    <path d="M6 34a42 42 0 0 0 84 0z" fill="#3BA55D" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M11 34a37 37 0 0 0 74 0z" fill="#fff" />
+    <path d="M14 34a34 34 0 0 0 68 0z" fill="#FF5C6A" />
+    <g fill={INK}>{[[30, 46, 20], [48, 56, 0], [66, 46, -20], [40, 42, 10], [58, 41, -10]].map(([x, y, r], i) => <ellipse key={i} cx={x} cy={y} rx="2" ry="3.4" transform={`rotate(${r} ${x} ${y})`} />)}</g>
+  </>,
+  chili: <>
+    {sh('M30 22q-6-10 6-12q4 18 30 40q14 12 12 30q-30-4-46-30q-8-14-2-28z')}
+    <path d="M28 20q-6-10 6-12q4 18 30 40q14 12 12 30q-30-4-46-30q-8-14-2-28z" fill="#E8412B" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M28 20q-4-10 4-16q6 2 4 8q-4 2-8 8z" fill="#3BA55D" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+    <path d="M38 38q10 18 30 34" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" opacity=".6" />
+  </>,
+}
+
+const SHAPES = {
+  circle: (c) => <circle cx="50" cy="50" r="40" fill={c} />,
+  ring: (c) => <circle cx="50" cy="50" r="32" fill="none" stroke={c} strokeWidth="14" />,
+  half: (c) => <path d="M8 62a42 42 0 0 1 84 0z" fill={c} />,
+  tri: (c) => <path d="M50 10L92 88H8z" fill={c} strokeLinejoin="round" stroke={c} strokeWidth="8" />,
+  plus: (c) => <path d="M38 8h24v30h30v24H62v30H38V62H8V38h30z" fill={c} />,
+  squig: (c) => <path d="M6 58q11-26 22 0t22 0t22 0t22 0" fill="none" stroke={c} strokeWidth="12" strokeLinecap="round" />,
+  quarter: (c) => <path d="M10 90V10a80 80 0 0 1 80 80z" fill={c} />,
+  square: (c) => <rect x="14" y="14" width="72" height="72" rx="12" fill={c} transform="rotate(12 50 50)" />,
+}
+export const PALETTE = ['#FF4B2B', '#2D7FF9', '#36C5A0', '#8B5CF6', '#FF5C8A', '#FFC400']
+
+// Filtro de traço "feito à mão" (leve ondulação) e símbolos reutilizáveis
+export function DoodleDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
+      <defs><filter id="dd-wc" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="4" result="n" /><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" /></filter></defs>
+    </svg>
+  )
+}
+
+export function Doodle({ k, c, size = 110, className = '', style }) {
+  const food = ART[k]
+  return (
+    <svg className={className} style={style} width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <g filter={food ? 'url(#dd-wc)' : undefined}>{food || SHAPES[k](c || PALETTE[0])}</g>
+    </svg>
+  )
+}
+
+// Conjuntos de elementos por seção: [peça, cor (só formas), lado, topo %, deslocamento lateral px, tamanho px, giro°, duração s, atraso s]
+const SETS = {
+  hero: [['ramen', 0, 'r', 12, -34, 150, 8, 9, 0], ['pizza', 0, 'l', 78, -34, 120, -12, 10, 1.2], ['circle', 1, 'l', 10, 6, 34, 0, 8, .6], ['squig', 0, 'r', 70, 40, 90, -6, 7, 2], ['plus', 2, 'r', 46, 8, 26, 14, 9, .3]],
+  a: [['donut', 0, 'r', 6, -34, 120, 14, 9, 0], ['tri', 2, 'l', 62, -10, 52, -14, 8, 1], ['circle', 4, 'r', 80, 30, 30, 0, 7, .5]],
+  b: [['sushi', 0, 'l', 4, -40, 130, -8, 10, .4], ['half', 3, 'r', 70, -16, 74, 20, 9, 1.4], ['plus', 1, 'l', 84, 24, 28, 12, 8, 0]],
+  c: [['coffee', 0, 'r', 2, -36, 120, 8, 9, .8], ['chili', 0, 'l', 72, -30, 100, -18, 10, 0], ['ring', 0, 'r', 76, 26, 44, 0, 8, 1.1]],
+  d: [['taco', 0, 'l', 2, -40, 130, -10, 10, .2], ['quarter', 5, 'r', 74, -18, 70, 0, 9, 1], ['square', 4, 'r', 8, 20, 34, 0, 8, .7]],
+  e: [['melon', 0, 'r', 4, -34, 120, 10, 9, 0], ['squig', 1, 'l', 80, 10, 90, 4, 8, 1.3], ['circle', 2, 'l', 12, 28, 26, 0, 7, .4]],
+  q: [['pizza', 0, 'r', 16, -20, 130, 12, 10, .4], ['donut', 0, 'l', 62, -40, 110, -10, 9, 0], ['circle', 1, 'r', 66, 40, 30, 0, 7, .6], ['squig', 2, 'l', 14, 30, 80, -6, 8, 1.2]],
+  g: [['ramen', 0, 'l', 8, -10, 150, -8, 9, 0], ['sushi', 0, 'r', 14, -4, 120, 10, 10, .8], ['donut', 0, 'r', 66, 60, 90, -12, 9, .3], ['pizza', 0, 'l', 62, 50, 100, 14, 10, 1.1], ['circle', 4, 'l', 40, 8, 30, 0, 7, .5], ['plus', 1, 'r', 42, 6, 28, 12, 8, 0]],
+  f: [['pizza', 0, 'l', 6, -34, 110, 12, 10, .5], ['donut', 0, 'r', 72, -30, 100, -10, 9, 0], ['tri', 3, 'r', 10, 30, 40, 18, 8, 1]],
+}
+export function Floaters({ set }) {
+  const items = SETS[set] || []
+  return (
+    <div className="fl-layer" aria-hidden="true">
+      {items.map(([k, ci, side, top, off, size, rot, dur, delay], i) => (
+        <Doodle key={i} k={k} c={PALETTE[ci]} size={size} className={'fl' + (i > 1 ? ' fl-x' : '')}
+          style={{ [side === 'l' ? 'left' : 'right']: `max(${off}px, calc((100vw - 1200px) / 2 + ${off}px))`, top: `${top}%`, '--r': `${rot}deg`, '--dur': `${dur}s`, '--dl': `${delay}s` }} />
+      ))}
+    </div>
+  )
+}

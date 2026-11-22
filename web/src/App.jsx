@@ -1,104 +1,50 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { api } from './api.js'
-import PublicPage from './PublicPage.jsx'
-import Dashboard from './Dashboard.jsx'
-import Admin from './Admin.jsx'
+import React from 'react'
+import { useLocation, Redirect, Toaster } from './lib/router.jsx'
+import { MeProvider, useMe } from './lib/me.jsx'
+import { Loading, Guard } from './lib/ui.jsx'
+import * as Site from './pages/Site.jsx'
+import * as On from './pages/Onboarding.jsx'
+import * as Build from './pages/Build.jsx'
+import * as St from './pages/Studio.jsx'
+import * as Pn from './pages/Panel.jsx'
+import * as Net from './pages/Network.jsx'
+import * as Ad from './pages/Admin.jsx'
+import { Voo } from './pages/Voo.jsx'
+import Public from './pub/Public.jsx'
+import { STATIC } from './lib/base.js'
 
-const hash = () => (location.hash.replace(/^#\/?/, '') || '').split('?')[0]
-export const Logo = () => <a className="logo" href="#/"><i />MAPA<b>SP</b></a>
+const STATIC_OK = new Set(['/', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
-function Landing({ me }) {
-  return (
-    <div className="landing">
-      <header className="lhead"><Logo /><nav>{me?.user ? <a className="btn sm" href="#/painel">Meu painel</a> : <><a className="btn ln sm" href="#/entrar">Entrar</a><a className="btn sm" href="#/candidatura">Quero meu mapa</a></>}</nav></header>
-      <section className="lhero">
-        <div className="col" style={{ gap: 18 }}>
-          <span className="tag ax">Para criadores que indicam lugares</span>
-          <h1 className="d s72">Seus lugares indicados, num mapa com a sua cara.</h1>
-          <p className="s16 mut">Você cola os posts, a gente identifica os lugares e localiza no mapa. Você revisa, personaliza cada detalhe e coloca o link na bio.</p>
-          <div className="row"><a className="btn big" href="#/candidatura">Quero meu mapa</a><a className="btn ln big" href="#/entrar">Entrar</a></div>
-          <p className="xs mut">Para perfis com um mínimo de seguidores. Você aprova tudo antes de publicar.</p>
-        </div>
-        <div className="lcards">
-          {['Símbolo por categoria', 'Cores e fonte', 'Formato de pin', 'Estilo do mapa'].map((t) => <div key={t} className="card"><b>{t}</b><span className="sm mut">Tudo muda na prévia em tempo real.</span></div>)}
-        </div>
-      </section>
-    </div>
-  )
+const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
+const ROUTES = {
+  '/': <Site.Landing />, '/voo': <Voo />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
+  '/candidatura': <On.Apply />, '/candidatura/enviada': <On.ApplyStatus sent />, '/candidatura/status': <On.ApplyStatus />, '/candidatura/aprovado': <On.Approved />, '/entrar': <On.Login />,
+  '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
+  '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
+  '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
+  '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Pn.Audience />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
+  '/painel/listas': <Pn.Lists />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
+  '/estudio': ST(<St.StudioHome />), '/estudio/modelos': ST(<St.StudioTemplates />), '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': ST(<St.StudioSymbols />),
+  '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': ST(<St.StudioLayout />), '/estudio/links': ST(<St.StudioLinks />), '/estudio/endereco': ST(<St.StudioAddress />),
+  '/rede': <Net.NetworkMap />, '/rede/lugar': <Net.NetworkPlace />, '/restaurantes': <Net.Claim />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
+  '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
 }
 
-function Entrar() {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(null)
-  const [err, setErr] = useState('')
-  const submit = async (e) => {
-    e.preventDefault(); setErr('')
-    try { setSent(await api('/auth/request', { method: 'POST', body: { email } })) } catch (x) { setErr(x.message === 'email_invalido' ? 'Digite um e-mail válido.' : 'Não foi possível enviar. Tente de novo.') }
-  }
-  return (
-    <div className="center"><Logo />
-      <form className="card formcard" onSubmit={submit}>
-        <h1 className="d s44">Acesse sem senha</h1>
-        {location.hash.includes('erro=link') && <p className="note">Este link expirou ou já foi usado. Peça outro.</p>}
-        {!sent ? (<>
-          <p className="mut sm">Enviamos um link de acesso para o seu e-mail. Ele vale por 15 minutos e só funciona uma vez.</p>
-          <label className="lb" htmlFor="em">E-mail</label>
-          <input id="em" className="in" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" required />
-          {err && <p className="err">{err}</p>}
-          <button className="btn blk">Enviar link de acesso</button>
-        </>) : (<>
-          <p>Link enviado para <b>{email}</b>.</p>
-          {sent.devLink ? <p className="note">Modo desenvolvimento (sem provedor de e-mail configurado): <a href={sent.devLink}>abrir o link de acesso</a></p> : <p className="mut sm">Confira o spam se não chegar.</p>}
-        </>)}
-      </form>
-    </div>
-  )
+// Páginas do site: entram com um fade curto (as telas do painel e do estúdio ficam como estão, para não perder estado)
+const SITE = new Set(['/', '/planos', '/perguntas', '/exemplos', '/termos'])
+function Routes() {
+  const { path } = useLocation()
+  const { me } = useMe()
+  // domínio próprio: o servidor injeta o slug e a página do criador atende a raiz do domínio
+  if (window.__SLUG__) return <Public slug={window.__SLUG__} />
+  const pub = path.match(/^\/@([a-z0-9_-]+)(\/.*)?$/i)
+  if (pub) return <Public slug={pub[1].toLowerCase()} />
+  if (me === undefined) return <Loading />
+  if (STATIC && !STATIC_OK.has(path)) return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
+  const ed = path.match(/^\/revisar\/(\d+)$/)
+  if (ed) return <Build.EditPlace id={ed[1]} />
+  const el = ROUTES[path]
+  if (!el) return <Redirect to="/" />
+  return SITE.has(path) ? <div key={path} className="rt">{el}</div> : el
 }
-
-function Candidatura({ me, reload }) {
-  const [cfg, setCfg] = useState({})
-  const [f, setF] = useState({ handle: '', displayName: '', followers: '', acceptTerms: false })
-  const [err, setErr] = useState('')
-  useEffect(() => { api('/config').then(setCfg) }, [])
-  if (!me?.user) return <div className="center"><Logo /><div className="card formcard"><h1 className="d s44">Peça seu mapa</h1><p className="mut">Primeiro confirme o seu e-mail.</p><a className="btn blk" href="#/entrar">Continuar com e-mail</a></div></div>
-  if (me.creator) { location.hash = '#/painel'; return null }
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })
-  const submit = async (e) => {
-    e.preventDefault(); setErr('')
-    try { await api('/apply', { method: 'POST', body: { ...f, followers: Number(f.followers) } }); await reload(); location.hash = '#/painel' }
-    catch (x) { setErr({ handle_invalido: 'Use só letras, números, ponto e sublinhado.', aceite_obrigatorio: 'É preciso aceitar os termos.' }[x.message] || 'Não foi possível enviar.') }
-  }
-  return (
-    <div className="center"><Logo />
-      <form className="card formcard" onSubmit={submit}>
-        <h1 className="d s44">Conte quem é você</h1>
-        <p className="mut sm">Analisamos cada perfil. Critério atual: no mínimo {cfg.minFollowers?.toLocaleString('pt-BR')} seguidores.</p>
-        <label className="lb" htmlFor="h">Seu @ no Instagram ou TikTok</label>
-        <input id="h" className="in" value={f.handle} onChange={set('handle')} placeholder="@seuperfil" required />
-        <label className="lb" htmlFor="n">Nome de exibição</label>
-        <input id="n" className="in" value={f.displayName} onChange={set('displayName')} placeholder="Como aparece no mapa" required />
-        <label className="lb" htmlFor="s">Seguidores (a conferência final é nossa)</label>
-        <input id="s" className="in" type="number" min="0" value={f.followers} onChange={set('followers')} required />
-        <label className="check"><input type="checkbox" checked={f.acceptTerms} onChange={set('acceptTerms')} /> Sou o titular ou represento este perfil e aceito os Termos e a Política de Privacidade.</label>
-        {err && <p className="err">{err}</p>}
-        <button className="btn blk">Enviar candidatura</button>
-      </form>
-    </div>
-  )
-}
-
-export default function App() {
-  const [route, setRoute] = useState(hash())
-  const [me, setMe] = useState(undefined)
-  const reload = useCallback(() => api('/me').then(setMe).catch(() => setMe({ user: null })), [])
-  useEffect(() => { reload(); const f = () => setRoute(hash()); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f) }, [reload])
-
-  const m = location.pathname.match(/^\/@([a-z0-9_-]+)\/?$/i)
-  if (m) return <PublicPage slug={m[1].toLowerCase()} />
-  if (me === undefined) return <div className="pubstate">Carregando…</div>
-  if (route.startsWith('painel')) return me.user ? <Dashboard me={me} reload={reload} sub={route.split('/')[1] || ''} /> : <Entrar />
-  if (route.startsWith('admin')) return me.user?.role === 'admin' ? <Admin /> : <div className="center"><div className="card formcard"><h1 className="d s32">Área restrita</h1><a className="btn" href="#/entrar">Entrar</a></div></div>
-  if (route === 'entrar') return <Entrar />
-  if (route === 'candidatura') return <Candidatura me={me} reload={reload} />
-  return <Landing me={me} />
-}
+export default function App() { return <MeProvider><Routes /><Toaster /></MeProvider> }
