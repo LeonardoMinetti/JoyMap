@@ -50,3 +50,7 @@ coxinha2.jpg | File:Coxinha de Puerto Iguazú, Misiones, Argentina.jpg | autor: 
 paodequeijo.jpg | File:Cheesebread.jpg | autor: Murilo manzini | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Cheesebread.jpg
 acai.jpg | File:Açaí na tigela 1.jpg | autor: Melsj | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:A%C3%A7a%C3%AD_na_tigela_1.jpg
 petisco.jpg | File:Porção de dadinhos de tapioca no Paraná.jpg | autor: Simplus Menegati | CC BY-SA 4.0 | https://commons.wikimedia.org/wiki/File:Por%C3%A7%C3%A3o_de_dadinhos_de_tapioca_no_Paran%C3%A1.jpg
+# Fotos de pessoas (perfis fictícios de demonstração). Fonte: Pexels, Licença Pexels (uso livre, sem atribuição obrigatória). As pessoas das fotos não têm qualquer relação com os perfis fictícios mostrados no site.
+bia-caio.jpg, bia-caio-b.jpg | recortes de Pexels #14059373 (casal em restaurante) | autor: ver a página da foto | Licença Pexels | https://www.pexels.com/photo/14059373/
+duda-lu.jpg, duda-lu-b.jpg | recortes de Pexels #7780652 (duas mulheres tomando café) | autor: ver a página da foto | Licença Pexels | https://www.pexels.com/photo/7780652/
+rafa.jpg, rafa-b.jpg | recortes de Pexels #8467227 (homem sorrindo diante de hambúrguer e pizza) | autor: Dimenshteyn | Licença Pexels | https://www.pexels.com/photo/8467227/
