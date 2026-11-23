@@ -47,6 +47,14 @@ const TABS = ['visao', 'buscas', 'lugares', 'divulgar']
 export function Side({ active }) {
   const { me, reload } = useMe()
   const [more, setMore] = React.useState(false)
+  const [pending, setPending] = React.useState(0)
+  React.useEffect(() => {
+    let on = true
+    const load = () => api('/creator/places').then((d) => on && setPending(d.places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length)).catch(() => {})
+    load(); window.addEventListener('wagli:places', load)
+    return () => { on = false; window.removeEventListener('wagli:places', load) }
+  }, [active])
+  const dot = (k) => k === 'lugares' && pending > 0 ? <i className="nd" role="img" aria-label={`${pending} lugar${pending === 1 ? '' : 'es'} para revisar`} title={`${pending} para revisar`} /> : null
   const c = me?.creator
   const out = async () => { await api('/auth/logout', { method: 'POST' }); await reload(); navigate('/') }
   React.useEffect(() => { setMore(false) }, [active])
@@ -56,14 +64,14 @@ export function Side({ active }) {
       <div className="side">
         <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
         <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(c?.displayName)}</div><div><div className="b sm">@{c?.handle}</div><div className="xs mut">{c?.plan?.trialEnds ? 'Teste grátis' : 'Sem plano ativo'}</div></div></div>
-        {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}</Link>)}
+        {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}{dot(k)}</Link>)}
         {me?.user?.role === 'admin' && <Link className="it" to="/admin"><Icon n="shield" s={18} c="#404040" />Administração</Link>}
         <button className="it" style={{ background: 'none', border: 0, textAlign: 'left', marginTop: 'auto' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button>
       </div>
       {/* celular: barra superior enxuta + abas fixas embaixo + folha "Mais" */}
       <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}><div className="b xs">@{c?.handle}</div><div className="av">{initial(c?.displayName)}</div></div></div>
       <nav className="mtabs" aria-label="Painel">
-        {items.filter((t) => TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{k === 'visao' ? 'Início' : l}</span></Link>)}
+        {items.filter((t) => TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{k === 'visao' ? 'Início' : l}</span>{dot(k)}</Link>)}
         <button type="button" className={!TABS.includes(active) ? 'on' : ''} onClick={() => setMore(true)} aria-haspopup="dialog"><Icon n="menu" s={22} c={!TABS.includes(active) ? '#171713' : '#6b6b6b'} /><span>Mais</span></button>
       </nav>
       {more && (

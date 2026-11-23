@@ -13,7 +13,13 @@ async function staticApi(path, opts) {
   throw NO_SERVER()
 }
 
-export async function api(path, { method = 'GET', body } = {}) {
+// avisa o menu do painel quando lugares ou posts mudam (o ponto de pendências em "Lugares" se atualiza)
+export async function api(path, opts = {}) {
+  const r = await apiRaw(path, opts)
+  if ((opts.method || 'GET') !== 'GET' && /^\/creator\/(places|posts)/.test(path)) window.dispatchEvent(new Event('wagli:places'))
+  return r
+}
+async function apiRaw(path, { method = 'GET', body } = {}) {
   if (STATIC) return staticApi(path, { method, body })
   const res = await fetch(`/api${path}`, {
     method, credentials: 'same-origin',

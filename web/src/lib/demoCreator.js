@@ -162,7 +162,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     if (status === 'confirmed' && !name) status = x.status
     if ('name' in body && name !== x.name) x.nameSrc = 'manual'
     if ('address' in body && body.address !== x.address) { x.lat = null; x.lon = null; x.geoStatus = 'none'; x.geoQuality = null }
-    const gUrl = 'googleUrl' in body ? cleanGoogleUrl(body.googleUrl) : x.googleUrl, iUrl = 'instagramUrl' in body ? cleanInstagramUrl(body.instagramUrl) : x.instagramUrl
+    const gUrl = 'googleUrl' in body ? cleanGoogleUrl(body.googleUrl) : (x.googleUrl ?? null), iUrl = 'instagramUrl' in body ? cleanInstagramUrl(body.instagramUrl) : (x.instagramUrl ?? null)
     if (gUrl === undefined) throw err('google_invalido')
     if (iUrl === undefined) throw err('instagram_invalido')
     x.googleUrl = gUrl; x.instagramUrl = iUrl

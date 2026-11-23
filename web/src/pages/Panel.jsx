@@ -19,7 +19,7 @@ const AccountPage = ({ tab, children }) => (
   </PanelPage>
 )
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
-const Head = ({ title, sub, right }) => <div className="row jb wrap"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
+const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
 import { demoExport } from '../lib/demoCreator.js'
 const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
@@ -36,9 +36,7 @@ export function Overview() {
   const [days, setDays] = useState(30)
   const s = useStats(days)
   const [places] = usePlacesList()
-  const [routes, setRoutes] = useState(null)
   const [hov, setHov] = useState(null)
-  useEffect(() => { api('/creator/routes').then((d) => setRoutes(d.routes)).catch(() => setRoutes([])) }, [])
   const c = me.creator
   const theme = c.theme
   const series = useMemo(() => {
@@ -49,13 +47,7 @@ export function Overview() {
   const max = Math.max(1, ...series.map((x) => x.n))
   const peak = series.reduce((a, b) => (b.n > a.n ? b : a), { n: 0 })
   const shown = hov != null ? series[hov] : peak
-  const live = (places || []).filter((p) => p.status === 'confirmed')
-  const todo = places ? [
-    { n: places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length, one: 'lugar ou post para revisar', many: 'lugares e posts para revisar', to: '/painel/atualizar', icon: 'spark' },
-    { n: live.filter((p) => !p.photo).length, one: 'lugar sem foto', many: 'lugares sem foto', to: '/painel/lugares?f=semfoto', icon: 'image' },
-    { n: live.filter((p) => !hasCoords(p)).length, one: 'lugar sem localização no mapa', many: 'lugares sem localização no mapa', to: '/painel/lugares?f=nocoord', icon: 'pin' },
-    ...(routes && !routes.length && live.length > 2 ? [{ n: 1, one: 'Monte seu primeiro roteiro com os lugares do mapa', many: '', to: '/painel/roteiros', icon: 'route', plain: true }] : []),
-  ].filter((t) => t.n > 0) : []
+  const pending = places ? places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length : 0
   const top = s && !s.error ? s.topPlaces.slice(0, 5) : []
   const topMax = Math.max(1, ...top.map((p) => p.opens))
   const byId = new Map((places || []).map((p) => [p.id, p]))
@@ -63,12 +55,7 @@ export function Overview() {
     <PanelPage active="visao">
       {me.notices.map((n) => <div key={n.id} className="note row"><Icon n="alert" s={18} c="#93370d" /><span className="sp">{n.text}</span><button className="btn sm ln" onClick={async () => { await api('/creator/notices/seen', { method: 'POST' }); reload() }}>Entendi</button></div>)}
       {!c.published && <div className="note row"><span className="sp"><b>Seu mapa ainda não está no ar.</b> Revise os lugares e publique para os seguidores verem.</span><Link className="btn sm" to="/revisar">Revisar e publicar</Link></div>}
-      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{places && todo[0] && todo[0].to === '/painel/atualizar' ? ` (${todo[0].n})` : ''}</Link></div>} />
-      {places && <div className="card col" style={{ gap: 10 }}>
-        <div className="row jb"><b>Para fazer</b>{todo.length === 0 && <span className="tag ok">Tudo em dia</span>}</div>
-        {todo.length === 0 ? <span className="sm mut">Nada pendente: seus lugares estão revisados, com foto e localizados no mapa.</span> : todo.map((t) => (
-          <Link key={t.to} to={t.to} className="todo"><span className="todo-ic"><Icon n={t.icon} s={18} /></span><span className="sp sm">{t.plain ? <b>{t.one}</b> : <><b>{t.n}</b> {t.n === 1 ? t.one : t.many}</>}</span><Icon n="next" s={16} c="#8a8a8a" /></Link>))}
-      </div>}
+      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{pending ? ` (${pending})` : ''}</Link></div>} />
       {!s ? <Loading /> : s.error ? <p className="err">Não foi possível carregar.</p> : <>
         <div className="g4"><Kpi v={s.sessions} l="sessões" hint="Visitas ao seu mapa" /><Kpi v={s.placeOpens} l="lugares abertos" hint="Vezes que um lugar foi aberto" /><Kpi v={s.routeClicks} l="cliques em rota" hint="Quem pediu rota até o lugar" /><Kpi v={s.postOpens} l="voltas aos seus posts" hint="Quem voltou ao post original" /></div>
         <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
@@ -77,13 +64,13 @@ export function Overview() {
           <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
             {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>
         </div>
-        <div className="g2" style={{ gridTemplateColumns: '3fr 2fr' }}>
-          <div className="card col" style={{ gap: 10 }}><div className="row jb"><b>Lugares mais abertos</b><Link className="link xs" to="/painel/lugares">Ver todos</Link></div>
+        <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
+          <div className="card col"><div className="row jb"><b>Lugares mais abertos</b><Link className="link xs" to="/painel/lugares">Ver todos</Link></div>
             {top.length ? top.map((p, i) => { const pl = byId.get(p.id); return (
               <Link key={p.id} to={`/revisar/${p.id}`} className="rank"><b className="sm" style={{ width: 18 }}>{i + 1}</b>{pl ? <PlacePhoto place={pl} theme={theme} size={40} style={{ borderRadius: 12 }} /> : <Photo s={40} />}
                 <div className="sp col" style={{ gap: 4 }}><div className="row jb"><b className="sm trunc">{p.name}</b><span className="xs mut">{p.opens} aberturas · {p.routes} rotas</span></div><div className="hb"><i style={{ width: `${(p.opens / topMax) * 100}%` }} /></div></div></Link>) })
               : <p className="sm mut">Os lugares mais abertos aparecem aqui quando houver visitas.</p>}</div>
-          <div className="col" style={{ gap: 16, minWidth: 0 }}>
+          <div className="col" style={{ gap: 20, minWidth: 0 }}>
             <div className="card row">{s.featured ? <><Photo /><div className="sp"><span className="eb">Indicação em destaque</span><div className="b">{s.featured.name}</div><div className="xs mut">{s.featured.routes} cliques em rota</div></div></> : <span className="sm mut">A indicação em destaque aparece quando houver cliques em rota.</span>}</div>
             <div className="card soft"><span className="xs mut">{s.note}</span></div></div>
         </div>
@@ -107,6 +94,7 @@ export function Searches() {
     <PanelPage active="buscas">
       <Head title="Buscas e oportunidades" sub="O que sua audiência procura no seu mapa · últimos 30 dias" right={!s.error && sampleTag(s.sessions)} />
       <div className="g3"><Kpi v={total} l="buscas" /><Kpi v={empty} l="sem resultado" hint="Buscas em que o mapa não tinha o que a pessoa procurava" /><Kpi v={s.requests} l={`pedido${s.requests === 1 ? '' : 's'} de indicação`} hint='Quem tocou em "Pedir uma indicação" (anônimo)' /></div>
+      <section className="blk" aria-label="Termos buscados">
       <div className="row wrap jb"><div className="seg" role="group" aria-label="Filtrar buscas">{[['all', 'Todas'], ['empty', 'Sem resultado'], ['ok', 'Com resultado']].map(([k, l]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}</button>)}</div><div className="in" style={{ minHeight: 40, width: 240 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar termo" aria-label="Buscar termo" /></div></div>
       <div className="card col" style={{ gap: 4, padding: 12 }}>
         {rows.map((x) => (
@@ -117,7 +105,8 @@ export function Searches() {
           </div>))}
         {!rows.length && <p className="sm mut" style={{ padding: 12 }}>{(s.searches || []).length ? 'Nenhuma busca neste filtro.' : 'Ainda sem buscas no seu mapa.'}</p>}
       </div>
-      <div className="card soft"><span className="xs mut">Os termos passam por um filtro que remove e-mails, telefones e links antes de serem guardados. Barra cinza: buscas com resultado; barra amarela: sem resultado.</span></div>
+      <p className="xs mut" style={{ margin: 0 }}>Os termos passam por um filtro que remove e-mails, telefones e links antes de serem guardados. Barra cinza: buscas com resultado; barra amarela: sem resultado.</p>
+      </section>
     </PanelPage>
   )
 }
@@ -147,6 +136,7 @@ export function PlacesPage() {
   return (
     <PanelPage active="lugares">
       <Head title="Lugares" sub={`${live.length} lugares no seu mapa`} right={<div className="row wrap"><Link className="btn ln sm" to="/colar-posts?voltar=/painel/atualizar">Colar posts</Link><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></div>} />
+      <section className="blk" aria-label="Lista de lugares">
       <div className="row wrap jb">
         <div className="seg" role="group" aria-label="Filtrar lugares">{FIL.map(([k, l, fn]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}{k !== 'all' && <span className="n">{live.filter(fn).length}</span>}</button>)}</div>
         <div className="row wrap"><div className="in" style={{ minHeight: 40, width: 220 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar nome ou bairro" aria-label="Buscar lugar" /></div>
@@ -170,6 +160,7 @@ export function PlacesPage() {
             <tr key={p.id} className="click" style={{ cursor: 'pointer' }} onClick={() => navigate(`/revisar/${p.id}`)}><td><div className="row"><PlacePhoto place={p} theme={theme} size={36} style={{ borderRadius: 10 }} label="" /><div><b>{p.name || 'Sem nome'}</b><div className="xs mut">{p.neighborhood || p.municipality || p.address || ''}</div></div></div></td><td>{catOf(theme, p.category).name}</td><td>{pf?.opens || 0}</td><td>{pf?.routes || 0}</td><td><span className={`tag ${st[0]}`}>{st[1]}</span></td></tr>) })}
           {!list.length && <tr><td colSpan="5" className="mut">Nenhum lugar nesta lista.</td></tr>}</tbody></table></div>
       )}
+      </section>
     </PanelPage>
   )
 }
@@ -181,8 +172,8 @@ function AudienceBlock({ s }) {
   const wd = [1, 2, 3, 4, 5, 6, 0].map((i) => a.weekdays[i])
   const mx = Math.max(1, ...wd)
   return (
-    <section className="col" style={{ gap: 16 }} aria-label="Audiência">
-      <div><h2 className="d s32">Audiência</h2><p className="sm mut">De onde vêm as visitas ao seu mapa (região aproximada)</p></div>
+    <section className="blk sec" aria-label="Audiência">
+      <div className="sec-h"><h2 className="d s32">Audiência</h2><p className="sm mut">De onde vêm as visitas ao seu mapa (região aproximada)</p></div>
       <div className="g2">
         <div className="card col"><b>Cidades</b><p className="sm mut">Ainda não mostramos a cidade das visitas: isso exigiria localizar visitantes pelo IP, e hoje não guardamos IP. Quando houver uma base de localização aproximada, ela aparece aqui.</p></div>
         <div className="card col"><b>Quando acessam</b>{a.sample ? <><div className="bars" style={{ height: 130 }}>{wd.map((n, i) => <i key={i} className={n === Math.max(...wd) && n ? 'hi' : ''} style={{ height: `${Math.max(3, (n / mx) * 100)}%` }} title={`${WD[i]}: ${n}`} />)}</div><div className="row jb xs mut">{WD.map((d) => <span key={d}>{d}</span>)}</div></> : <p className="sm mut">Ainda sem visitas.</p>}</div>
@@ -257,7 +248,7 @@ function AddressCard() {
     const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `qr-${cr.slug}.png`; a.click()
   }
   return (
-    <div className="col" style={{ gap: 16 }}>
+    <div className="blk">
       {STATIC && <Note>Na demonstração o endereço do mapa e o domínio ficam fixos.</Note>}
       <div><label className="lb" htmlFor="s1">Endereço do mapa</label><div className="row"><div className="in f sp"><span className="mut nowrap">{location.host}/@</span><input id="s1" value={slug} disabled={STATIC} onChange={(e) => setSlug(e.target.value.toLowerCase())} />{slug === cr.slug ? <span className="tag ok">Seu endereço</span> : avail && <span className={'tag ' + (avail.available ? 'ok' : 'bd2')}>{avail.available ? 'Disponível' : avail.reason === 'em_uso' ? 'Em uso' : 'Inválido'}</span>}</div><button className="btn" disabled={STATIC || slug === cr.slug || !avail?.available} onClick={saveSlug}>Salvar</button></div>
         <span className="xs mut">Ao trocar o endereço, o link antigo para de funcionar. Atualize a bio.</span></div>
@@ -281,13 +272,13 @@ export function Promote() {
   return (
     <PanelPage active="divulgar">
       <Head title="Divulgar" sub="O link do seu mapa e como colocá-lo em outros lugares" />
-      <section className="col" style={{ gap: 16 }} aria-label="O link do seu mapa">
-        <h2 className="d s32">O link do seu mapa</h2>
+      <section className="blk sec" aria-label="O link do seu mapa">
+        <div className="sec-h"><h2 className="d s32">O link do seu mapa</h2></div>
         <div className="card row" style={{ gap: 14, padding: 22 }}><span className="todo-ic" style={{ width: 44, height: 44 }}><Icon n="link" s={20} /></span><div className="sp" style={{ minWidth: 0 }}><span className="eb">Endereço atual</span><b className="d s26 trunc" style={{ display: 'block' }}>{location.host}/@{c.slug}</b></div><button className="btn" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><a className="btn ln" href={url} target="_blank" rel="noopener noreferrer">Abrir</a></div>
         <AddressCard />
       </section>
-      <section className="col" style={{ gap: 16 }} aria-label="Incorporar em outro site">
-        <h2 className="d s32">Incorporar em outro site</h2>
+      <section className="blk sec" aria-label="Incorporar em outro site">
+        <div className="sec-h"><h2 className="d s32">Incorporar em outro site</h2></div>
         <div className="card col" style={{ gap: 12 }}>
           <b>Mapa dentro do seu site ou blog</b><span className="sm mut">Cole este código na página onde o mapa deve aparecer. Ele mostra só o mapa, com os seus pins.</span>
           <div className="card soft xs" style={{ fontFamily: "'Courier New',monospace", wordBreak: 'break-all' }}>{embed}</div>
