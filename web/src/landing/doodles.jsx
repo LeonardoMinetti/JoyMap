@@ -72,11 +72,20 @@ const ART = {
     {[28, 74].map((x) => <g key={x} className="dd-wheel"><circle cx={x} cy="72" r="11" fill={INK} /><circle cx={x} cy="72" r="4.5" fill="#fff" /><path d={`M${x} 63v18M${x - 9} 72h18`} stroke="#fff" strokeWidth="1.6" /></g>)}
   </>,
   plane: <>
-    <path d="M6 82q18-4 26 4t24-2" fill="none" stroke={INK} strokeWidth="1.6" strokeDasharray="3 6" strokeLinecap="round" opacity=".6" />
-    {sh('M8 46L92 12L68 86L50 60z')}
-    <path d="M8 46L92 12L50 60z" fill="#fff" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
-    <path d="M92 12L68 86L50 60z" fill="#CFE8FF" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
-    <path d="M50 60L47 80L58 70" fill="#F7A81B" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+    <path d="M0 62h16M4 70h12" stroke={INK} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="3 6" opacity=".5" />
+    <path d="M62 88q-2-9 7-10q3-8 12-5q9-3 12 6q7 1 6 9z" fill="#fff" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" opacity=".95" />
+    <g transform="rotate(-10 50 48)">
+      {sh('M10 40L20 36H72Q94 38 96 50Q94 60 72 61H26Q12 60 10 40Z')}
+      <path d="M12 39L15 14H25L38 38z" fill="#FF4B2B" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M14 47L3 53H22z" fill="#E4E4E4" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M10 40L20 36H72Q94 38 96 50Q94 60 72 61H26Q12 60 10 40Z" fill="#fff" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M13 53H95Q93 60 72 61H26Q16 60 13 53z" fill="#2D7FF9" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M78 41Q89 41 93 49H78z" fill="#CFE8FF" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+      {[28, 36, 44, 52, 60, 68].map((x) => <circle key={x} cx={x} cy="46" r="2.7" fill="#CFE8FF" stroke={INK} strokeWidth="1.1" />)}
+      <path d="M42 54H72L50 82H28z" fill="#E4E4E4" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M36 76L60 56" stroke={INK} strokeWidth="1" opacity=".3" />
+      <rect x="42" y="68" width="22" height="11" rx="5.5" fill="#fff" stroke={INK} strokeWidth="1.5" /><ellipse cx="44.5" cy="73.5" rx="3" ry="4.6" fill="#9a9a92" stroke={INK} strokeWidth="1" />
+    </g>
   </>,
   backpack: <>
     {sh('M24 28h52a0 0 0 0 1 0 0v50a8 8 0 0 1-8 8H32a8 8 0 0 1-8-8z')}
