@@ -17,7 +17,7 @@ export const TONES = {
   dark: { label: 'Escuro', tint: '#161616' },
 }
 export const SHAPES = { drop: 'Gota', circle: 'Círculo', square: 'Quadrado', hex: 'Hexágono' }
-export const ACCENTS = ['#ff4b2b', '#2d7ff9', '#12b76a', '#9b5cff', '#ff5c8a', '#171717']
+export const ACCENTS = ['#ffc400', '#ff4b2b', '#2d7ff9', '#12b76a', '#9b5cff', '#ff5c8a', '#171717']
 export const CAT_COLORS = ['#e03bb0', '#ff5c8a', '#36c5a0', '#2aa6f5', '#ff8a3d']
 export const RADIUS_MODES = { retos: { label: 'Retos', r: 4 }, suaves: { label: 'Suaves', r: 14 }, redondos: { label: 'Redondos', r: 24 } }
 export const radiusMode = (r) => Object.entries(RADIUS_MODES).reduce((best, [k, v]) => (Math.abs(v.r - r) < Math.abs(RADIUS_MODES[best].r - r) ? k : best), 'suaves')

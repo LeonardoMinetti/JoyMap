@@ -222,40 +222,7 @@ export function UpdateMap() {
   )
 }
 
-// F6 · divulgar (modelos geram PNG de verdade, no navegador)
-function drawStory(kind, cv, { c, places, url, qrImg }) {
-  const W = 1080, H = 1350
-  cv.width = W; cv.height = H
-  const g = cv.getContext('2d')
-  const T = c.theme
-  const fillBg = (col) => { g.fillStyle = col; g.fillRect(0, 0, W, H) }
-  const text = (t, x, y, size, col, weight = 700, align = 'center') => { g.fillStyle = col; g.font = `${weight} ${size}px Archivo, Arial, sans-serif`; g.textAlign = align; g.fillText(t, x, y) }
-  const wrap = (t, x, y, size, col, maxW) => { const words = t.split(' '); let line = ''; let yy = y; for (const w of words) { const test = line ? `${line} ${w}` : w; if (g.measureText(test).width > maxW && line) { text(line, x, yy, size, col); line = w; yy += size * 1.1 } else line = test; g.font = `700 ${size}px Archivo, Arial, sans-serif` } text(line, x, yy, size, col) }
-  if (kind === 'map') {
-    fillBg(TONES[T.tone].tint)
-    const pts = places.filter(hasCoords)
-    if (pts.length) {
-      const la = pts.map((p) => p.lat), lo = pts.map((p) => p.lon)
-      const [a, b, d, e] = [Math.min(...la), Math.max(...la), Math.min(...lo), Math.max(...lo)]
-      for (const p of pts) {
-        const x = 120 + ((p.lon - d) / Math.max(e - d, 1e-6)) * (W - 240), y = 150 + ((b - p.lat) / Math.max(b - a, 1e-6)) * (H - 520)
-        g.fillStyle = '#fff'; g.beginPath(); g.arc(x, y, 30, 0, 7); g.fill(); g.fillStyle = catOf(T, p.category).color; g.beginPath(); g.arc(x, y, 24, 0, 7); g.fill()
-      }
-    }
-    text(c.displayName, W / 2, H - 200, 96, '#171717'); text(`${places.length} lugares indicados`, W / 2, H - 120, 44, '#404040', 600); text(url.replace(/^https?:\/\//, ''), W / 2, H - 56, 34, '#6b6b6b', 600)
-  } else if (kind === 'week') {
-    fillBg(T.accent); const on = onAccent(T)
-    text('LUGAR DA SEMANA', W / 2, 260, 48, on, 700)
-    g.font = '700 150px Archivo, Arial, sans-serif'; wrap((places[0]?.name || 'Seu lugar aqui').toUpperCase(), W / 2, 620, 150, on, W - 160)
-    text(`indicado por @${c.handle}`, W / 2, H - 180, 46, on, 600); text(url.replace(/^https?:\/\//, ''), W / 2, H - 110, 38, on, 600)
-  } else if (kind === 'qr') {
-    fillBg('#ffffff'); if (qrImg) g.drawImage(qrImg, 190, 220, 700, 700)
-    text(c.displayName, W / 2, 1060, 80, '#171717'); text('Aponte a câmera e veja os lugares no mapa', W / 2, 1140, 38, '#404040', 600); text(url.replace(/^https?:\/\//, ''), W / 2, 1230, 36, '#6b6b6b', 600)
-  } else {
-    fillBg('#171717'); g.font = '700 130px Archivo, Arial, sans-serif'; wrap('PROCURANDO ONDE COMER?', W / 2, 520, 130, '#fff', W - 160)
-    text('Todos os lugares que eu indico estão no mapa:', W / 2, 960, 44, '#d4d4d4', 600); text(url.replace(/^https?:\/\//, ''), W / 2, 1040, 54, T.accent, 700); text('link na bio', W / 2, 1140, 40, '#a3a3a3', 600)
-  }
-}
+// F6 · divulgar: o link do mapa e o código para incorporar
 // Endereço do mapa, domínio próprio e QR code (antes ficavam no Estúdio)
 function AddressCard() {
   const { me, reload } = useMe()
@@ -291,7 +258,6 @@ function AddressCard() {
   }
   return (
     <div className="col" style={{ gap: 16 }}>
-      <span className="eb">Endereço, domínio e QR code</span>
       {STATIC && <Note>Na demonstração o endereço do mapa e o domínio ficam fixos.</Note>}
       <div><label className="lb" htmlFor="s1">Endereço do mapa</label><div className="row"><div className="in f sp"><span className="mut nowrap">{location.host}/@</span><input id="s1" value={slug} disabled={STATIC} onChange={(e) => setSlug(e.target.value.toLowerCase())} />{slug === cr.slug ? <span className="tag ok">Seu endereço</span> : avail && <span className={'tag ' + (avail.available ? 'ok' : 'bd2')}>{avail.available ? 'Disponível' : avail.reason === 'em_uso' ? 'Em uso' : 'Inválido'}</span>}</div><button className="btn" disabled={STATIC || slug === cr.slug || !avail?.available} onClick={saveSlug}>Salvar</button></div>
         <span className="xs mut">Ao trocar o endereço, o link antigo para de funcionar. Atualize a bio.</span></div>
@@ -307,54 +273,26 @@ function AddressCard() {
 
 export function Promote() {
   useTitle('Divulgar')
-  const { me, reload } = useMe()
-  const [places] = usePlacesList()
-  const [qrImg, setQrImg] = useState(null)
-  const [tab, setTab] = useState('link')
-  const [kind, setKind] = useState('map')
+  const { me } = useMe()
   const c = me.creator
   const url = `${location.origin}/@${c.slug}`
   const embed = `<iframe src="${url}/incorporar" width="100%" height="480" style="border:0" title="Mapa de ${c.displayName}" loading="lazy"></iframe>`
-  useEffect(() => { QRCode.toDataURL(url, { margin: 1, width: 700 }).then((d) => { const i = new Image(); i.onload = () => setQrImg(i); i.src = d }) }, [url])
   const copy = (t, m) => navigator.clipboard?.writeText(t).then(() => toast(m)).catch(() => toast(t))
-  const confirmed = (places || []).filter((p) => p.status === 'confirmed')
-  const tiles = [['map', 'Mapa completo', 'Todos os pins do seu mapa'], ['week', 'Lugar da semana', 'Destaque uma indicação'], ['qr', 'QR para mesa de evento', 'Aponte a câmera e abra o mapa'], ['bio', 'Chamada para a bio', 'Texto para stories e posts']]
-  const thumbs = useRef({})
-  const big = useRef(null)
-  useEffect(() => { if (tab !== 'imagens' || !places) return; for (const [k] of tiles) if (thumbs.current[k]) drawStory(k, thumbs.current[k], { c, places: confirmed, url, qrImg }) }, [tab, places, qrImg])
-  useEffect(() => { if (tab === 'imagens' && places && big.current) drawStory(kind, big.current, { c, places: confirmed, url, qrImg }) }, [tab, kind, places, qrImg])
-  const download = (k) => { const cv = document.createElement('canvas'); drawStory(k, cv, { c, places: confirmed, url, qrImg }); const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `${k}-${c.slug}.png`; a.click() }
-  const flag = async (k) => { await api('/creator/settings', { method: 'PUT', body: { [k]: !c.settings[k] } }); reload() }
-  const bio = [['bioLinkIg', 'Instagram', 'insta', 'Perfil → Editar perfil → Links → cole o endereço do mapa.'], ['bioLinkTiktok', 'TikTok', 'tiktok', 'Perfil → Editar perfil → Site → cole o endereço do mapa.']]
   return (
     <PanelPage active="divulgar">
-      <Head title="Divulgar" sub="Leve seguidores ao seu mapa: link, QR code e imagens prontas" />
-      <nav className="sub-tabs" role="tablist" aria-label="Divulgar">{[['link', 'Link e endereço'], ['imagens', 'Imagens para posts'], ['incorporar', 'Incorporar em outro site']].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</nav>
-      {tab === 'link' && <>
-        <div className="card row" style={{ gap: 14, padding: 22 }}><span className="todo-ic" style={{ width: 44, height: 44 }}><Icon n="link" s={20} /></span><div className="sp" style={{ minWidth: 0 }}><span className="eb">O link do seu mapa</span><b className="d s26 trunc" style={{ display: 'block' }}>{location.host}/@{c.slug}</b></div><button className="btn" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><a className="btn ln" href={url} target="_blank" rel="noopener noreferrer">Abrir</a></div>
-        <div><span className="eb">Link na bio</span><p className="sm mut" style={{ margin: '4px 0 10px' }}>Troque o link do seu perfil pelo do mapa e marque quando fizer. Só você consegue trocar, no app da rede.</p>
-          <div className="g2">{bio.map(([k, l, ic, how]) => (
-            <div key={k} className="card col" style={{ gap: 10 }}>
-              <div className="row"><Icon n={ic} s={22} /><b className="sp">{l}</b><span className={'tag ' + (c.settings[k] ? 'ok' : 'wn')}>{c.settings[k] ? 'Link atualizado' : 'Ainda não'}</span></div>
-              <span className="sm mut">{how}</span>
-              <div className="row"><button className="btn sm ln" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><label className="row xs" style={{ gap: 8, cursor: 'pointer' }}><Switch on={!!c.settings[k]} onChange={() => flag(k)} label={`Link na bio do ${l} atualizado`} />Já atualizei</label></div>
-            </div>))}</div></div>
+      <Head title="Divulgar" sub="O link do seu mapa e como colocá-lo em outros lugares" />
+      <section className="col" style={{ gap: 16 }} aria-label="O link do seu mapa">
+        <h2 className="d s32">O link do seu mapa</h2>
+        <div className="card row" style={{ gap: 14, padding: 22 }}><span className="todo-ic" style={{ width: 44, height: 44 }}><Icon n="link" s={20} /></span><div className="sp" style={{ minWidth: 0 }}><span className="eb">Endereço atual</span><b className="d s26 trunc" style={{ display: 'block' }}>{location.host}/@{c.slug}</b></div><button className="btn" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><a className="btn ln" href={url} target="_blank" rel="noopener noreferrer">Abrir</a></div>
         <AddressCard />
-      </>}
-      {tab === 'imagens' && <div className="g2" style={{ gridTemplateColumns: 'minmax(240px,320px) 1fr', alignItems: 'start' }}>
-        <div className="col" style={{ gap: 10, minWidth: 0 }}>{tiles.map(([k, l, d]) => (
-          <button key={k} type="button" className={'card row' + (kind === k ? ' sel' : '')} style={{ gap: 12, padding: 10, textAlign: 'left' }} aria-pressed={kind === k} onClick={() => setKind(k)}>
-            <div style={{ width: 56, borderRadius: 10, overflow: 'hidden', background: 'var(--soft)', flex: 'none' }}><canvas ref={(el) => { thumbs.current[k] = el }} style={{ width: '100%', display: 'block' }} /></div>
-            <div className="sp"><b className="sm">{l}</b><div className="xs mut">{d}</div></div></button>))}
-          <span className="xs mut">As imagens têm 1080×1350 e usam as cores do seu mapa.</span></div>
-        <div className="card col" style={{ gap: 12, alignItems: 'center', minWidth: 0 }}>
-          <div style={{ width: 'min(340px, 100%)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 12px 34px rgba(23,23,19,.16)' }}><canvas ref={big} style={{ width: '100%', display: 'block' }} /></div>
-          <div className="row wrap"><button className="btn" disabled={!places} onClick={() => download(kind)}>Baixar PNG</button><button className="btn ln" onClick={() => copy(url, 'Link copiado')}>Copiar link para a legenda</button></div>
-        </div></div>}
-      {tab === 'incorporar' && <div className="card col" style={{ gap: 12 }}>
-        <b>Mapa dentro do seu site ou blog</b><span className="sm mut">Cole este código na página onde o mapa deve aparecer. Ele mostra só o mapa, com os seus pins.</span>
-        <div className="card soft xs" style={{ fontFamily: "'Courier New',monospace", wordBreak: 'break-all' }}>{embed}</div>
-        <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(embed, 'Código copiado')}>Copiar código</button></div>}
+      </section>
+      <section className="col" style={{ gap: 16 }} aria-label="Incorporar em outro site">
+        <h2 className="d s32">Incorporar em outro site</h2>
+        <div className="card col" style={{ gap: 12 }}>
+          <b>Mapa dentro do seu site ou blog</b><span className="sm mut">Cole este código na página onde o mapa deve aparecer. Ele mostra só o mapa, com os seus pins.</span>
+          <div className="card soft xs" style={{ fontFamily: "'Courier New',monospace", wordBreak: 'break-all' }}>{embed}</div>
+          <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(embed, 'Código copiado')}>Copiar código</button></div>
+      </section>
     </PanelPage>
   )
 }

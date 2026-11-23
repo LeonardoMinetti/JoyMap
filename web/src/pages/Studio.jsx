@@ -12,7 +12,7 @@ import { LIBS, SAMPLE_ICON } from '../iconcat.js'
 import { CATEGORIES } from '../../../server/theme.js'
 import { demoPlaces } from '../demoData.js'
 import { Phone, Native } from '../landing/device.jsx'
-import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, radiusMode, symOf } from '../theme.jsx'
+import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, onColor, radiusMode, symOf } from '../theme.jsx'
 
 // Lugares de exemplo com foto (as mesmas fotos livres usadas na demonstração), só até o criador confirmar os dele
 const SAMPLE_CATS = ['rest', 'cafe', 'bread', 'pizza', 'bar', 'burger', 'cake']
@@ -155,23 +155,31 @@ function useSortable(list, set) {
 }
 const upload = (file, max) => new Promise((res, rej) => { if (!file || file.size > max) return rej(new Error('size')); const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file) })
 
+const Sec = ({ title, hint, children, right }) => <section className="card col" style={{ gap: 14 }}>{(title || right) && <div className="row jb wrap" style={{ gap: 8 }}><div><b>{title}</b>{hint && <div className="xs mut">{hint}</div>}</div>{right}</div>}{children}</section>
+
 // D1 · visão geral
 export function StudioHome() {
   const s = useStudio()
   const T = s.theme
-  const mini = (to, vis, t, d) => <Link key={to} className="card click" to={to}>{vis}<b>{t}</b><span className="xs mut">{d}</span></Link>
-  const sq = (c, r = 12, w = 26) => <i key={c} className="sq" style={{ width: w, height: w, background: c, borderRadius: r }} />
+  const font = FONTS[T.font] || FONTS.sans
+  const shapeName = SHAPES[T.shape]
+  const apply = (tpl) => { s.setTheme(applyTemplate(T, tpl)); toast(`Modelo ${tpl.name} aplicado ao rascunho`) }
+  const dot = (c, k) => <i key={k} style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: '2px solid #fff', marginLeft: k ? -8 : 0, boxShadow: '0 0 0 1px rgba(0,0,0,.08)', display: 'inline-block' }} />
+  const cards = [
+    ['/estudio/cores', 'Cores e tema', `${font.label} · cantos ${RADIUS_MODES[radiusMode(T.radius)].label.toLowerCase()}`, <span className="row" style={{ gap: 0 }}>{[T.accent, T.bg, T.fg].map((c, k) => dot(c, k))}</span>],
+    ['/estudio/categorias', 'Categorias', 'A cor de cada uma', <span className="row" style={{ gap: 4 }}>{T.categories.slice(0, 5).map((c) => <i key={c.id} style={{ width: 14, height: 14, borderRadius: '50%', background: c.color, display: 'inline-block' }} />)}</span>],
+    ['/estudio/pins', 'Pins e símbolos', `Pin em ${shapeName.toLowerCase()} · pacote de símbolos`, <span className="row" style={{ gap: 4 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={20} c={c.color} /> })}</span>],
+    ['/estudio/mapa', 'Estilo do mapa', `${TONES[T.tone]?.label || 'Claro'} · rótulos ${T.mapLabels ? 'ligados' : 'desligados'}`, <div style={{ borderRadius: 10, overflow: 'hidden', width: 64, height: 36 }}><FakeMap h={36} tone={T.tone} n={0} lab={false} /></div>],
+  ]
   return (
     <Shell active="modelos" layout="main" previewWidth={460} title="Visão geral">
-      <p className="mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real. Comece por um modelo ou escolha uma seção.</p>
-      <div className="g3" style={{ gap: 14 }}>
-        {mini('/estudio/cores', <div className="row" style={{ gap: 6 }}>{[T.accent, T.bg, T.fg].map((c) => sq(c))}</div>, 'Cores e tema', 'Paleta, fonte, cantos')}
-        {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'A cor de cada uma')}
-        {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e símbolos', 'Formato e pacote de símbolos')}
-        {mini('/estudio/mapa', <div style={{ borderRadius: 8, overflow: 'hidden', height: 30 }}><FakeMap h={30} tone={T.tone} n={0} lab={false} /></div>, 'Estilo do mapa', 'Base e rótulos')}
-        {mini('/estudio/modelos', <Icon n="layers" s={22} />, 'Modelos prontos', 'Comece por um e ajuste')}
+      <div><h1 className="d s32">Seu estilo</h1><p className="sm mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real, e só vai ao ar quando você publicar.</p></div>
+      <Sec title="Comece por um modelo" hint="Aplica cores, fonte e pins de uma vez. Dá para ajustar tudo depois." right={<Link className="link xs" to="/estudio/modelos">Ver todos com prévia</Link>}>
+        <div className="row wrap" style={{ gap: 10 }}>{TEMPLATES.map((t) => <button key={t.id} type="button" className="tplchip" onClick={() => apply(t)}><span className="row" style={{ gap: 0 }}>{[t.t.accent, t.t.bg, t.t.fg].map((c, k) => dot(c, k))}</span>{t.name}</button>)}</div>
+      </Sec>
+      <div className="g2" style={{ gap: 14 }}>
+        {cards.map(([to, t, d, vis]) => <Link key={to} className="card click col" style={{ gap: 10 }} to={to}><div className="row jb"><b>{t}</b><Icon n="next" s={16} c="#8a8a8a" /></div><div style={{ minHeight: 36, display: 'flex', alignItems: 'center' }}>{vis}</div><span className="xs mut">{d}</span></Link>)}
       </div>
-      <Note>Dica: comece por um modelo e ajuste só o que importa. Todas as escolhas valem para o mapa, os cartões e a página.</Note>
     </Shell>
   )
 }
@@ -181,46 +189,50 @@ export function StudioColors() {
   const { theme: T, setTheme } = useStudio()
   const ratio = contrast(onAccent(T), T.accent)
   const textRatio = contrast(T.fg, T.bg)
+  const bad = ratio < 4.5 || textRatio < 4.5
   return (
     <Shell active="cores" title="Cores e tema">
       <h1 className="d s32">Cores e tema</h1>
-      <div><Lb>Cor principal</Lb><div className="row wrap" style={{ gap: 8 }}>{ACCENTS.map((a) => <button key={a} aria-label={`Cor ${a}`} className={'swatch' + (T.accent.toLowerCase() === a ? ' on' : '')} style={{ background: a }} onClick={() => setTheme({ accent: a })} />)}<label className="chip" style={{ position: 'relative' }}>Outra cor<input type="color" className="sr" value={T.accent} onChange={(e) => setTheme({ accent: e.target.value })} aria-label="Outra cor" /></label></div></div>
-      <div className="g2"><div><Lb>Fundo</Lb><ColorBox wide value={T.bg} onChange={(v) => setTheme({ bg: v })} label="Cor de fundo" /></div><div><Lb>Texto</Lb><ColorBox wide value={T.fg} onChange={(v) => setTheme({ fg: v })} label="Cor do texto" /></div></div>
-      <div><Lb>Fonte dos títulos</Lb><div className="g2" style={{ gap: 8 }}>{Object.entries(FONTS).map(([k, f]) => <button key={k} className={'card' + (T.font === k ? ' sel' : '')} style={{ padding: 10, textAlign: 'left', fontFamily: f.css, textTransform: f.upper ? 'uppercase' : 'none', fontWeight: 700, fontSize: f.size }} onClick={() => setTheme({ font: k })}>{f.label}</button>)}</div></div>
-      <div><Lb>Cantos dos botões e cartões</Lb><div className="row">{Object.entries(RADIUS_MODES).map(([k, m]) => <button key={k} className={'chip' + (radiusMode(T.radius) === k ? ' on' : '')} onClick={() => setTheme({ radius: m.r })}>{m.label}</button>)}</div></div>
-      <div className="row"><div className="sp"><b className="sm">Contraste automático</b><div className="xs mut">Ajusta o texto dos botões para ficar legível</div></div><Switch on={T.contrastAuto} onChange={(v) => setTheme({ contrastAuto: v })} label="Contraste automático" /></div>
-      <Note style={ratio < 4.5 || textRatio < 4.5 ? { background: 'var(--bads)', color: 'var(--bad)' } : undefined}>
-        {ratio >= 4.5 ? `Verificação de acessibilidade: o texto ${onAccent(T) === '#ffffff' ? 'branco' : 'escuro'} sobre esta cor passa no contraste mínimo (${ratio.toFixed(1)}:1).` : `Atenção: o texto sobre esta cor tem contraste ${ratio.toFixed(1)}:1, abaixo do mínimo de 4,5:1.${T.contrastAuto ? '' : ' Ligue o contraste automático.'}`}
-        {textRatio < 4.5 && ` O texto sobre o fundo está em ${textRatio.toFixed(1)}:1: escolha cores mais distantes.`}
-      </Note>
+      <Sec title="Cor principal" hint="Botões, destaques e o cartão dos roteiros">
+        <div className="row wrap" style={{ gap: 10 }}>{ACCENTS.map((a) => <button key={a} aria-label={`Cor ${a}`} aria-pressed={T.accent.toLowerCase() === a} className={'swatch big' + (T.accent.toLowerCase() === a ? ' on' : '')} style={{ background: a }} onClick={() => setTheme({ accent: a })}>{T.accent.toLowerCase() === a && <Icon n="check" s={18} c={onColor(a)} />}</button>)}<label className="chip" style={{ position: 'relative' }}>Outra cor<input type="color" className="sr" value={T.accent} onChange={(e) => setTheme({ accent: e.target.value })} aria-label="Outra cor" /></label></div>
+      </Sec>
+      <Sec title="Fundo e texto" hint="Veja como fica um cartão com as suas escolhas">
+        <div className="g2"><div><Lb>Fundo</Lb><ColorBox wide value={T.bg} onChange={(v) => setTheme({ bg: v })} label="Cor de fundo" /></div><div><Lb>Texto</Lb><ColorBox wide value={T.fg} onChange={(v) => setTheme({ fg: v })} label="Cor do texto" /></div></div>
+        <div className="row" style={{ background: T.bg, color: T.fg, borderRadius: T.radius, padding: 14, gap: 12, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.08)', fontFamily: (FONTS[T.font] || FONTS.sans).css }}>
+          <div className="sp"><b style={{ fontSize: 16 }}>Cafeteria Exemplo</b><div style={{ fontSize: 12, opacity: .7 }}>Pinheiros · aberto até as 18h</div></div>
+          <span style={{ background: T.accent, color: onAccent(T), borderRadius: Math.min(T.radius, 22), padding: '8px 14px', fontWeight: 700, fontSize: 13 }}>Abrir rota</span></div>
+        <div className="row wrap" style={{ gap: 6 }}><span className={'tag ' + (ratio >= 4.5 ? 'ok' : 'bd2')}>Botão {ratio.toFixed(1)}:1</span><span className={'tag ' + (textRatio >= 4.5 ? 'ok' : 'bd2')}>Texto {textRatio.toFixed(1)}:1</span><span className="xs mut">O mínimo recomendado é 4,5:1.</span></div>
+      </Sec>
+      <Sec title="Fonte dos títulos">
+        <div className="g2" style={{ gap: 10 }}>{Object.entries(FONTS).map(([k, f]) => <button key={k} className={'card col' + (T.font === k ? ' sel' : '')} style={{ padding: 14, textAlign: 'left', gap: 2, fontFamily: f.css, textTransform: f.upper ? 'uppercase' : 'none', fontWeight: 700 }} aria-pressed={T.font === k} onClick={() => setTheme({ font: k })}><span style={{ fontSize: 30, lineHeight: 1 }}>Aa</span><span style={{ fontSize: f.size }}>{f.label}</span></button>)}</div>
+      </Sec>
+      <Sec title="Cantos dos botões e cartões">
+        <div className="row" style={{ gap: 10 }}>{Object.entries(RADIUS_MODES).map(([k, m]) => <button key={k} className={'card col' + (radiusMode(T.radius) === k ? ' sel' : '')} style={{ padding: 12, alignItems: 'center', gap: 8, flex: 1 }} aria-pressed={radiusMode(T.radius) === k} onClick={() => setTheme({ radius: m.r })}><span style={{ width: 52, height: 36, background: 'var(--ink)', borderRadius: m.r }} /><span className="xs">{m.label}</span></button>)}</div>
+      </Sec>
+      <Sec><div className="row"><div className="sp"><b className="sm">Contraste automático</b><div className="xs mut">Ajusta o texto dos botões para ficar legível sobre a cor principal</div></div><Switch on={T.contrastAuto} onChange={(v) => setTheme({ contrastAuto: v })} label="Contraste automático" /></div>
+        {bad && <Note style={{ background: 'var(--bads)', color: 'var(--bad)' }}>Atenção: {ratio < 4.5 ? `o texto sobre a cor principal tem contraste ${ratio.toFixed(1)}:1.${T.contrastAuto ? '' : ' Ligue o contraste automático.'}` : ''}{textRatio < 4.5 ? ` O texto sobre o fundo está em ${textRatio.toFixed(1)}:1: escolha cores mais distantes.` : ''}</Note>}</Sec>
     </Shell>
   )
 }
 
-// D3 · categorias (lista fixa do wagli: só cor e símbolo mudam)
+// D3 · categorias (lista fixa do wagli: só a cor muda)
 export function StudioCategories() {
   const { theme: T, setTheme, places, c: cr } = useStudio()
-  const [sel, setSel] = useState(null)
   const count = (id) => places.filter((p) => p.category === id && (p.status === 'confirmed' || p.status === 'pending')).length
   const setCat = (i, patch) => setTheme((t) => ({ categories: t.categories.map((x, j) => (j === i ? { ...x, ...patch } : x)) }))
+  const palette = [...new Set([...CAT_COLORS, ...ACCENTS, '#a16207', '#7c3aed', '#0e9f8e'])].slice(0, 10)
   return (
     <Shell active="categorias" title="Categorias">
-      <h1 className="d s32">Categorias</h1>
-      <p className="sm mut">As categorias são as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor de cada uma. Os símbolos vêm do pacote escolhido em Pins e símbolos.</p>
-      {T.categories.map((cat, i) => {
+      <div><h1 className="d s32">Categorias</h1><p className="sm mut">São as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor de cada uma; os símbolos vêm do pacote em Pins e símbolos.</p></div>
+      <div className="g2" style={{ gap: 12 }}>{T.categories.map((cat, i) => {
         const { n, sym } = symOf(cat, cr.symbols)
-        const open = sel === i
         return (
-          <div key={cat.id} className={'card' + (open ? ' sel col' : '')} style={open ? { gap: 12 } : undefined}>
-            <div className="row"><span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span>
-              <div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugares</div></div>
-              <button aria-label={open ? 'Fechar edição' : `Editar ${cat.name}`} style={{ background: 'none', border: 0, padding: 4 }} onClick={() => setSel(open ? null : i)}><Icon n={open ? 'check' : 'edit'} s={18} /></button></div>
-            {open && <>
-              <div><span className="lb">Cor</span><div className="row" style={{ gap: 8 }}>{[cat.color, ...CAT_COLORS.filter((x) => x !== cat.color)].slice(0, 5).map((col) => <button key={col} aria-label={`Cor ${col}`} className={'dotsw' + (cat.color === col ? ' on' : '')} style={{ background: col }} onClick={() => setCat(i, { color: col })} />)}
-                <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={cat.color} onChange={(e) => setCat(i, { color: e.target.value })} aria-label="Outra cor da categoria" /></label></div></div>
-            </>}
+          <div key={cat.id} className="card col" style={{ gap: 12, padding: 14 }}>
+            <div className="row"><span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span><div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugar{count(cat.id) === 1 ? '' : 'es'}</div></div></div>
+            <div className="row wrap" style={{ gap: 6 }}>{[cat.color, ...palette.filter((x) => x.toLowerCase() !== cat.color.toLowerCase())].slice(0, 7).map((col, k) => <button key={col} aria-label={`Cor ${col} em ${cat.name}`} aria-pressed={k === 0} className={'dotsw sm' + (k === 0 ? ' on' : '')} style={{ background: col }} onClick={() => setCat(i, { color: col })} />)}
+              <label className="dotsw sm" style={{ position: 'relative', background: 'conic-gradient(#ff4b2b,#ffc400,#12b76a,#2d7ff9,#9b5cff,#ff4b2b)', display: 'block' }} title="Outra cor"><input type="color" className="sr" value={cat.color} onChange={(e) => setCat(i, { color: e.target.value })} aria-label={`Outra cor para ${cat.name}`} /></label></div>
           </div>)
-      })}
+      })}</div>
     </Shell>
   )
 }
@@ -248,17 +260,20 @@ function SymbolPicker() {
 
 // D5 · estilo do mapa
 export function StudioMap() {
-  const { theme: T, setTheme, real, c: cr } = useStudio()
-  const [view, setView] = useState(null)
+  const { theme: T, setTheme } = useStudio()
   return (
     <Shell active="mapa" title="Estilo do mapa">
       <h1 className="d s32">Estilo do mapa</h1>
-      <div className="g2" style={{ gap: 10 }}>
-        {Object.entries(TONES).map(([k, t]) => <button key={k} className={'card col' + (T.tone === k ? ' sel' : '')} style={{ padding: 8, gap: 6, textAlign: 'left' }} onClick={() => setTheme({ tone: k })}><div style={{ borderRadius: 10, overflow: 'hidden', pointerEvents: 'none' }}><FakeMap h={100} tone={k} n={5} lab={false} /></div><b className="xs">{t.label}</b></button>)}
-        <div className="card soft col" style={{ padding: 8, gap: 6, justifyContent: 'center', alignItems: 'center' }}><Icon n="plus" s={22} /><b className="xs">Mais estilos em breve</b></div>
-      </div>
-      <div className="row"><div className="sp"><b className="sm">Nomes de bairros</b><div className="xs mut">Mostrar rótulos no mapa (até o zoom 12)</div></div><Switch on={T.mapLabels} onChange={(v) => setTheme({ mapLabels: v })} label="Nomes de bairros" /></div>
-      <div><Lb>Densidade de rótulos</Lb><Slider value={T.labelDensity} onChange={(v) => setTheme({ labelDensity: v })} label="Densidade de rótulos" /></div>
+      <Sec title="Base do mapa" hint="O desenho das ruas e dos bairros por trás dos seus pins">
+        <div className="g2" style={{ gap: 10 }}>
+          {Object.entries(TONES).map(([k, t]) => <button key={k} aria-pressed={T.tone === k} className={'card col' + (T.tone === k ? ' sel' : '')} style={{ padding: 8, gap: 8, textAlign: 'left' }} onClick={() => setTheme({ tone: k })}><div style={{ borderRadius: 12, overflow: 'hidden', pointerEvents: 'none', position: 'relative' }}><FakeMap h={110} tone={k} n={5} lab={false} />{T.tone === k && <span style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: 'var(--ink)', display: 'grid', placeItems: 'center' }}><Icon n="check" s={14} c="#fff" /></span>}</div><b className="xs" style={{ paddingLeft: 4 }}>{t.label}</b></button>)}
+          <div className="card soft col" style={{ padding: 8, gap: 6, justifyContent: 'center', alignItems: 'center' }}><Icon n="plus" s={22} /><b className="xs">Mais estilos em breve</b></div>
+        </div>
+      </Sec>
+      <Sec title="Nomes de bairros">
+        <div className="row"><div className="sp"><b className="sm">Mostrar rótulos no mapa</b><div className="xs mut">Aparecem até o zoom 12</div></div><Switch on={T.mapLabels} onChange={(v) => setTheme({ mapLabels: v })} label="Nomes de bairros" /></div>
+        <div style={{ opacity: T.mapLabels ? 1 : 0.45 }}><div className="row jb"><Lb>Quantidade de rótulos</Lb><b className="xs">{T.labelDensity}%</b></div><Slider value={T.labelDensity} onChange={(v) => setTheme({ labelDensity: v })} label="Quantidade de rótulos" /></div>
+      </Sec>
       <Note>Os estilos de mapa são do OpenFreeMap (Positron, Bright, Fiord e Dark), sobre dados do OpenStreetMap. Revise o uso dos tiles antes do lançamento. Créditos dos símbolos: <a className="link" href="/licencas-simbolos.txt" target="_blank" rel="noopener">licenças</a>.</Note>
     </Shell>
   )
@@ -278,13 +293,17 @@ export function StudioPins() {
   return (
     <Shell active="pins" title="Pins e símbolos">
       <h1 className="d s32">Pins e símbolos</h1>
-      <h2 className="d s26">Pin</h2>
-      <div><Lb>Formato</Lb><div className="g4" style={{ gap: 8 }}>{Object.entries(SHAPES).map(([k, l]) => <button key={k} className={'card col' + (T.shape === k ? ' sel' : '')} style={{ alignItems: 'center', padding: 10, gap: 6 }} onClick={() => setTheme({ shape: k })}>{shapeBox(k)}<span className="xs">{l}</span></button>)}</div></div>
-      <div className="row"><div className="sp"><b className="sm">Borda branca</b><div className="xs mut">Melhora a leitura em mapas escuros</div></div><Switch on={T.pinBorder} onChange={(v) => setTheme({ pinBorder: v })} label="Borda branca" /></div>
-      <div className="row"><div className="sp"><b className="sm">Agrupar pins próximos</b><div className="xs mut">Mostra o total quando o zoom é baixo</div></div><Switch on={T.cluster} onChange={(v) => setTheme({ cluster: v })} label="Agrupar pins próximos" /></div>
-      <div className="card soft row" style={{ gap: 14 }}><span style={{ width: 40, height: 40, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 16px Archivo' }}>12</span><span style={{ width: 34, height: 34, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 14px Archivo' }}>5</span><span className="sm mut sp">Estilo do grupo: círculo escuro com contagem</span></div>
-      <div><Lb>Pin selecionado</Lb><div className="row wrap">{[['outline', 'Maior com contorno'], ['pulse', 'Pulsando'], ['color', 'Só cor']].map(([k, l]) => <button key={k} className={'chip' + (T.selected === k ? ' on' : '')} onClick={() => setTheme({ selected: k })}>{l}</button>)}</div></div>
-      <div className="sep" />
+      <Sec title="Formato do pin">
+        <div className="g4" style={{ gap: 8 }}>{Object.entries(SHAPES).map(([k, l]) => <button key={k} aria-pressed={T.shape === k} className={'card col' + (T.shape === k ? ' sel' : '')} style={{ alignItems: 'center', padding: 10, gap: 6 }} onClick={() => setTheme({ shape: k })}>{shapeBox(k)}<span className="xs">{l}</span></button>)}</div>
+      </Sec>
+      <Sec title="Detalhes">
+        <div className="row"><div className="sp"><b className="sm">Borda branca</b><div className="xs mut">Melhora a leitura em mapas escuros</div></div><Switch on={T.pinBorder} onChange={(v) => setTheme({ pinBorder: v })} label="Borda branca" /></div>
+        <div className="sep" />
+        <div className="row"><div className="sp"><b className="sm">Agrupar pins próximos</b><div className="xs mut">Mostra o total quando o zoom é baixo</div></div><Switch on={T.cluster} onChange={(v) => setTheme({ cluster: v })} label="Agrupar pins próximos" /></div>
+        {T.cluster && <div className="row" style={{ gap: 10 }}><span style={{ width: 38, height: 38, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 15px Archivo' }}>12</span><span style={{ width: 30, height: 30, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 13px Archivo' }}>5</span><span className="xs mut sp">Estilo do grupo: círculo escuro com a contagem</span></div>}
+        <div className="sep" />
+        <div><Lb>Pin selecionado</Lb><div className="row wrap">{[['outline', 'Maior com contorno'], ['pulse', 'Pulsando'], ['color', 'Só cor']].map(([k, l]) => <button key={k} className={'chip' + (T.selected === k ? ' on' : '')} aria-pressed={T.selected === k} onClick={() => setTheme({ selected: k })}>{l}</button>)}</div></div>
+      </Sec>
       <SymbolPicker />
     </Shell>
   )
