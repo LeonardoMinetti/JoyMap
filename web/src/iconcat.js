@@ -59,8 +59,8 @@ export const LIB_ID = /^lib:(fluent3d|noto|lucide):([a-z0-9-]{1,48})$/
 
 // Equivalência entre as categorias dos exemplos (cafe, bar...) e o ícone de cada biblioteca.
 export const SAMPLE_ICON = {
-  fluent3d: { cafe: 'hot-beverage', bar: 'cocktail-glass', rest: 'fork-and-knife-with-plate', fish: 'sushi', burger: 'hamburger', pizza: 'pizza', cake: 'birthday-cake', bread: 'croissant' },
-  lucide: { cafe: 'coffee', bar: 'martini', rest: 'utensils', fish: 'fish', burger: 'sandwich', pizza: 'pizza', cake: 'cake-slice', bread: 'croissant' },
+  fluent3d: { cafe: 'hot-beverage', bar: 'cocktail-glass', rest: 'fork-and-knife-with-plate', fish: 'sushi', burger: 'hamburger', pizza: 'pizza', cake: 'birthday-cake', bread: 'croissant', tour: 'shopping-bags', ice: 'ice-cream' },
+  lucide: { cafe: 'coffee', bar: 'martini', rest: 'utensils', fish: 'fish', burger: 'sandwich', pizza: 'pizza', cake: 'cake-slice', bread: 'croissant', tour: 'store', ice: 'ice-cream-cone' },
 }
 SAMPLE_ICON.noto = SAMPLE_ICON.fluent3d
 

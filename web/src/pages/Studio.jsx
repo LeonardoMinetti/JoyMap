@@ -8,7 +8,8 @@ import FakeMap from '../FakeMap.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import MapSheet from '../pub/MapSheet.jsx'
 import { pubVars } from '../pub/shared.jsx'
-import { LIBS } from '../iconcat.js'
+import { LIBS, SAMPLE_ICON } from '../iconcat.js'
+import { CATEGORIES } from '../../../server/theme.js'
 import { demoPlaces } from '../demoData.js'
 import { Phone, Native } from '../landing/device.jsx'
 import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, radiusMode, symOf } from '../theme.jsx'
@@ -165,8 +166,8 @@ export function StudioHome() {
       <p className="mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real. Comece por um modelo ou escolha uma seção.</p>
       <div className="g3" style={{ gap: 14 }}>
         {mini('/estudio/cores', <div className="row" style={{ gap: 6 }}>{[T.accent, T.bg, T.fg].map((c) => sq(c))}</div>, 'Cores e tema', 'Paleta, fonte, cantos')}
-        {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'Cor e símbolo de cada uma')}
-        {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e símbolos', 'Formato, símbolos e agrupamento')}
+        {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'A cor de cada uma')}
+        {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e símbolos', 'Formato e pacote de símbolos')}
         {mini('/estudio/mapa', <div style={{ borderRadius: 8, overflow: 'hidden', height: 30 }}><FakeMap h={30} tone={T.tone} n={0} lab={false} /></div>, 'Estilo do mapa', 'Base e rótulos')}
         {mini('/estudio/layout', <div className="ph" style={{ height: 30 }}>blocos</div>, 'Layout da página', 'Ordem, capa, lista ou grade')}
         {mini('/estudio/modelos', <Icon n="layers" s={22} />, 'Modelos prontos', 'Comece por um e ajuste')}
@@ -203,11 +204,10 @@ export function StudioCategories() {
   const [sel, setSel] = useState(null)
   const count = (id) => places.filter((p) => p.category === id && (p.status === 'confirmed' || p.status === 'pending')).length
   const setCat = (i, patch) => setTheme((t) => ({ categories: t.categories.map((x, j) => (j === i ? { ...x, ...patch } : x)) }))
-  const common = ['rest', 'heart', 'star', 'bread']
   return (
     <Shell active="categorias" title="Categorias">
       <h1 className="d s32">Categorias</h1>
-      <p className="sm mut">As categorias são as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor e o símbolo de cada uma.</p>
+      <p className="sm mut">As categorias são as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor de cada uma. Os símbolos vêm do pacote escolhido em Pins e símbolos.</p>
       {T.categories.map((cat, i) => {
         const { n, sym } = symOf(cat, cr.symbols)
         const open = sel === i
@@ -217,9 +217,6 @@ export function StudioCategories() {
               <div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugares</div></div>
               <button aria-label={open ? 'Fechar edição' : `Editar ${cat.name}`} style={{ background: 'none', border: 0, padding: 4 }} onClick={() => setSel(open ? null : i)}><Icon n={open ? 'check' : 'edit'} s={18} /></button></div>
             {open && <>
-              <div className="row wrap" style={{ gap: 6 }}><span className="lb" style={{ margin: 0, width: '100%' }}>Símbolo</span>
-                {[cat.icon, ...common.filter((x) => x !== cat.icon)].slice(0, 4).map((k) => { const s2 = symOf({ icon: k }, cr.symbols); return <button key={k} aria-label={`Símbolo ${k}`} className={'chip' + (cat.icon === k ? ' on' : '')} onClick={() => setCat(i, { icon: k })}><Icon n={s2.n} sym={s2.sym} s={16} c={cat.icon === k ? '#fff' : '#171717'} /></button> })}
-                <Link className="chip" to={`/estudio/pins?cat=${cat.id}`}>Ver todos</Link></div>
               <div><span className="lb">Cor</span><div className="row" style={{ gap: 8 }}>{[cat.color, ...CAT_COLORS.filter((x) => x !== cat.color)].slice(0, 5).map((col) => <button key={col} aria-label={`Cor ${col}`} className={'dotsw' + (cat.color === col ? ' on' : '')} style={{ background: col }} onClick={() => setCat(i, { color: col })} />)}
                 <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={cat.color} onChange={(e) => setCat(i, { color: e.target.value })} aria-label="Outra cor da categoria" /></label></div></div>
             </>}
@@ -230,59 +227,22 @@ export function StudioCategories() {
 }
 
 // D4 · biblioteca de símbolos
-const SYMBOL_ERR = { svg_grande: 'O arquivo passa de 50 KB.', svg_inseguro: 'O SVG tem elementos não permitidos (scripts, imagens ou links).', svg_sem_path: 'Só aceitamos desenhos feitos com caminhos (path). Converta as formas em contorno e exporte de novo.', svg_invalido: 'Não conseguimos ler este SVG.', limite_20: 'Limite de 20 símbolos enviados.' }
+// Pacote de símbolos: vale para todas as categorias de uma vez (o criador não escolhe símbolo por categoria)
+const PACKS = [['base', 'Básicos', 'Ícones simples do wagli'], ...Object.entries(LIBS).map(([k, v]) => [k, v.label, v.long])]
+const packIcon = (pack, cat) => (pack === 'base' ? CATEGORIES.find((c) => c.id === cat.id).icon : `lib:${pack}:${SAMPLE_ICON[pack][cat.id]}`)
 function SymbolPicker() {
-  const { theme: T, setTheme, c: cr, reload } = useStudio()
-  const [grp, setGrp] = useState('Comida')
-  const [style, setStyle] = useState(() => (/^lib:([a-z0-9]+):/.exec(T.categories[0]?.icon || '') || [])[1] || 'base')
-  const [q, setQ] = useState('')
-  const [target, setTarget] = useState(() => new URLSearchParams(location.search).get('cat'))
-  const idx = Math.max(0, T.categories.findIndex((x) => x.id === target))
-  const cat = T.categories[idx]
-  const GROUPS = style === 'base' ? ['Comida', 'Bebidas', 'Passeios', 'Viagem', 'Compras', 'Formas'] : ['Comida', 'Doces', 'Bebidas', 'Lugares', 'Destaques']
-  const STYLES = [['base', 'Básicos'], ...Object.entries(LIBS).map(([k, v]) => [k, v.label]), ['mine', 'Meus envios']]
-  const lib = LIBS[style]
-  const libItems = lib ? lib.cat.filter(([, l, g]) => (!q ? g === grp : l.toLowerCase().includes(q.toLowerCase()))) : []
-  const cols = ['#ff4b2b', '#a16207', '#7c3aed', '#f59e0b', '#ec4899', '#dc2626', '#2d7ff9', '#ea580c']
-  const items = style !== 'base' ? [] : SYMBOL_LIBRARY.filter(([, l, g]) => (!q ? g === grp : l.toLowerCase().includes(q.toLowerCase())))
-  const apply = (icon) => { setTheme({ categories: T.categories.map((c, j) => (j === idx ? { ...c, icon } : c)) }); toast(`Símbolo aplicado em "${cat.name}"`) }
-  const file = useRef(null)
-  const send = async (f) => {
-    if (!f) return
-    try {
-      const svg = await f.text()
-      await api('/creator/symbols', { method: 'POST', body: { name: f.name.replace(/\.svg$/i, ''), svg } })
-      await reload(); setStyle('mine'); toast('Enviado. Passa a valer no mapa depois da revisão.')
-    } catch (e) { toast(SYMBOL_ERR[e.message] || 'Não foi possível enviar o símbolo.') }
-    if (file.current) file.current.value = ''
-  }
+  const { theme: T, setTheme, c: cr } = useStudio()
+  const current = PACKS.find(([k]) => T.categories.every((c) => c.icon === packIcon(k, c)))?.[0] || null
+  const apply = (k, label) => { setTheme((t) => ({ categories: t.categories.map((c) => ({ ...c, icon: packIcon(k, c) })) })); toast(`Pacote ${label} aplicado a todas as categorias`) }
+  const show = (k, c) => { const id = packIcon(k, c); const lib = LIBS[k]; return <span key={c.id} title={c.name} style={{ width: 34, height: 34, borderRadius: '50%', background: lib?.color ? '#f1f1f4' : c.color, display: 'grid', placeItems: 'center' }}>{k === 'base' ? <Icon {...symOf({ icon: id }, cr.symbols)} s={18} c="#fff" /> : <Icon sym={{ lib: id }} s={lib.color ? 24 : 18} c="#fff" />}</span> }
   return (
     <>
-      <div className="row jb wrap"><h2 className="d s26">Símbolo de cada categoria</h2><div className="in" style={{ width: 260 }}><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar símbolo" aria-label="Buscar símbolo" /></div></div>
-      <div className="row wrap" role="group" aria-label="Categoria que recebe o símbolo">{T.categories.map((c) => { const s2 = symOf(c, cr.symbols); return <button key={c.id} className={'chip' + (cat.id === c.id ? ' on' : '')} aria-pressed={cat.id === c.id} onClick={() => setTarget(c.id)}><span className="ms-dot" style={{ background: c.color, width: 10, height: 10, borderRadius: '50%', display: 'inline-block' }} />{c.name}</button> })}</div>
-      <p className="sm mut">Aplicando em: <b>{cat.name}</b></p>
-      <div className="row wrap" role="tablist" aria-label="Estilo do símbolo">{STYLES.map(([k, l]) => <button key={k} role="tab" aria-selected={style === k} className={'chip' + (style === k ? ' on' : '')} onClick={() => { setStyle(k); setQ('') }}>{l}</button>)}</div>
-      {style !== 'mine' && <div className="row wrap">{GROUPS.map((g) => <button key={g} className={'chip' + (grp === g && !q ? ' on' : '')} style={{ background: grp === g && !q ? undefined : 'transparent' }} onClick={() => { setGrp(g); setQ('') }}>{g}</button>)}</div>}
-      {lib && <p className="xs mut">{lib.long}. Licença {lib.license}. {lib.color ? 'O desenho traz as próprias cores.' : 'Usa a cor da categoria.'}</p>}
-      {style === 'mine' ? (
-        <div className="g5" style={{ gap: 12 }}>{cr.symbols.map((s, i) => (
-          <div key={s.id} className="card col" style={{ alignItems: 'center', gap: 8, padding: 14 }}>
-            <button disabled={s.status !== 'approved'} aria-label={`Usar ${s.name}`} style={{ width: 48, height: 48, borderRadius: '50%', background: cols[i % cols.length], display: 'grid', placeItems: 'center', border: 0, opacity: s.status === 'approved' ? 1 : 0.5, cursor: s.status === 'approved' ? 'pointer' : 'not-allowed' }} onClick={() => apply(`custom:${s.id}`)}><Icon sym={s} s={24} c="#fff" /></button>
-            <span className="xs mut trunc" style={{ maxWidth: '100%' }}>{s.name}</span>
-            <span className={'tag ' + (s.status === 'approved' ? 'ok' : s.status === 'rejected' ? 'bd2' : 'wn')}>{s.status === 'approved' ? 'Liberado' : s.status === 'rejected' ? 'Recusado' : 'Em análise'}</span>
-            <button className="link xs" onClick={async () => { await api(`/creator/symbols/${s.id}`, { method: 'DELETE' }); await reload() }}>Remover</button></div>))}
-          {!cr.symbols.length && <p className="mut sm" style={{ gridColumn: '1/-1' }}>Você ainda não enviou símbolos.</p>}</div>
-      ) : lib ? (
-        <div className="g5" style={{ gap: 12 }}>{libItems.map(([n, l]) => { const id = `lib:${style}:${n}`; return (
-          <button key={n} className={'card col' + (cat.icon === id ? ' sel' : '')} style={{ alignItems: 'center', gap: 8, padding: 14 }} onClick={() => apply(id)} aria-label={`Usar ${l}`}><span style={{ width: 48, height: 48, borderRadius: '50%', background: lib.color ? '#f1f1f4' : cat.color, display: 'grid', placeItems: 'center' }}><Icon sym={{ lib: id }} s={lib.color ? 32 : 24} c="#fff" /></span><span className="xs mut">{l}</span></button>) })}
-          {!libItems.length && <p className="mut sm" style={{ gridColumn: '1/-1' }}>Nenhum símbolo encontrado.</p>}</div>
-      ) : (
-        <div className="g5" style={{ gap: 12 }}>{items.map(([n, l], i) => (
-          <button key={n} className={'card col' + (cat.icon === n ? ' sel' : '')} style={{ alignItems: 'center', gap: 8, padding: 14 }} onClick={() => apply(n)}><span style={{ width: 48, height: 48, borderRadius: '50%', background: cols[SYMBOL_LIBRARY.findIndex((x) => x[0] === n) % cols.length], display: 'grid', placeItems: 'center' }}><Icon n={n} s={24} c="#fff" /></span><span className="xs mut">{l}</span></button>))}
-          {!items.length && <p className="mut sm" style={{ gridColumn: '1/-1' }}>Nenhum símbolo encontrado.</p>}</div>
-      )}
-      <div className="card soft row" style={{ gap: 16, border: '2px dashed var(--line)' }}><span className="sq" style={{ display: 'grid', placeItems: 'center', background: '#fff' }}><Icon n="up" s={22} /></span><div className="sp"><b>Envie o seu próprio símbolo</b><div className="sm mut">SVG de uma cor, até 50 KB, só caminhos (path). Revisamos antes de liberar.</div></div>
-        <input ref={file} type="file" accept=".svg,image/svg+xml" className="sr" id="svgfile" onChange={(e) => send(e.target.files[0])} /><label htmlFor="svgfile" className="btn sec sm">Escolher arquivo</label></div>
+      <div><h2 className="d s26">Pacote de símbolos</h2><p className="sm mut">O pacote vale para todas as categorias de uma vez, no mapa e nos pins.</p></div>
+      <div className="col" style={{ gap: 10 }}>{PACKS.map(([k, label, desc]) => (
+        <button key={k} type="button" className={'card col' + (current === k ? ' sel' : '')} style={{ gap: 10, textAlign: 'left' }} aria-pressed={current === k} onClick={() => apply(k, label)}>
+          <div className="row jb"><div><b className="sm">{label}</b><div className="xs mut">{desc}{LIBS[k] ? `. Licença ${LIBS[k].license}.` : ''}</div></div>{current === k && <span className="tag ok">Em uso</span>}</div>
+          <div className="row wrap" style={{ gap: 8 }}>{T.categories.map((c) => show(k, c))}</div>
+        </button>))}</div>
     </>
   )
 }
