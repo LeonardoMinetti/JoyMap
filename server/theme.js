@@ -1,9 +1,9 @@
 // Tema visual do criador: validação de tudo que vem do cliente + saneamento de SVG enviado.
 export const ICONS = ['rest', 'cafe', 'bar', 'bread', 'cake', 'pizza', 'fish', 'burger', 'heart', 'star', 'flag', 'store', 'clock', 'spark']
-export const BLOCKS = ['header', 'links', 'filters', 'map', 'list', 'routes']
+export const BLOCKS = ['header', 'filters', 'map', 'list', 'routes']
 const FONTS = ['sans', 'disp', 'serif', 'fraunces', 'playfair', 'mono']
-const TONES = ['light', 'bright', 'liberty', 'fiord', 'dark']
-const TONE_LEGACY = { sepia: 'liberty', mint: 'bright', blue: 'fiord' } // estilos antigos (Snazzy) viram os equivalentes do OpenFreeMap
+const TONES = ['light', 'bright', 'fiord', 'dark']
+const TONE_LEGACY = { sepia: 'bright', liberty: 'bright', mint: 'bright', blue: 'fiord' } // estilos antigos (Snazzy) viram os equivalentes do OpenFreeMap
 const SHAPES = ['drop', 'circle', 'square', 'hex']
 const SELECTED = ['outline', 'pulse', 'color']
 const LINK_STYLES = ['fill', 'line', 'soft']
@@ -11,8 +11,21 @@ const HEIGHTS = ['sm', 'md', 'lg']
 const LISTS = ['grid', 'rows']
 const HEX = /^#[0-9a-fA-F]{6}$/
 
+// Categorias fixas do wagli: o criador não adiciona, remove nem renomeia; só escolhe cor e símbolo de cada uma.
+export const CATEGORIES = [
+  { id: 'bar', name: 'Bar & Cervejaria', color: '#7c3aed', icon: 'bar' },
+  { id: 'cafe', name: 'Cafeteria & Comidinhas', color: '#a16207', icon: 'cafe' },
+  { id: 'cake', name: 'Doces & Confeitaria', color: '#ec4899', icon: 'cake' },
+  { id: 'burger', name: 'Hamburgueria & Lanches', color: '#ea580c', icon: 'burger' },
+  { id: 'bread', name: 'Padarias', color: '#f59e0b', icon: 'bread' },
+  { id: 'tour', name: 'Passeios, Experiências e Lojas', color: '#0e9f8e', icon: 'store' },
+  { id: 'pizza', name: 'Pizza', color: '#dc2626', icon: 'pizza' },
+  { id: 'rest', name: 'Restaurante', color: '#ff4b2b', icon: 'rest' },
+  { id: 'ice', name: 'Sorveteria', color: '#2aa6f5', icon: 'lib:lucide:ice-cream-cone' },
+]
+
 export const DEFAULT_LAYOUT = {
-  blocks: [{ id: 'header', on: true }, { id: 'links', on: true }, { id: 'filters', on: true }, { id: 'map', on: true }, { id: 'list', on: true }, { id: 'routes', on: false }],
+  blocks: [{ id: 'header', on: true }, { id: 'filters', on: true }, { id: 'map', on: true }, { id: 'list', on: true }, { id: 'routes', on: false }],
   mapHeight: 'md', listStyle: 'grid', cover: false,
 }
 
@@ -21,12 +34,7 @@ export const DEFAULT_THEME = {
   tone: 'light', shape: 'drop', pinSize: 55, pinBorder: true, cluster: true, selected: 'outline',
   mapLabels: true, labelDensity: 40, start: 'all', startView: null,
   linkStyle: 'fill', social: { instagram: true, tiktok: false }, bio: '', layout: DEFAULT_LAYOUT,
-  categories: [
-    { id: 'rest', name: 'Restaurantes', color: '#ff4b2b', icon: 'rest' }, { id: 'cafe', name: 'Cafés', color: '#a16207', icon: 'cafe' },
-    { id: 'bar', name: 'Drinks', color: '#7c3aed', icon: 'bar' }, { id: 'bread', name: 'Padarias', color: '#f59e0b', icon: 'bread' },
-    { id: 'cake', name: 'Doces', color: '#ec4899', icon: 'cake' }, { id: 'pizza', name: 'Pizza', color: '#dc2626', icon: 'pizza' },
-    { id: 'fish', name: 'Japonês', color: '#2d7ff9', icon: 'fish' }, { id: 'burger', name: 'Lanches', color: '#ea580c', icon: 'burger' },
-  ],
+  categories: CATEGORIES.map((c) => ({ ...c })),
 }
 
 const pick = (list, v, fb) => (list.includes(v) ? v : fb)
@@ -55,7 +63,7 @@ export function sanitizeTheme(input = {}) {
   const out = {
     accent: HEX.test(t.accent) ? t.accent : DEFAULT_THEME.accent, bg: HEX.test(t.bg) ? t.bg : DEFAULT_THEME.bg, fg: HEX.test(t.fg) ? t.fg : DEFAULT_THEME.fg,
     font: pick(FONTS, t.font, 'sans'), radius: Math.max(0, Math.min(32, parseInt(t.radius, 10) || 0)), contrastAuto: t.contrastAuto !== false,
-    tone: pick(TONES, TONE_LEGACY[t.tone] || t.tone, 'light'), shape: pick(SHAPES, t.shape, 'drop'), pinSize: num(t.pinSize, 0, 100, 55), pinBorder: t.pinBorder !== false,
+    tone: pick(TONES, TONE_LEGACY[t.tone] || t.tone, 'light'), shape: pick(SHAPES, t.shape, 'drop'), pinSize: 55, pinBorder: t.pinBorder !== false,
     cluster: t.cluster !== false, selected: pick(SELECTED, t.selected, 'outline'), mapLabels: t.mapLabels !== false, labelDensity: num(t.labelDensity, 0, 100, 40),
     start: 'all', startView: null, // o ponto inicial do mapa não é mais configurável: sempre enquadra todos os lugares
     linkStyle: pick(LINK_STYLES, t.linkStyle, 'fill'),
@@ -63,12 +71,9 @@ export function sanitizeTheme(input = {}) {
     bio: String(t.bio || '').slice(0, 160),
     layout: sanitizeLayout(input?.layout, input || {}),
   }
-  const seen = new Set()
-  out.categories = (Array.isArray(t.categories) ? t.categories : DEFAULT_THEME.categories).slice(0, 16).map((c) => ({
-    id: String(c.id || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 20), name: String(c.name || '').slice(0, 30),
-    color: HEX.test(c.color) ? c.color : '#ff4b2b', icon: ICONS.includes(c.icon) || /^custom:\d{1,9}$/.test(String(c.icon)) || /^lib:(fluent3d|noto|lucide):[a-z0-9-]{1,48}$/.test(String(c.icon)) ? c.icon : 'rest',
-  })).filter((c) => c.id && c.name && !seen.has(c.id) && seen.add(c.id))
-  if (!out.categories.length) out.categories = DEFAULT_THEME.categories
+  const given = new Map((Array.isArray(t.categories) ? t.categories : []).map((c) => [String(c?.id), c || {}]))
+  const okIcon = (i) => ICONS.includes(i) || /^custom:\d{1,9}$/.test(String(i)) || /^lib:(fluent3d|noto|lucide):[a-z0-9-]{1,48}$/.test(String(i))
+  out.categories = CATEGORIES.map((d) => { const g = given.get(d.id) || {}; return { ...d, color: HEX.test(g.color) ? g.color : d.color, icon: okIcon(g.icon) ? g.icon : d.icon } })
   return out
 }
 

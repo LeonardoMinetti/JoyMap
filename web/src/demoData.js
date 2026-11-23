@@ -2,7 +2,7 @@
 // Usados no mapa público /@demo e nas vitrines da landing. Não são recomendações nem clientes reais.
 export const DEMO_SLUG = 'demo'
 export const DEMO_PLACES = [
-  { id: 1, name: 'Izakaya Exemplo', category: 'fish', neighborhood: 'Liberdade', lat: -23.5588, lon: -46.6354 },
+  { id: 1, name: 'Izakaya Exemplo', category: 'rest', neighborhood: 'Liberdade', lat: -23.5588, lon: -46.6354 },
   { id: 2, name: 'Brunch Exemplo', category: 'cafe', neighborhood: 'Pinheiros', lat: -23.5667, lon: -46.6917 },
   { id: 3, name: 'Cantina Exemplo', category: 'rest', neighborhood: 'Bela Vista', lat: -23.5578, lon: -46.6475 },
   { id: 4, name: 'Café Exemplo', category: 'cafe', neighborhood: 'Vila Madalena', lat: -23.5546, lon: -46.6911 },
@@ -12,7 +12,7 @@ export const DEMO_PLACES = [
   { id: 8, name: 'Padaria Exemplo', category: 'bread', neighborhood: 'Mooca', lat: -23.5604, lon: -46.5988 },
   { id: 9, name: 'Pizza Exemplo', category: 'pizza', neighborhood: 'Moema', lat: -23.5995, lon: -46.6665 },
   { id: 10, name: 'Tapioca Exemplo', category: 'rest', neighborhood: 'Santa Cecília', lat: -23.537, lon: -46.649 },
-  { id: 11, name: 'Ramen Exemplo', category: 'fish', neighborhood: 'Liberdade', lat: -23.5615, lon: -46.6339 },
+  { id: 11, name: 'Ramen Exemplo', category: 'rest', neighborhood: 'Liberdade', lat: -23.5615, lon: -46.6339 },
   { id: 12, name: 'Cafeteria Exemplo', category: 'cafe', neighborhood: 'Paulista', lat: -23.5614, lon: -46.6559 },
 ]
 const PHOTO = { 1: 'sushi', 2: 'brunch', 3: 'massa', 4: 'latte', 5: 'burger', 6: 'bolo', 7: 'drink', 8: 'croissant', 9: 'pizza', 10: 'petisco', 11: 'ramen', 12: 'espresso' }

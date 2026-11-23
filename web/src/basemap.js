@@ -3,8 +3,8 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import '@maplibre/maplibre-gl-leaflet'
 
 // Base vetorial gratuita e sem chave (OpenFreeMap, dados © OpenStreetMap), usando os estilos nativos como foram desenhados.
-const STYLES = { light: 'positron', bright: 'bright', liberty: 'liberty', fiord: 'fiord', dark: 'dark' }
-const LEGACY = { sepia: 'liberty', mint: 'bright', blue: 'fiord' } // tons antigos (Snazzy) dos mapas já salvos
+const STYLES = { light: 'positron', bright: 'bright', fiord: 'fiord', dark: 'dark' }
+const LEGACY = { sepia: 'bright', liberty: 'bright', mint: 'bright', blue: 'fiord' } // tons antigos (Snazzy) dos mapas já salvos
 export const styleName = (tone) => STYLES[tone] || STYLES[LEGACY[tone]] || 'positron'
 const cache = {}
 const load = (name) => (cache[name] ||= fetch(`https://tiles.openfreemap.org/styles/${name}`).then((r) => { if (!r.ok) throw new Error('style'); return r.json() }).catch((e) => { delete cache[name]; throw e }))

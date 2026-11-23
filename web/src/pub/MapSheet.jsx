@@ -11,9 +11,9 @@ import { PlacePhoto, sub, useMemoColors, NoResult } from './shared.jsx'
 export const HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
-export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['perfil', 'Perfil', 'user']]
-const KEY = { '/': 'inicio', '/roteiros': 'roteiros', '/salvos': 'perfil' }
-// Abas inferiores (Início, Bairros, Categorias, Roteiros, Perfil). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
+export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
+const KEY = { '/': 'inicio', '/roteiros': 'roteiros' }
+// Abas inferiores (Início, Bairros, Categorias, Roteiros). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
 export function PubTabs({ cur, href, onOpen, preview, navRef }) {
   const c = KEY[cur] || cur
   return (
@@ -28,7 +28,7 @@ export function PubTabs({ cur, href, onOpen, preview, navRef }) {
   )
 }
 
-// Painel que sobe da base (Bairros, Categorias, Roteiros, Perfil)
+// Painel que sobe da base (Bairros, Categorias, Roteiros, Salvos)
 function Panel({ title, onClose, children, tall, bottom = TAB }) {
   useEffect(() => { const k = (e) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [onClose])
   return (
@@ -131,6 +131,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           ? <><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button type="button" className="ms-ib" aria-label="Fechar busca" onClick={() => { setSearchOpen(false); f.setQ?.('') }}><Icon n="close" s={20} c="currentColor" /></button></>
           : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>
             <button type="button" className="ms-ib" aria-label="Buscar" tabIndex={preview ? -1 : 0} onClick={() => !preview && setSearchOpen(true)}><Icon n="search" s={20} c="currentColor" /></button>
+            <button type="button" className="ms-ib" aria-label="Salvos" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel(panel === 'salvos' ? null : 'salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
             <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button></>}
       </header>
       <div className="ms-chips" role="group" aria-label="Filtros">
@@ -153,7 +154,6 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         </div>
         <div className="ms-scroll">
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
-          {creator.links?.length > 0 && <div className="plinks">{creator.links.map((l, i) => <a key={i} className={theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line'} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer">{l.title}</a>)}</div>}
           {shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
             : <div className="ms-list">{shown.map(row)}</div>}
@@ -179,17 +179,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
               <span className="ms-stack">{rp.slice(0, 3).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 3 && <em>+{rp.length - 3}</em>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
             </button>) })}
         </Panel>)}
-      {panel === 'perfil' && (
-        <Panel bottom={tabs ? tabH : 0} title="Perfil" onClose={() => setPanel(null)} tall>
-          <div className="ms-pf">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle} · {places.length} lugares</span></div></div>
-          {theme.bio && <p className="ms-bio">{theme.bio}</p>}
-          {creator.links?.length > 0 && <div className="plinks">{creator.links.map((l, i) => <a key={i} className={theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line'} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer">{l.title}</a>)}</div>}
-          <div className="prow" style={{ gap: 8 }}>
-            {theme.social?.instagram && <a className="pb sm sec sp" href={preview ? undefined : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={16} c="currentColor" />Instagram</a>}
-            {theme.social?.tiktok && creator.tiktok && <a className="pb sm sec sp" href={preview ? undefined : `https://www.tiktok.com/@${creator.tiktok}`} target="_blank" rel="noopener noreferrer"><Icon n="tiktok" s={16} c="currentColor" />TikTok</a>}
-            <button type="button" className="pb sm sec sp" onClick={() => !preview && onShare?.()}><Icon n="share" s={16} c="currentColor" />Compartilhar</button>
-          </div>
-          <div className="ms-sec">Salvos neste aparelho ({places.filter((p) => isSaved(p.id)).length})</div>
+      {panel === 'salvos' && (
+        <Panel bottom={tabs ? tabH : 0} title="Salvos" onClose={() => setPanel(null)} tall>
+          <div className="ms-sec">Neste aparelho ({places.filter((p) => isSaved(p.id)).length})</div>
           {places.filter((p) => isSaved(p.id)).map((p) => <button key={p.id} type="button" className="ms-opt" onClick={() => { setPanel(null); openFicha?.(p.id) }}><PlacePhoto place={p} theme={theme} size={40} /><span className="sp">{p.name}</span></button>)}
           {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}
           <div className="pfoot">Mapa feito com <b>wagli</b></div>

@@ -13,7 +13,6 @@ export const FONTS = {
 export const TONES = {
   light: { label: 'Claro', tint: '#f3f3f1' },
   bright: { label: 'Vivo', tint: '#f6f1e6' },
-  liberty: { label: 'Clássico', tint: '#f3efe6' },
   fiord: { label: 'Azul-noite', tint: '#4a5a7c' },
   dark: { label: 'Escuro', tint: '#161616' },
 }
@@ -29,21 +28,21 @@ export const SYMBOL_LIBRARY = [
   ['store', 'Loja', 'Compras'], ['clock', 'Aberto tarde', 'Passeios'], ['spark', 'Novo', 'Formas'], ['image', 'Cenário', 'Viagem'],
 ]
 export const PALETTES = {
-  warm: { rest: '#ff4b2b', cafe: '#a16207', bar: '#7c3aed', bread: '#f59e0b', cake: '#ec4899', pizza: '#dc2626', fish: '#2d7ff9', burger: '#ea580c' },
-  cool: { rest: '#2d7ff9', cafe: '#0e7490', bar: '#6d28d9', bread: '#0891b2', cake: '#db2777', pizza: '#4f46e5', fish: '#0284c7', burger: '#1d4ed8' },
-  candy: { rest: '#ff5c8a', cafe: '#d98a00', bar: '#9b5cff', bread: '#ff8a3d', cake: '#e03bb0', pizza: '#16a085', fish: '#2aa6f5', burger: '#ff6b6b' },
+  warm: { rest: '#ff4b2b', cafe: '#a16207', bar: '#7c3aed', bread: '#f59e0b', cake: '#ec4899', pizza: '#dc2626', tour: '#0e9f8e', ice: '#2aa6f5', burger: '#ea580c' },
+  cool: { rest: '#2d7ff9', cafe: '#0e7490', bar: '#6d28d9', bread: '#0891b2', cake: '#db2777', pizza: '#4f46e5', tour: '#0f766e', ice: '#0284c7', burger: '#1d4ed8' },
+  candy: { rest: '#ff5c8a', cafe: '#d98a00', bar: '#9b5cff', bread: '#ff8a3d', cake: '#e03bb0', pizza: '#16a085', tour: '#36c5a0', ice: '#2aa6f5', burger: '#ff6b6b' },
   mono: null,
 }
 export const TEMPLATES = [
   { id: 'solar', name: 'Solar', t: { accent: '#ff4b2b', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'drop', font: 'sans', radius: 14 }, pal: 'warm' },
   { id: 'noite', name: 'Noite', t: { accent: '#a78bfa', bg: '#343843', fg: '#f6f6f8', tone: 'fiord', shape: 'circle', font: 'disp', radius: 14 }, pal: 'candy' },
   { id: 'mare', name: 'Maré', t: { accent: '#2d7ff9', bg: '#f4f8ff', fg: '#171717', tone: 'bright', shape: 'hex', font: 'sans', radius: 14 }, pal: 'cool' },
-  { id: 'doce', name: 'Doce', t: { accent: '#e03bb0', bg: '#fff5fb', fg: '#171717', tone: 'liberty', shape: 'circle', font: 'disp', radius: 22 }, pal: 'candy' },
+  { id: 'doce', name: 'Doce', t: { accent: '#e03bb0', bg: '#fff5fb', fg: '#171717', tone: 'bright', shape: 'circle', font: 'disp', radius: 22 }, pal: 'candy' },
   { id: 'mono', name: 'Mono', t: { accent: '#171717', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'square', font: 'mono', radius: 2 }, pal: 'mono' },
 ]
 export function applyTemplate(theme, tpl) {
   const p = PALETTES[tpl.pal]
-  return { ...theme, ...tpl.t, categories: theme.categories.map((c) => ({ ...c, color: p ? p[c.icon] || c.color : tpl.t.accent })) }
+  return { ...theme, ...tpl.t, categories: theme.categories.map((c) => ({ ...c, color: p ? p[c.id] || c.color : tpl.t.accent })) }
 }
 
 // ---------- contraste (WCAG) ----------

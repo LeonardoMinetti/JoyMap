@@ -34,7 +34,7 @@ function seed(d) {
   d.places.forEach((p) => { photo[p.id] = withBase(p.photo) })
   const places = DEMO_PLACES.map((p, i) => mk({ id: p.id, name: p.name, category: p.category, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, address: 'Endereço ilustrativo (demonstração)', geoStatus: 'found', geoQuality: i % 3 === 2 ? 'street_approx' : 'address_exact', postedOn: iso(-12 - i * 9), snippet: `Post de exemplo sobre ${p.name} (fictício).` }))
   places.push(
-    mk({ id: 13, name: 'Sushi Exemplo', category: 'fish', neighborhood: 'Aclimação', address: 'Rua Exemplo, 100', lat: -23.5731, lon: -46.6342, geoStatus: 'found', geoQuality: 'street_approx', confidence: 'medium', status: 'pending', postedOn: iso(-3), snippet: 'Rodízio novo na Aclimação, vale a visita (post fictício).' }),
+    mk({ id: 13, name: 'Sushi Exemplo', category: 'rest', neighborhood: 'Aclimação', address: 'Rua Exemplo, 100', lat: -23.5731, lon: -46.6342, geoStatus: 'found', geoQuality: 'street_approx', confidence: 'medium', status: 'pending', postedOn: iso(-3), snippet: 'Rodízio novo na Aclimação, vale a visita (post fictício).' }),
     mk({ id: 14, name: 'Hamburgueria Exemplo', category: 'burger', neighborhood: 'Pinheiros', address: 'Rua Exemplo, 250', lat: -23.5663, lon: -46.6838, geoStatus: 'found', geoQuality: 'address_exact', confidence: 'high', status: 'pending', postedOn: iso(-2), snippet: 'Smash burger com batata na brasa (post fictício).' }),
     mk({ id: 15, name: null, category: 'rest', confidence: 'low', status: 'unresolved', nameSrc: null, postedOn: iso(-1), snippet: 'Esse almoço foi demais, mas esqueci de marcar o lugar (post fictício).' }),
   )
@@ -182,9 +182,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === `/public/${DEMO_SLUG}`) {
     const live = s.places.filter((x) => x.status === 'confirmed' && x.geoStatus === 'found' && x.lat != null && !x.hidden)
     const ids = new Set(live.map((x) => x.id))
-    const blocks = Object.fromEntries(cr.theme.layout.blocks.map((b) => [b.id, b.on]))
     return {
-      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, links: blocks.links ? cr.links.filter((l) => l.on) : [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
+      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
       places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, placeIds: r.placeIds.filter((i) => ids.has(i)) })).filter((r) => r.placeIds.length),
     }
   }

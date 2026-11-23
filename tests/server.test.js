@@ -42,24 +42,27 @@ test('geocodificação: rejeita município errado e "sem número" nunca é exato
   assert.equal(simplify('Rua Gen. Calado, 20 - Tatuapé', 'São Paulo'), 'Rua General Calado, 20, São Paulo')
 })
 
-test('tema: valida cores, fonte e categorias', () => {
-  const t = sanitizeTheme({ accent: 'red', font: 'comic', radius: 999, categories: [{ id: 'Café!', name: 'Cafés', color: '#123456', icon: 'nada' }] })
+test('tema: valida cores, fonte; categorias são fixas (só cor e símbolo mudam)', () => {
+  const t = sanitizeTheme({ accent: 'red', font: 'comic', radius: 999, categories: [{ id: 'cafe', name: 'Renomeada', color: '#123456', icon: 'nada' }, { id: 'nova', name: 'Nova', color: '#111111', icon: 'rest' }] })
   assert.equal(t.accent, '#ff4b2b')
   assert.equal(t.font, 'sans')
   assert.equal(t.radius, 32)
-  assert.deepEqual(t.categories[0], { id: 'caf', name: 'Cafés', color: '#123456', icon: 'rest' })
+  assert.equal(t.categories.length, 9)
+  assert.ok(!t.categories.some((c) => c.id === 'nova'))
+  const cafe = t.categories.find((c) => c.id === 'cafe')
+  assert.deepEqual(cafe, { id: 'cafe', name: 'Cafeteria & Comidinhas', color: '#123456', icon: 'cafe' })
 })
 
 test('tema: layout, pins e links têm limites; cabeçalho nunca some; símbolo próprio só como path', () => {
-  const t = sanitizeTheme({ pinSize: 999, selected: 'x', layout: { blocks: [{ id: 'map', on: true }, { id: 'header', on: false }, { id: 'zzz', on: true }], listStyle: 'rows' }, categories: [{ id: 'a', name: 'A', color: '#111111', icon: 'custom:7' }] })
-  assert.equal(t.pinSize, 100)
+  const t = sanitizeTheme({ pinSize: 999, selected: 'x', layout: { blocks: [{ id: 'map', on: true }, { id: 'header', on: false }, { id: 'zzz', on: true }], listStyle: 'rows' }, categories: [{ id: 'pizza', name: 'A', color: '#111111', icon: 'custom:7' }] })
+  assert.equal(t.pinSize, 55) // o tamanho do pin não é mais editável
   assert.equal(t.selected, 'outline')
   assert.equal(t.layout.blocks[0].id, 'map')
   assert.equal(t.layout.blocks.find((b) => b.id === 'header').on, true)
-  assert.equal(t.layout.blocks.length, 6)
+  assert.equal(t.layout.blocks.length, 5)
   assert.equal(t.layout.listStyle, 'rows')
-  assert.equal(t.categories[0].icon, 'custom:7')
-  assert.equal(sanitizeTheme({ showLinks: false }).layout.blocks.find((b) => b.id === 'links').on, false)
+  assert.equal(t.categories.find((c) => c.id === 'pizza').icon, 'custom:7')
+  assert.ok(!sanitizeTheme({}).layout.blocks.some((b) => b.id === 'links'))
   assert.deepEqual(sanitizeSvg('<svg viewBox="0 0 10 10"><path d="M1 1L9 9"/></svg>'), { d: 'M1 1L9 9', vb: '0 0 10 10', mode: 'fill' })
   assert.throws(() => sanitizeSvg('<svg><script>alert(1)</script><path d="M1 1"/></svg>'), /svg_inseguro/)
   assert.throws(() => sanitizeSvg('<svg><circle r="2"/></svg>'), /svg_sem_path/)
@@ -166,7 +169,7 @@ test('fluxo: candidatura → análise → aprovação → onboarding → posts �
   assert.equal(pub.places.length, 1)
   assert.equal(pub.places[0].tiktokId, '7405595760361737477')
   assert.equal('confidence' in pub.places[0], false) // dados internos não vazam
-  assert.equal(pub.creator.theme.categories.length, 8)
+  assert.equal(pub.creator.theme.categories.length, 9)
 
   // rotas (roteiros) só com lugares do próprio criador
   await call(app, a.cookie, '/api/creator/routes', 'PUT', { routes: [{ name: 'Domingo', placeIds: [carola.id, 99999] }] })

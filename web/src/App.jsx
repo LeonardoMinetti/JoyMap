@@ -25,8 +25,8 @@ const ROUTES = {
   '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
   '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Redirect to="/painel" />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
   '/painel/roteiros': <Pn.Roteiros />, '/painel/listas': <Redirect to="/painel/roteiros" />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
-  '/estudio': ST(<St.StudioHome />), '/estudio/modelos': ST(<St.StudioTemplates />), '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': ST(<St.StudioSymbols />),
-  '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': ST(<St.StudioLayout />), '/estudio/links': ST(<St.StudioLinks />), '/estudio/endereco': ST(<St.StudioAddress />),
+  '/estudio': ST(<St.StudioHome />), '/estudio/modelos': ST(<St.StudioTemplates />), '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': <Redirect to="/estudio/pins" />,
+  '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': ST(<St.StudioLayout />), '/estudio/links': <Redirect to="/estudio" />, '/estudio/endereco': <Redirect to="/painel/divulgar" />,
   '/rede': <Net.NetworkMap />, '/rede/lugar': <Net.NetworkPlace />, '/restaurantes': <Net.Claim />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
   '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
 }
@@ -52,11 +52,13 @@ function Routes() {
 function DemoBar() {
   const { me } = useMe()
   const { path } = useLocation()
-  if (!STATIC || !me?.user || path.startsWith('/@')) return null
+  const show = STATIC && !!me?.user && !path.startsWith('/@')
+  // a faixa não ocupa espaço no fim da página (isso deixava o menu lateral curto): só ganha folga no conteúdo
+  React.useEffect(() => { document.body.classList.toggle('has-demobar', show); return () => document.body.classList.remove('has-demobar') }, [show])
+  if (!show) return null
   const go = (fn) => () => { fn(); location.assign(import.meta.env.BASE_URL) }
   return (
     <>
-    <div aria-hidden className="demobar-sp" />
     <div role="status" className="demobar" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
       <span><b>Demonstração.</b> Dados fictícios, salvos só nesta aba.</span>
       <button className="btn sm" style={{ background: '#fff', color: '#171717' }} onClick={go(() => { demoReset(); demoLeave() })}>Recomeçar</button>

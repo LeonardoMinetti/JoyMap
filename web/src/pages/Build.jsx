@@ -161,7 +161,7 @@ export function EditPlace({ id }) {
   const theme = me.creator.theme
   const save = async () => { await api(`/creator/places/${p.id}`, { method: 'PATCH', body: f }); navigate('/revisar') }
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
-  const cats = theme.categories.slice(0, 3).some((c) => c.id === f.category) ? theme.categories.slice(0, 3) : [...theme.categories.slice(0, 2), catOf(theme, f.category)]
+  const cats = theme.categories
   return (
     <Guard need="approved"><Stage>
       <Hd back="/revisar" title="Editar lugar" />
@@ -170,8 +170,7 @@ export function EditPlace({ id }) {
         <Field label="Nome" id="n1"><div className="in f"><input id="n1" value={f.name} onChange={set('name')} /></div></Field>
         <Field label="Endereço" id="n2"><div className="in"><input id="n2" value={f.address} onChange={set('address')} placeholder="Rua, número - bairro" /></div></Field>
         <div><label className="lb">Categoria e símbolo</label><div className="row wrap">
-          {cats.map((c) => { const { n, sym } = symOf(c, me.creator.symbols); return <button key={c.id} className={'chip' + (f.category === c.id ? ' on' : '')} onClick={() => setF({ ...f, category: c.id })}><Icon n={n} sym={sym} s={16} c={f.category === c.id ? '#fff' : '#171717'} />{c.name}</button> })}
-          <Link className="chip" to="/estudio/categorias">+ nova</Link></div></div>
+          {cats.map((c) => { const { n, sym } = symOf(c, me.creator.symbols); return <button key={c.id} className={'chip' + (f.category === c.id ? ' on' : '')} onClick={() => setF({ ...f, category: c.id })}><Icon n={n} sym={sym} s={16} c={f.category === c.id ? '#fff' : '#171717'} />{c.name}</button> })}</div></div>
         <div><label className="lb">Post da indicação</label>
           {trocar ? <div className="in"><Icon n="link" s={16} c="#757575" /><input value={f.postUrl} onChange={set('postUrl')} placeholder="Cole o link do post ou vídeo" autoFocus /></div>
             : <div className="card soft row"><Icon n="link" s={18} /><span className="sm sp trunc">{f.postUrl ? `${f.postUrl.replace(/^https?:\/\/(www\.)?/, '')}${p.postedOn ? ` (${fmtDate(p.postedOn)})` : ''}` : 'Sem post vinculado'}</span><button className="tag" style={{ border: 0, cursor: 'pointer' }} onClick={() => setTrocar(true)}>{f.postUrl ? 'Trocar' : 'Adicionar'}</button></div>}</div>

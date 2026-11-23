@@ -184,7 +184,6 @@ export default function Public({ slug, embed }) {
         <div className="left">
           <div className="phead"><div className="pav" style={{ width: 56, height: 56, fontSize: 26 }}>{initial(creator.displayName)}</div><div className="sp"><h1 className="pt" style={{ '--fs': '32px' }}>{creator.displayName}</h1><div className="sm mut">@{creator.handle} · {places.length} lugares</div></div><button className="picon" aria-label="Compartilhar" onClick={() => setOverlay({ kind: 'share' })}><Icon n="share" s={18} c="currentColor" /></button></div>
           {theme.bio && <p className="sm" style={{ margin: 0 }}>{theme.bio}</p>}
-          {creator.links.length > 0 && <div className="plinks">{creator.links.map((l, i) => <a key={i} className={theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line'} href={l.url} target="_blank" rel="noopener noreferrer">{l.title}</a>)}</div>}
           <div className="pchips"><button className={'pchip' + (!f.cats.length ? ' on' : '')} onClick={() => f.setCats([])}>Todos</button>{usedCats.map((c) => <button key={c.id} className={'pchip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => f.setCats([c.id])}>{c.name}</button>)}</div>
           <div className="prow"><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input value={f.q} onChange={(e) => f.setQ(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button className="pb sec" aria-label="Filtros" onClick={() => setOverlay({ kind: 'filters' })}><Icon n="filter" s={18} c="currentColor" /></button></div>
           <div className="prow" style={{ gap: 6 }}>{[['lugares', '/', 'Lugares'], ['roteiros', '/roteiros', 'Roteiros'], ['salvos', '/salvos', 'Salvos']].map(([k, p, l]) => <Link key={k} to={href(p)} className={'pchip' + (tab === k ? ' on' : '')} style={{ borderColor: 'var(--line)' }}>{l}</Link>)}</div>
@@ -241,7 +240,7 @@ export default function Public({ slug, embed }) {
   return (
     <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}>
       <div className="pub msroot" style={{ ...wrapStyle, width: '100%', maxWidth: 460, height: '100dvh', boxShadow: '0 0 0 1px var(--line)' }}>
-        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'roteiros', 'perfil'].includes(search.get('p')) ? search.get('p') : null} />
+        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
         {overlays}
       </div>
     </div>

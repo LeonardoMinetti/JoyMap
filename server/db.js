@@ -88,5 +88,6 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
   ensureColumn(db, 'events', 'dev', 'TEXT')
   ensureColumn(db, 'events', 'ref', 'TEXT')
   ensureColumn(db, 'events', 'ret', 'INTEGER')
+  db.exec("UPDATE places SET category='rest' WHERE category='fish'") // "Japonês" deixou de ser categoria: vira Restaurante
   return db
 }

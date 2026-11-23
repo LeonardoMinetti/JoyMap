@@ -96,8 +96,6 @@ export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, 
   const H = { sm: 240, md: 330, lg: 440 }[theme.layout.mapHeight] || 330
   const colors = useMemoColors(theme)
   const stop = (e) => e.stopPropagation()
-  const links = creator.links
-  const lc = (i) => (theme.linkStyle === 'line' ? 'pb line' : theme.linkStyle === 'soft' ? 'pb soft' : i === 0 ? 'pb' : 'pb line')
   const body = {
     header: (
       <div key="header" className="col" style={{ gap: 10 }}>
@@ -107,10 +105,6 @@ export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, 
           <button className="picon" aria-label="Compartilhar" onClick={preview ? undefined : onShare}><Icon n="share" s={18} c="currentColor" /></button>
         </div>
         {theme.bio && <p className="sm" style={{ margin: 0 }}>{theme.bio}</p>}
-      </div>),
-    links: (links.length > 0 || theme.social.instagram || (theme.social.tiktok && creator.tiktok)) && (
-      <div key="links" className="col" style={{ gap: 10 }}>
-        {links.length > 0 && <div className={'plinks' + (links.length === 1 ? ' one' : '')}>{links.map((l, i) => <a key={i} href={preview ? undefined : l.url} target="_blank" rel="noopener noreferrer" className={lc(i)}>{l.title}</a>)}</div>}
         {(theme.social.instagram || (theme.social.tiktok && creator.tiktok)) && <div className="psocial">
           {theme.social.instagram && <a className="picon" aria-label="Instagram" href={preview ? undefined : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={18} c="currentColor" /></a>}
           {theme.social.tiktok && creator.tiktok && <a className="picon" aria-label="TikTok" href={preview ? undefined : `https://www.tiktok.com/@${creator.tiktok}`} target="_blank" rel="noopener noreferrer"><Icon n="tiktok" s={18} c="currentColor" /></a>}

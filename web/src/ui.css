@@ -357,5 +357,5 @@ body{background:var(--cream)}.page{background:var(--cream)}
 @media (prefers-reduced-motion:reduce){.stp-ph{animation:none}}
 @media (max-width:900px){.stp-ph{zoom:1}.stbody .prev>div{zoom:.72}}
 .app .main .hero{background:var(--soft)}
-.demobar-sp{height:70px}
-@media (max-width:900px){.demobar{z-index:35!important;bottom:68px!important;padding:6px 8px 6px 14px!important;font-size:12px!important}.demobar-sp{height:130px}}
+.has-demobar .main{padding-bottom:110px}
+@media (max-width:900px){.demobar{z-index:35!important;bottom:68px!important;padding:6px 8px 6px 14px!important;font-size:12px!important}.has-demobar .main{padding-bottom:170px}}

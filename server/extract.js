@@ -50,8 +50,8 @@ export function humanize(handle) {
 
 export function guessCategory(text) {
   const t = strip(text.toLowerCase())
-  const rules = [['cafe', /cafe|cafeteria|brunch|coffee/], ['bar', /\bbar\b|drink|coquetel|chopp|cervej/], ['cake', /doce|sobremesa|sorvete|confeitaria|bolo|brigadeiro/],
-    ['pizza', /pizza/], ['fish', /sushi|japon|temaki|rodizio japa/], ['burger', /hambur|burger|lanche/], ['bread', /padaria|pao |panificadora/]]
+  const rules = [['ice', /sorveteria|sorvete|gelato|gelateria|picole/], ['cafe', /cafe|cafeteria|brunch|coffee/], ['bar', /\bbar\b|drink|coquetel|chopp|cervej/], ['cake', /doce|sobremesa|confeitaria|bolo|brigadeiro/],
+    ['pizza', /pizza/], ['burger', /hambur|burger|lanche/], ['bread', /padaria|pao |panificadora/], ['tour', /passeio|experiencia|\bloja\b|ingresso|parque|museu/]]
   for (const [id, re] of rules) if (re.test(t)) return id
   return 'rest'
 }

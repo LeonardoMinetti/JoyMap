@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
@@ -15,7 +14,7 @@ import { Phone, Native } from '../landing/device.jsx'
 import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, radiusMode, symOf } from '../theme.jsx'
 
 // Lugares de exemplo com foto (as mesmas fotos livres usadas na demonstração), só até o criador confirmar os dele
-const SAMPLE_CATS = ['rest', 'cafe', 'bread', 'fish', 'bar', 'burger', 'cake']
+const SAMPLE_CATS = ['rest', 'cafe', 'bread', 'pizza', 'bar', 'burger', 'cake']
 const SAMPLE = demoPlaces().slice(0, 9).map((p, i) => ({ ...p, id: -(i + 1), category: SAMPLE_CATS.includes(p.category) ? p.category : 'rest', postedOn: '2026-09-12', ad: false }))
 
 const Ctx = createContext(null)
@@ -26,29 +25,26 @@ function StudioProvider({ children }) {
   const { me, reload } = useMe()
   const c = me.creator
   const [theme, setT] = useState(c.theme)
-  const [links, setL] = useState(c.links)
-  const [snap, setSnap] = useState(() => JSON.stringify({ t: c.theme, l: c.links }))
+  const [snap, setSnap] = useState(() => JSON.stringify(c.theme))
   const [places, setPlaces] = useState(null)
   const [routes, setRoutes] = useState([])
   const [coverVer, setCoverVer] = useState(0)
   const loadPlaces = useCallback(() => { api('/creator/places').then((d) => setPlaces(d.places)); api('/creator/routes').then((d) => setRoutes(d.routes)) }, [])
   useEffect(() => { loadPlaces() }, [loadPlaces])
   const setTheme = (patch) => setT((t) => ({ ...t, ...(typeof patch === 'function' ? patch(t) : patch) }))
-  const setLinks = (l) => setL(typeof l === 'function' ? l : () => l)
-  const dirty = JSON.stringify({ t: theme, l: links }) !== snap
+  const dirty = JSON.stringify(theme) !== snap
   const publish = async () => {
     const r = await api('/creator/theme', { method: 'PUT', body: theme })
-    const l = await api('/creator/links', { method: 'PUT', body: { links } })
-    setT(r.theme); setL(l.links); setSnap(JSON.stringify({ t: r.theme, l: l.links }))
+    setT(r.theme); setSnap(JSON.stringify(r.theme))
     await reload(); toast('Alterações publicadas')
   }
-  const undo = () => { const s = JSON.parse(snap); setT(s.t); setL(s.l) }
+  const undo = () => setT(JSON.parse(snap))
   const real = (places || []).filter((p) => p.status === 'confirmed' && p.lat != null)
   const data = useMemo(() => ({
-    creator: { handle: c.handle, tiktok: c.tiktok, slug: c.slug, displayName: c.displayName, theme, links: links.filter((l) => l.on && l.title), cover: theme.layout.cover && c.hasCover, coverUrl: '/api/creator/cover', symbols: c.symbols },
+    creator: { handle: c.handle, tiktok: c.tiktok, slug: c.slug, displayName: c.displayName, theme, links: [], cover: theme.layout.cover && c.hasCover, coverUrl: '/api/creator/cover', symbols: c.symbols },
     places: real.length ? real : SAMPLE, routes: routes.filter((r) => r.placeIds.length).map((r) => ({ ...r, placeIds: r.placeIds })),
-  }), [theme, links, places, routes, c])
-  return <Ctx.Provider value={{ c, theme, setTheme, links, setLinks, dirty, publish, undo, places: places || [], real, data, usingSample: !real.length, loadPlaces, coverVer, bumpCover: () => setCoverVer((v) => v + 1), routes, setRoutes, reload }}>{children}</Ctx.Provider>
+  }), [theme, places, routes, c])
+  return <Ctx.Provider value={{ c, theme, setTheme, dirty, publish, undo, places: places || [], real, data, usingSample: !real.length, loadPlaces, coverVer, bumpCover: () => setCoverVer((v) => v + 1), routes, setRoutes, reload }}>{children}</Ctx.Provider>
 }
 export function StudioRoute({ children }) { return <Guard need="approved" finished><StudioProvider>{children}</StudioProvider></Guard> }
 
@@ -68,8 +64,8 @@ export function PhonePreview({ fake, themeOverride, width = 300, height = 620, i
 }
 
 // Prévia principal do Estúdio: iPhone com a tela real que o seguidor vê. Cada aba do Estúdio abre a tela em que a edição aparece.
-const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A ordem da página, a capa e a lista de lugares.'], ['profile', 'Perfil', 'Bio, redes e os links que ficam ao lado do mapa.']]
-const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', simbolos: 'map', mapa: 'map', pins: 'place', layout: 'list', links: 'profile' }
+const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A ordem da página, a capa e a lista de lugares.']]
+const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', mapa: 'map', pins: 'place', layout: 'list' }
 function StudioPhone({ active, fake }) {
   const s = useStudio()
   const theme = s.data.creator.theme
@@ -80,7 +76,7 @@ function StudioPhone({ active, fake }) {
   const f = useMemo(() => ({ cats: [], setCats: () => {}, q: '', clear: () => {} }), [])
   // pulso suave quando uma edição muda a prévia
   const [flash, setFlash] = useState(false)
-  const sig = JSON.stringify(theme) + JSON.stringify(s.links)
+  const sig = JSON.stringify(theme)
   const first = useRef(true)
   useEffect(() => { if (first.current) { first.current = false; return } setFlash(true); const t = setTimeout(() => setFlash(false), 800); return () => clearTimeout(t) }, [sig])
   const cap = VIEWS.find((v) => v[0] === view)[2]
@@ -93,7 +89,7 @@ function StudioPhone({ active, fake }) {
         <Phone h={600} label="Prévia do seu mapa público, como o seguidor vê no celular">
           <Native h={600} theme={theme}>
             <div className="pub preview" style={{ ...pubVars(theme), height: '100%' }}>
-              <MapSheet key={view} data={s.data} shown={places} f={f} selectedId={view === 'place' ? places[0]?.id : null} openPanel={view === 'profile' ? 'perfil' : null} preview fake={fake || s.usingSample} snap={view === 'list' ? 'full' : view === 'place' ? 'half' : 'low'} />
+              <MapSheet key={view} data={s.data} shown={places} f={f} selectedId={view === 'place' ? places[0]?.id : null} preview fake={fake || s.usingSample} snap={view === 'list' ? 'full' : view === 'place' ? 'half' : 'low'} />
             </div>
           </Native>
         </Phone>
@@ -103,8 +99,8 @@ function StudioPhone({ active, fake }) {
   )
 }
 
-const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['simbolos', 'Símbolos', 'spark', '/estudio/simbolos'],
-  ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa'], ['pins', 'Pins', 'flag', '/estudio/pins'], ['layout', 'Layout', 'menu', '/estudio/layout'], ['links', 'Links da bio', 'link', '/estudio/links'], ['endereco', 'Endereço', 'globe', '/estudio/endereco']]
+const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['pins', 'Pins e símbolos', 'flag', '/estudio/pins'],
+  ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa'], ['layout', 'Layout', 'menu', '/estudio/layout']]
 // O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
 function StudioHead({ active }) {
   const s = useStudio()
@@ -169,13 +165,10 @@ export function StudioHome() {
       <p className="mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real. Comece por um modelo ou escolha uma seção.</p>
       <div className="g3" style={{ gap: 14 }}>
         {mini('/estudio/cores', <div className="row" style={{ gap: 6 }}>{[T.accent, T.bg, T.fg].map((c) => sq(c))}</div>, 'Cores e tema', 'Paleta, fonte, cantos')}
-        {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'Nome, cor e símbolo de cada uma')}
-        {mini('/estudio/simbolos', <div className="row" style={{ gap: 6 }}>{['pizza', 'fish', 'burger'].map((n) => <Icon key={n} n={n} s={22} />)}</div>, 'Símbolos', 'Biblioteca e envio de SVG próprio')}
-        {mini('/estudio/mapa', <div style={{ borderRadius: 8, overflow: 'hidden', height: 30 }}><FakeMap h={30} tone={T.tone} n={0} lab={false} /></div>, 'Estilo do mapa', 'Base, rótulos, densidade')}
-        {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e agrupamento', 'Formato, tamanho, cluster')}
+        {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'Cor e símbolo de cada uma')}
+        {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e símbolos', 'Formato, símbolos e agrupamento')}
+        {mini('/estudio/mapa', <div style={{ borderRadius: 8, overflow: 'hidden', height: 30 }}><FakeMap h={30} tone={T.tone} n={0} lab={false} /></div>, 'Estilo do mapa', 'Base e rótulos')}
         {mini('/estudio/layout', <div className="ph" style={{ height: 30 }}>blocos</div>, 'Layout da página', 'Ordem, capa, lista ou grade')}
-        {mini('/estudio/links', <Icon n="link" s={22} />, 'Links da bio', 'Botões ao lado do mapa')}
-        {mini('/estudio/endereco', <Icon n="globe" s={22} />, 'Endereço e domínio', 'Slug, domínio, QR code')}
         {mini('/estudio/modelos', <Icon n="layers" s={22} />, 'Modelos prontos', 'Comece por um e ajuste')}
       </div>
       <Note>Dica: comece por um modelo e ajuste só o que importa. Todas as escolhas valem para o mapa, os cartões e a página.</Note>
@@ -204,50 +197,46 @@ export function StudioColors() {
   )
 }
 
-// D3 · categorias
+// D3 · categorias (lista fixa do wagli: só cor e símbolo mudam)
 export function StudioCategories() {
   const { theme: T, setTheme, places, c: cr } = useStudio()
   const [sel, setSel] = useState(null)
   const count = (id) => places.filter((p) => p.category === id && (p.status === 'confirmed' || p.status === 'pending')).length
   const setCat = (i, patch) => setTheme((t) => ({ categories: t.categories.map((x, j) => (j === i ? { ...x, ...patch } : x)) }))
-  const sort = useSortable(T.categories, (n) => setTheme({ categories: n }))
   const common = ['rest', 'heart', 'star', 'bread']
   return (
     <Shell active="categorias" title="Categorias">
       <h1 className="d s32">Categorias</h1>
-      <p className="sm mut">Cada categoria tem nome, símbolo e cor. Os seguidores filtram por elas.</p>
+      <p className="sm mut">As categorias são as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor e o símbolo de cada uma.</p>
       {T.categories.map((cat, i) => {
         const { n, sym } = symOf(cat, cr.symbols)
         const open = sel === i
         return (
-          <div key={cat.id} className={'card' + (open ? ' sel col' : '')} style={open ? { gap: 12 } : undefined} {...sort.props(i)}>
-            <div className="row">{sort.handle(i)}<span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span>
-              {open ? <div className="sp"><span className="lb" style={{ margin: 0 }}>Nome</span><input className="in" style={{ minHeight: 36, padding: '4px 10px' }} aria-label="Nome da categoria" value={cat.name} maxLength="30" onChange={(e) => setCat(i, { name: e.target.value })} /></div>
-                : <div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugares</div></div>}
-              <button aria-label={open ? 'Fechar edição' : 'Editar categoria'} style={{ background: 'none', border: 0, padding: 4 }} onClick={() => setSel(open ? null : i)}><Icon n={open ? 'check' : 'edit'} s={18} /></button></div>
+          <div key={cat.id} className={'card' + (open ? ' sel col' : '')} style={open ? { gap: 12 } : undefined}>
+            <div className="row"><span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span>
+              <div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugares</div></div>
+              <button aria-label={open ? 'Fechar edição' : `Editar ${cat.name}`} style={{ background: 'none', border: 0, padding: 4 }} onClick={() => setSel(open ? null : i)}><Icon n={open ? 'check' : 'edit'} s={18} /></button></div>
             {open && <>
               <div className="row wrap" style={{ gap: 6 }}><span className="lb" style={{ margin: 0, width: '100%' }}>Símbolo</span>
                 {[cat.icon, ...common.filter((x) => x !== cat.icon)].slice(0, 4).map((k) => { const s2 = symOf({ icon: k }, cr.symbols); return <button key={k} aria-label={`Símbolo ${k}`} className={'chip' + (cat.icon === k ? ' on' : '')} onClick={() => setCat(i, { icon: k })}><Icon n={s2.n} sym={s2.sym} s={16} c={cat.icon === k ? '#fff' : '#171717'} /></button> })}
-                <Link className="chip" to={`/estudio/simbolos?cat=${cat.id}`}>Ver todos</Link></div>
+                <Link className="chip" to={`/estudio/pins?cat=${cat.id}`}>Ver todos</Link></div>
               <div><span className="lb">Cor</span><div className="row" style={{ gap: 8 }}>{[cat.color, ...CAT_COLORS.filter((x) => x !== cat.color)].slice(0, 5).map((col) => <button key={col} aria-label={`Cor ${col}`} className={'dotsw' + (cat.color === col ? ' on' : '')} style={{ background: col }} onClick={() => setCat(i, { color: col })} />)}
                 <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={cat.color} onChange={(e) => setCat(i, { color: e.target.value })} aria-label="Outra cor da categoria" /></label></div></div>
-              <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={T.categories.length <= 1} onClick={() => { if (!count(cat.id) || confirm(`${count(cat.id)} lugares usam "${cat.name}". Eles aparecerão como "Outros". Remover mesmo assim?`)) { setTheme({ categories: T.categories.filter((_, j) => j !== i) }); setSel(null) } }}><Icon n="trash" s={14} />Remover categoria</button>
             </>}
           </div>)
       })}
-      <button className="btn ln blk" disabled={T.categories.length >= 16} onClick={() => { setTheme({ categories: [...T.categories, { id: `c${Date.now().toString(36)}`.slice(0, 20), name: 'Nova categoria', color: CAT_COLORS[T.categories.length % CAT_COLORS.length], icon: 'star' }] }); setSel(T.categories.length) }}><Icon n="plus" s={18} />Nova categoria</button>
     </Shell>
   )
 }
 
 // D4 · biblioteca de símbolos
 const SYMBOL_ERR = { svg_grande: 'O arquivo passa de 50 KB.', svg_inseguro: 'O SVG tem elementos não permitidos (scripts, imagens ou links).', svg_sem_path: 'Só aceitamos desenhos feitos com caminhos (path). Converta as formas em contorno e exporte de novo.', svg_invalido: 'Não conseguimos ler este SVG.', limite_20: 'Limite de 20 símbolos enviados.' }
-export function StudioSymbols() {
+function SymbolPicker() {
   const { theme: T, setTheme, c: cr, reload } = useStudio()
   const [grp, setGrp] = useState('Comida')
   const [style, setStyle] = useState(() => (/^lib:([a-z0-9]+):/.exec(T.categories[0]?.icon || '') || [])[1] || 'base')
   const [q, setQ] = useState('')
-  const target = new URLSearchParams(location.search).get('cat')
+  const [target, setTarget] = useState(() => new URLSearchParams(location.search).get('cat'))
   const idx = Math.max(0, T.categories.findIndex((x) => x.id === target))
   const cat = T.categories[idx]
   const GROUPS = style === 'base' ? ['Comida', 'Bebidas', 'Passeios', 'Viagem', 'Compras', 'Formas'] : ['Comida', 'Doces', 'Bebidas', 'Lugares', 'Destaques']
@@ -268,9 +257,10 @@ export function StudioSymbols() {
     if (file.current) file.current.value = ''
   }
   return (
-    <Shell active="simbolos" layout="main" previewWidth={380} title="Símbolos">
-      <div className="row jb wrap"><h1 className="d s32">Biblioteca de símbolos</h1><div className="in" style={{ width: 260 }}><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar símbolo" aria-label="Buscar símbolo" /></div></div>
-      <p className="sm mut">Aplicando em: <b>{cat.name}</b>. <Link className="link" to="/estudio/categorias">Trocar categoria</Link></p>
+    <>
+      <div className="row jb wrap"><h2 className="d s26">Símbolo de cada categoria</h2><div className="in" style={{ width: 260 }}><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar símbolo" aria-label="Buscar símbolo" /></div></div>
+      <div className="row wrap" role="group" aria-label="Categoria que recebe o símbolo">{T.categories.map((c) => { const s2 = symOf(c, cr.symbols); return <button key={c.id} className={'chip' + (cat.id === c.id ? ' on' : '')} aria-pressed={cat.id === c.id} onClick={() => setTarget(c.id)}><span className="ms-dot" style={{ background: c.color, width: 10, height: 10, borderRadius: '50%', display: 'inline-block' }} />{c.name}</button> })}</div>
+      <p className="sm mut">Aplicando em: <b>{cat.name}</b></p>
       <div className="row wrap" role="tablist" aria-label="Estilo do símbolo">{STYLES.map(([k, l]) => <button key={k} role="tab" aria-selected={style === k} className={'chip' + (style === k ? ' on' : '')} onClick={() => { setStyle(k); setQ('') }}>{l}</button>)}</div>
       {style !== 'mine' && <div className="row wrap">{GROUPS.map((g) => <button key={g} className={'chip' + (grp === g && !q ? ' on' : '')} style={{ background: grp === g && !q ? undefined : 'transparent' }} onClick={() => { setGrp(g); setQ('') }}>{g}</button>)}</div>}
       {lib && <p className="xs mut">{lib.long}. Licença {lib.license}. {lib.color ? 'O desenho traz as próprias cores.' : 'Usa a cor da categoria.'}</p>}
@@ -293,7 +283,7 @@ export function StudioSymbols() {
       )}
       <div className="card soft row" style={{ gap: 16, border: '2px dashed var(--line)' }}><span className="sq" style={{ display: 'grid', placeItems: 'center', background: '#fff' }}><Icon n="up" s={22} /></span><div className="sp"><b>Envie o seu próprio símbolo</b><div className="sm mut">SVG de uma cor, até 50 KB, só caminhos (path). Revisamos antes de liberar.</div></div>
         <input ref={file} type="file" accept=".svg,image/svg+xml" className="sr" id="svgfile" onChange={(e) => send(e.target.files[0])} /><label htmlFor="svgfile" className="btn sec sm">Escolher arquivo</label></div>
-    </Shell>
+    </>
   )
 }
 
@@ -310,12 +300,12 @@ export function StudioMap() {
       </div>
       <div className="row"><div className="sp"><b className="sm">Nomes de bairros</b><div className="xs mut">Mostrar rótulos no mapa (até o zoom 12)</div></div><Switch on={T.mapLabels} onChange={(v) => setTheme({ mapLabels: v })} label="Nomes de bairros" /></div>
       <div><Lb>Densidade de rótulos</Lb><Slider value={T.labelDensity} onChange={(v) => setTheme({ labelDensity: v })} label="Densidade de rótulos" /></div>
-      <Note>Os estilos de mapa são do OpenFreeMap (Positron, Bright, Liberty, Fiord e Dark), sobre dados do OpenStreetMap. Revise o uso dos tiles antes do lançamento. Créditos dos símbolos: <a className="link" href="/licencas-simbolos.txt" target="_blank" rel="noopener">licenças</a>.</Note>
+      <Note>Os estilos de mapa são do OpenFreeMap (Positron, Bright, Fiord e Dark), sobre dados do OpenStreetMap. Revise o uso dos tiles antes do lançamento. Créditos dos símbolos: <a className="link" href="/licencas-simbolos.txt" target="_blank" rel="noopener">licenças</a>.</Note>
     </Shell>
   )
 }
 
-// D6 · pins e agrupamento
+// D6 · pins e símbolos (juntos)
 export function StudioPins() {
   const { theme: T, setTheme } = useStudio()
   const shapeBox = (k) => {
@@ -327,20 +317,22 @@ export function StudioPins() {
     return <i style={st} />
   }
   return (
-    <Shell active="pins" title="Pins">
-      <h1 className="d s32">Pins e agrupamento</h1>
+    <Shell active="pins" title="Pins e símbolos">
+      <h1 className="d s32">Pins e símbolos</h1>
+      <h2 className="d s26">Pin</h2>
       <div><Lb>Formato</Lb><div className="g4" style={{ gap: 8 }}>{Object.entries(SHAPES).map(([k, l]) => <button key={k} className={'card col' + (T.shape === k ? ' sel' : '')} style={{ alignItems: 'center', padding: 10, gap: 6 }} onClick={() => setTheme({ shape: k })}>{shapeBox(k)}<span className="xs">{l}</span></button>)}</div></div>
-      <div><Lb>Tamanho</Lb><div className="row"><span className="xs mut">P</span><div className="sp"><Slider value={T.pinSize} onChange={(v) => setTheme({ pinSize: v })} label="Tamanho do pin" /></div><span className="xs mut">G</span></div></div>
       <div className="row"><div className="sp"><b className="sm">Borda branca</b><div className="xs mut">Melhora a leitura em mapas escuros</div></div><Switch on={T.pinBorder} onChange={(v) => setTheme({ pinBorder: v })} label="Borda branca" /></div>
       <div className="row"><div className="sp"><b className="sm">Agrupar pins próximos</b><div className="xs mut">Mostra o total quando o zoom é baixo</div></div><Switch on={T.cluster} onChange={(v) => setTheme({ cluster: v })} label="Agrupar pins próximos" /></div>
       <div className="card soft row" style={{ gap: 14 }}><span style={{ width: 40, height: 40, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 16px Archivo' }}>12</span><span style={{ width: 34, height: 34, borderRadius: '50%', background: '#171717', color: '#fff', display: 'grid', placeItems: 'center', font: '700 14px Archivo' }}>5</span><span className="sm mut sp">Estilo do grupo: círculo escuro com contagem</span></div>
       <div><Lb>Pin selecionado</Lb><div className="row wrap">{[['outline', 'Maior com contorno'], ['pulse', 'Pulsando'], ['color', 'Só cor']].map(([k, l]) => <button key={k} className={'chip' + (T.selected === k ? ' on' : '')} onClick={() => setTheme({ selected: k })}>{l}</button>)}</div></div>
+      <div className="sep" />
+      <SymbolPicker />
     </Shell>
   )
 }
 
 // D7 · layout da página (+ roteiros)
-const BLOCK = { header: ['Cabeçalho', 'Foto, nome e bio'], links: ['Links da bio', 'Botões personalizados'], filters: ['Filtros por categoria', ''], map: ['Mapa', ''], list: ['Lista de lugares', ''], routes: ['Roteiros', 'Coleções de lugares'] }
+const BLOCK = { header: ['Cabeçalho', 'Foto, nome e bio'], filters: ['Filtros por categoria', ''], map: ['Mapa', ''], list: ['Lista de lugares', ''], routes: ['Roteiros', 'Coleções de lugares'] }
 export function StudioLayout() {
   const s = useStudio()
   const { theme: T, setTheme, c: cr } = s
@@ -385,78 +377,6 @@ function RoutesEditor() {
       <div className="sp"><b>Roteiros do mapa</b><div className="sm mut">{s.routes.length ? `${s.routes.length} roteiro${s.routes.length === 1 ? '' : 's'}` : 'Nenhum roteiro ainda'} · criar e editar fica na área Roteiros do painel.</div></div>
       <Link className="btn ln sm" to="/painel/roteiros">Abrir Roteiros</Link>
     </div>
-  )
-}
-
-// D8 · links da bio
-export function StudioLinks() {
-  const { theme: T, setTheme, links, setLinks, c: cr } = useStudio()
-  const sort = useSortable(links, setLinks)
-  const setLink = (i, patch) => setLinks(links.map((l, j) => (j === i ? { ...l, ...patch } : l)))
-  return (
-    <Shell active="links" title="Links da bio">
-      <h1 className="d s32">Links da bio</h1>
-      <p className="sm mut">Os botões que aparecem acima do mapa. Substitui o seu link atual. Até 8 links.</p>
-      {links.map((l, i) => (
-        <div key={i} className="card col" style={{ gap: 8 }} {...sort.props(i)}>
-          <div className="row">{sort.handle(i)}<input className="in sp" style={{ minHeight: 40 }} aria-label="Título" placeholder="Título do botão" value={l.title} maxLength="40" onChange={(e) => setLink(i, { title: e.target.value })} /><Switch on={l.on} onChange={(v) => setLink(i, { on: v })} label="Mostrar link" /><button className="btn ln sm" aria-label="Remover link" onClick={() => setLinks(links.filter((_, j) => j !== i))}><Icon n="trash" s={14} /></button></div>
-          <div className="in" style={{ minHeight: 40, marginLeft: 28, width: 'auto' }}><Icon n="link" s={16} /><input aria-label="Endereço do link" placeholder="https://exemplo.com/reservas" value={l.url} onChange={(e) => setLink(i, { url: e.target.value })} /></div>
-        </div>))}
-      <div className="card row"><Icon n="drag" s={18} c="#a3a3a3" /><Icon n="insta" s={20} /><div className="sp"><b className="sm">Instagram</b><div className="xs mut">@{cr.handle}</div></div><Switch on={T.social.instagram} onChange={(v) => setTheme({ social: { ...T.social, instagram: v } })} label="Mostrar Instagram" /></div>
-      <div className="card row"><Icon n="drag" s={18} c="#a3a3a3" /><Icon n="tiktok" s={20} /><div className="sp"><b className="sm">TikTok</b><div className="xs mut">{cr.tiktok ? `@${cr.tiktok}` : 'Sem @ do TikTok na candidatura'}</div></div><Switch on={T.social.tiktok && !!cr.tiktok} disabled={!cr.tiktok} onChange={(v) => setTheme({ social: { ...T.social, tiktok: v } })} label="Mostrar TikTok" /></div>
-      <button className="btn ln blk" disabled={links.length >= 8} onClick={() => setLinks([...links, { title: '', url: '', on: true }])}><Icon n="plus" s={18} />Adicionar link</button>
-      <div><Lb>Estilo dos botões</Lb><div className="row">{[['fill', 'Preenchido'], ['line', 'Contorno'], ['soft', 'Suave']].map(([k, l]) => <button key={k} className={'chip' + (T.linkStyle === k ? ' on' : '')} onClick={() => setTheme({ linkStyle: k })}>{l}</button>)}</div></div>
-      <Note>Links sem título ou sem https:// não são publicados.</Note>
-    </Shell>
-  )
-}
-
-// D9 · endereço, domínio, QR code e imagem de compartilhamento
-export function StudioAddress() {
-  const s = useStudio()
-  const { c: cr, theme: T } = s
-  const [slug, setSlug] = useState(cr.slug)
-  const [avail, setAvail] = useState(null)
-  const [dom, setDom] = useState(cr.domain.name || '')
-  const [domInfo, setDomInfo] = useState(null)
-  const [qrStyle, setQrStyle] = useState('map')
-  const [qr, setQr] = useState('')
-  const url = `${location.origin}/@${cr.slug}`
-  useEffect(() => {
-    if (slug === cr.slug) return setAvail(null)
-    const h = setTimeout(() => api(`/creator/slug-available?slug=${encodeURIComponent(slug)}`).then((d) => setAvail(d)).catch(() => {}), 400)
-    return () => clearTimeout(h)
-  }, [slug])
-  const color = qrStyle === 'black' ? '#000000' : T.accent
-  useEffect(() => { QRCode.toDataURL(url, { margin: 1, width: 192, color: { dark: qrStyle === 'black' ? '#000000' : onQr(T.accent) } }).then(setQr).catch(() => {}) }, [url, qrStyle, T.accent])
-  function onQr(c) { return c }
-  const saveSlug = async () => { try { await api('/creator/slug', { method: 'PUT', body: { slug } }); await s.reload(); toast('Endereço salvo') } catch (x) { toast(x.message === 'slug_em_uso' ? 'Este endereço já está em uso.' : 'Use 3 a 30 letras, números, - ou _.') } }
-  const saveDom = async () => { try { const d = await api('/creator/domain', { method: 'PUT', body: { domain: dom } }); setDomInfo(d); await s.reload() } catch (x) { toast(x.message === 'dominio_em_uso' ? 'Este domínio já está em uso.' : 'Domínio inválido. Exemplo: mapa.seusite.com.br') } }
-  const check = async () => { const d = await api('/creator/domain/check', { method: 'POST' }); setDomInfo({ ...domInfo, ...d }); await s.reload(); toast(d.status === 'active' ? 'Domínio ativo' : 'O DNS ainda não aponta para nós') }
-  const target = domInfo?.target || new URL(location.origin).hostname
-  const download = async (kind) => {
-    if (kind === 'svg') {
-      const svg = await QRCode.toString(url, { type: 'svg', margin: 1, color: { dark: color } })
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })); a.download = `qr-${cr.slug}.svg`; a.click(); return
-    }
-    const cv = document.createElement('canvas')
-    await QRCode.toCanvas(cv, url, { margin: 2, width: 1024, errorCorrectionLevel: 'H', color: { dark: color } })
-    if (qrStyle === 'logo') { const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(512, 512, 120, 0, 7); g.fill(); g.fillStyle = T.accent; g.beginPath(); g.arc(512, 512, 96, 0, 7); g.fill(); g.fillStyle = onAccent(T); g.font = '700 110px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(cr.displayName.slice(0, 1).toUpperCase(), 512, 520) }
-    const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `qr-${cr.slug}.png`; a.click()
-  }
-  return (
-    <Shell active="endereco" layout="full" title="Endereço">
-      <h1 className="d s32">Endereço e domínio</h1>
-      <div><label className="lb" htmlFor="s1">Endereço do mapa</label><div className="row"><div className="in f sp"><span className="mut nowrap">{location.host}/@</span><input id="s1" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} />{slug === cr.slug ? <span className="tag ok">Seu endereço</span> : avail && <span className={'tag ' + (avail.available ? 'ok' : 'bd2')}>{avail.available ? 'Disponível' : avail.reason === 'em_uso' ? 'Em uso' : 'Inválido'}</span>}</div><button className="btn" disabled={slug === cr.slug || !avail?.available} onClick={saveSlug}>Salvar</button></div>
-        <span className="xs mut">Ao trocar o endereço, o link antigo para de funcionar. Atualize a bio.</span></div>
-      <div className="card col" style={{ gap: 10 }}><div className="row jb"><b>Domínio próprio</b><span className="tag ax">Plano Criador</span></div>
-        <div className="row"><div className="in sp"><input value={dom} onChange={(e) => setDom(e.target.value)} placeholder="mapa.dudacome.com.br" aria-label="Domínio próprio" /></div><button className="btn" onClick={saveDom}>{cr.domain.name ? 'Atualizar' : 'Salvar'}</button></div>
-        {cr.domain.name && <><div className="g2"><div className="card soft col" style={{ gap: 4 }}><span className="eb">Tipo</span><b className="sm">CNAME</b></div><div className="card soft col" style={{ gap: 4 }}><span className="eb">Valor</span><b className="sm">{target}</b></div></div>
-          <div className="row"><span className={'tag ' + (cr.domain.status === 'active' ? 'ok' : 'wn')}>{cr.domain.status === 'active' ? 'Ativo' : 'Aguardando DNS'}</span><span className="xs mut sp">Pode levar algumas horas para o DNS propagar. O certificado HTTPS do domínio é configurado no servidor.</span><button className="btn sec sm" onClick={check}>Verificar agora</button></div></>}</div>
-      <div className="card row" style={{ gap: 16 }}><div className="sq" style={{ width: 96, height: 96, background: '#fff', border: '1px solid var(--line)', display: 'grid', placeItems: 'center' }}>{qr && <img src={qr} alt="QR code do mapa" width="88" height="88" />}</div>
-        <div className="sp col" style={{ gap: 6 }}><b>QR code</b><div className="row wrap">{[['map', 'Cor do mapa'], ['black', 'Preto'], ['logo', 'Com logo']].map(([k, l]) => <button key={k} className={'chip' + (qrStyle === k ? ' on' : '')} onClick={() => setQrStyle(k)}>{l}</button>)}</div><div className="row"><button className="btn sec sm" onClick={() => download('png')}>Baixar PNG</button><button className="btn sec sm" onClick={() => download('svg')}>Baixar SVG</button></div>{qrStyle === 'logo' && <span className="xs mut">O logo entra só no PNG.</span>}</div></div>
-      <div className="card col" style={{ gap: 8 }}><div className="row jb"><b>Imagem de compartilhamento</b><span className="tag wn">Imagem em breve</span></div><div className="row" style={{ gap: 14, flexWrap: 'wrap' }}><div style={{ borderRadius: 12, overflow: 'hidden', width: 'min(300px, 100%)', flex: 'none' }}><FakeMap h={157} tone={T.tone} shape={T.shape} acc={T.accent} colors={Object.fromEntries(T.categories.filter((c) => !/^custom:/.test(c.icon)).map((c) => [c.icon, c.color]))} n={9} lab={false} /></div><div className="sp"><b className="sm">{cr.displayName}</b><div className="sm mut">{s.real.length} lugares indicados em São Paulo</div><div className="xs mut" style={{ marginTop: 6 }}>Ao colar o link em apps de mensagem, o título e a descrição já aparecem. A imagem do cartão ainda não é gerada: o desenho ao lado é só uma prévia ilustrativa.</div></div></div></div>
-    </Shell>
   )
 }
 

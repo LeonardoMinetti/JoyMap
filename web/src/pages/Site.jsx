@@ -76,12 +76,12 @@ export function Plans() {
 
 // mesma paleta dos cartões de roteiros: amarelo, preto, cinza, menta, lilás e rosa
 const EX_COL = [['var(--acc)', 'var(--ink)'], ['var(--ink)', '#fff'], ['#E4E4E4', 'var(--ink)'], ['#A5DFCA', 'var(--ink)'], ['#C9B0E9', 'var(--ink)'], ['#FF8FB1', 'var(--ink)']]
-const EX_TONE = { light: 'claro', bright: 'vivo', liberty: 'clássico', fiord: 'azul-noite', dark: 'escuro' }
+const EX_TONE = { light: 'claro', bright: 'vivo', fiord: 'azul-noite', dark: 'escuro' }
 const EX_SHAPE = { drop: 'em gota', circle: 'redondos', square: 'quadrados', hex: 'hexagonais' }
 const EXAMPLES = [
   { n: 'Duda Come SP', h: '@dudacomesp', k: 24, tone: 'bright', pal: 'candy', shape: 'circle', pins: 9, cat: 'Doces', av: {} },
   { n: 'Noite Boa', h: '@noiteboa', k: 18, tone: 'dark', pal: 'cool', shape: 'square', pins: 10, cat: 'Bares', av: { background: '#262626', color: '#fff' } },
-  { n: 'Padoca Lab', h: '@padocalab', k: 12, tone: 'liberty', pal: 'warm', shape: 'drop', pins: 7, cat: 'Cafés', av: { background: '#f1e7d3', color: '#8a5a14' } },
+  { n: 'Padoca Lab', h: '@padocalab', k: 12, tone: 'bright', pal: 'warm', shape: 'drop', pins: 7, cat: 'Cafés', av: { background: '#f1e7d3', color: '#8a5a14' } },
   { n: 'Mar e Mesa', h: '@maremesa', k: 31, tone: 'fiord', pal: 'mono', acc: '#2d7ff9', shape: 'hex', pins: 11, cat: 'Restaurantes', av: { background: '#e4ebf7', color: '#1d4ed8' } },
   { n: 'Café com Roteiro', h: '@cafecomroteiro', k: 15, tone: 'light', pal: 'warm', shape: 'circle', pins: 12, cat: 'Cafés', av: {} },
   { n: 'Verde Prato', h: '@verdeprato', k: 9, tone: 'bright', pal: 'cool', shape: 'drop', pins: 6, cat: 'Viagem', av: { background: '#cde8da', color: '#0b6b4d' } },
