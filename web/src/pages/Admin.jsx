@@ -5,13 +5,16 @@ import { Icon } from '../lib/icons.jsx'
 import { Logo, Guard, Loading, Note, useTitle } from '../lib/ui.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { num } from '../theme.jsx'
+import { STATIC } from '../lib/base.js'
+import { resetAdminDemo } from '../lib/demoAdmin.js'
 
 const DEF = { accent: '#d93a1c', tone: 'light', shape: 'circle', pinSize: 55, pinBorder: true, cluster: false, selected: 'outline', mapLabels: true, labelDensity: 40, start: 'all', startView: null, categories: [{ id: 'low', name: 'Baixa confiança', color: '#d93a1c', icon: 'alert' }] }
 function Shell({ active, children }) {
   const nav = [['candidaturas', 'Candidaturas', '/admin'], ['mapas', 'Mapas', '/admin/mapas'], ['moderacao', 'Moderação', '/admin/moderacao'], ['metricas', 'Métricas', '/admin/metricas']]
   return (
     <Guard need="admin"><div className="page"><div className="main" style={{ maxWidth: 1180, margin: '0 auto' }}>
-      <div className="row jb wrap"><div className="row"><Logo /><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Admin</span></div><div className="row wrap">{nav.map(([k, l, to]) => <Link key={k} className={'chip' + (active === k ? ' on' : '')} to={to}>{l}</Link>)}<Link className="chip" to="/painel">Sair do admin</Link></div></div>
+      <div className="row jb wrap"><div className="row"><Logo /><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Admin</span></div><div className="row wrap">{nav.map(([k, l, to]) => <Link key={k} className={'chip' + (active === k ? ' on' : '')} to={to}>{l}</Link>)}<Link className="chip" to={STATIC ? '/' : '/painel'}>Sair do admin</Link></div></div>
+      {STATIC && <div className="card soft sm row jb wrap" style={{ gap: 8 }}><span><b>Demonstração.</b> Os perfis, lugares e denúncias abaixo são fictícios e as ações ficam só nesta aba do navegador. Nada é enviado nem salvo.</span><button className="btn sm ln" onClick={() => { resetAdminDemo(); location.reload() }}>Recomeçar</button></div>}
       {children}
     </div></div></Guard>
   )

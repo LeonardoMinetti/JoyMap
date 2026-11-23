@@ -40,7 +40,7 @@ function Routes() {
   const pub = path.match(/^\/@([a-z0-9_-]+)(\/.*)?$/i)
   if (pub) return <Public slug={pub[1].toLowerCase()} />
   if (me === undefined) return <Loading />
-  if (STATIC && !STATIC_OK.has(path)) return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
+  if (STATIC && !STATIC_OK.has(path) && !path.startsWith('/admin')) return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
   const ed = path.match(/^\/revisar\/(\d+)$/)
   if (ed) return <Build.EditPlace id={ed[1]} />
   const el = ROUTES[path]
