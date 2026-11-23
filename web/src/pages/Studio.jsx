@@ -70,13 +70,35 @@ export function PhonePreview({ fake, themeOverride, width = 300, height = 620, i
 // Prévia principal do Estúdio: iPhone com a tela real que o seguidor vê. Cada aba do Estúdio abre a tela em que a edição aparece.
 const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A lista de lugares.']]
 const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', mapa: 'map', pins: 'place' }
+// Nas abas de pins e categorias a prévia foca em poucos lugares próximos, para a mudança aparecer bem grande no mapa
+const FOCUS = { pins: 'dense', categorias: 'cats' }
+function focusPlaces(places, mode) {
+  const ok = places.filter((p) => p.lat != null && p.lon != null)
+  if (ok.length < 4) return null
+  const med = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)]
+  const c = [med(ok.map((p) => p.lat)), med(ok.map((p) => p.lon))]
+  const d = (p) => (p.lat - c[0]) ** 2 + (p.lon - c[1]) ** 2
+  const near = [...ok].sort((a, b) => d(a) - d(b))
+  if (mode === 'dense') return near.slice(0, 7)
+  const seen = new Set(); const out = []
+  for (const p of near) if (!seen.has(p.category)) { seen.add(p.category); out.push(p) }
+  return out.length >= 3 ? out.slice(0, 9) : near.slice(0, 9)
+}
 function StudioPhone({ active, fake }) {
   const s = useStudio()
   const theme = s.data.creator.theme
   const [pick, setPick] = useState(null) // escolha manual do visitante; some ao trocar de aba do Estúdio
   useEffect(() => { setPick(null) }, [active])
   const view = pick || VIEW_FOR[active] || 'map'
-  const places = s.data.places
+  const mode = FOCUS[active]
+  const focus = useMemo(() => (mode ? focusPlaces(s.data.places, mode) : null), [s.data.places, mode])
+  const places = focus || s.data.places
+  // categorias: sem agrupamento, para as cores aparecerem; os dados continuam os do criador
+  const data = focus ? { ...s.data, creator: { ...s.data.creator, theme: { ...theme, pinSize: 100, cluster: mode === 'cats' ? false : theme.cluster } } } : s.data
+  // mexer em "agrupar" leva ao mapa (onde o agrupamento aparece); mexer no "pin selecionado" leva ao lugar
+  const t0 = useRef({ c: theme.cluster, s: theme.selected })
+  useEffect(() => { if (active !== 'pins') return; if (t0.current.c !== theme.cluster) setPick('map'); t0.current.c = theme.cluster }, [theme.cluster, active])
+  useEffect(() => { if (active !== 'pins') return; if (t0.current.s !== theme.selected) setPick('place'); t0.current.s = theme.selected }, [theme.selected, active])
   const f = useMemo(() => ({ cats: [], setCats: () => {}, q: '', clear: () => {} }), [])
   // pulso suave quando uma edição muda a prévia
   const [flash, setFlash] = useState(false)
@@ -93,12 +115,12 @@ function StudioPhone({ active, fake }) {
         <Phone h={600} label="Prévia do seu mapa público, como o seguidor vê no celular">
           <Native h={600} theme={theme}>
             <div className="pub preview" style={{ ...pubVars(theme), height: '100%' }}>
-              <MapSheet key={view} data={s.data} shown={places} f={f} selectedId={view === 'place' ? places[0]?.id : null} preview fake={fake || s.usingSample} snap={view === 'list' ? 'full' : view === 'place' ? 'half' : 'low'} />
+              <MapSheet key={view + ':' + (mode || '')} data={data} shown={places} f={f} selectedId={view === 'place' ? places[0]?.id : null} preview fake={fake || s.usingSample} snap={view === 'list' ? 'full' : focus ? 'peek' : view === 'place' ? 'half' : 'low'} />
             </div>
           </Native>
         </Phone>
       </div>
-      <p className="stp-cap"><b>{VIEWS.find((v) => v[0] === view)[1]}</b> · {cap}</p>
+      <p className="stp-cap"><b>{VIEWS.find((v) => v[0] === view)[1]}</b> · {cap}{focus && ' A prévia aproxima alguns lugares e aumenta os pins, para destacar o que você está mudando.'}</p>
     </div>
   )
 }
