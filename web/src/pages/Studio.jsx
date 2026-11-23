@@ -103,8 +103,8 @@ function StudioPhone({ active, fake }) {
   )
 }
 
-const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['pins', 'Pins e símbolos', 'flag', '/estudio/pins'],
-  ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa']]
+const NAV = [['modelos', 'Modelos', 'layers', '/estudio'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['pins', 'Pins e símbolos', 'flag', '/estudio/pins'],
+  ['mapa', 'Mapa', 'pin', '/estudio/mapa']]
 // O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
 function StudioHead({ active }) {
   const s = useStudio()
@@ -114,7 +114,7 @@ function StudioHead({ active }) {
   return (
     <div className="stm-h">
       <div className="stm-t">
-        <div><span className="eb">Painel</span><b className="d s26">Estúdio de estilo</b></div>
+        <div className="pg-h"><h1 className="d s44">Estúdio de estilo</h1><p className="sm mut">Personalize como o seu mapa aparece para os seguidores.</p></div>
         <div className="stm-act">
           <span className={'stm-st' + (s.dirty ? ' dirty' : '')} role="status"><i />{s.dirty ? 'Alterações não publicadas' : 'Tudo publicado'}</span>
           {s.dirty && <button type="button" className="link xs" onClick={s.undo}>Desfazer</button>}
@@ -171,12 +171,15 @@ export function StudioHome() {
   const current = TEMPLATES.find(same)
   const dot = (c, k) => <i key={k} style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: '2px solid #fff', marginLeft: k ? -8 : 0, boxShadow: '0 0 0 1px rgba(0,0,0,.08)', display: 'inline-block' }} />
   return (
-    <Shell active="modelos" layout="main" previewWidth={460} title="Visão geral">
-      <div><h1 className="d s32">Seu estilo</h1><p className="sm mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real, e só vai ao ar quando você publicar.</p></div>
-      <Sec title="Modelos" hint="Aplica cores, fonte e pins de uma vez. Dá para ajustar tudo depois nas outras abas." right={<Link className="link xs" to="/estudio/modelos">Ver todos com prévia</Link>}>
-        <div className="row wrap" style={{ gap: 10 }}>{TEMPLATES.map((t) => { const on = current?.id === t.id; return <button key={t.id} type="button" className={'tplchip' + (on ? ' on' : '')} aria-pressed={on} onClick={() => apply(t)}><span className="row" style={{ gap: 0 }}>{[t.t.accent, t.t.bg, t.t.fg].map((c, k) => dot(c, k))}</span>{t.name}{on && <Icon n="check" s={14} c="#fff" />}</button> })}</div>
-        {!current && <span className="xs mut">Seu estilo está personalizado: nenhum modelo corresponde exatamente ao que está configurado.</span>}
-      </Sec>
+    <Shell active="modelos" layout="main" previewWidth={460} title="Modelos">
+      <div><h1 className="d s32">Modelos</h1><p className="sm mut">Aplica cores, fonte e pins de uma vez. Dá para ajustar tudo depois nas outras abas.</p></div>
+      <div className="g2" style={{ gap: 12 }}>{TEMPLATES.map((t) => { const on = current?.id === t.id; return (
+        <button key={t.id} type="button" className={'card col' + (on ? ' sel' : '')} style={{ gap: 10, padding: 16, textAlign: 'left' }} aria-pressed={on} onClick={() => apply(t)}>
+          <div className="row jb"><span className="row" style={{ gap: 0 }}>{[t.t.accent, t.t.bg, t.t.fg].map((c, k) => dot(c, k))}</span>{on && <span className="tag ok">Selecionado</span>}</div>
+          <div><b>{t.name}</b><div className="xs mut">{FONTS[t.t.font].label} · pin {SHAPES[t.t.shape].toLowerCase()} · mapa {TONES[t.t.tone].label.toLowerCase()}</div></div>
+        </button>) })}</div>
+      {!current && <p className="xs mut" style={{ margin: 0 }}>Seu estilo está personalizado: nenhum modelo corresponde exatamente ao que está configurado.</p>}
+      <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} onClick={() => { if (confirm('Voltar ao visual padrão? As categorias mantêm o símbolo.')) s.setTheme((t) => applyTemplate(t, { t: { accent: '#ff4b2b', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'drop', font: 'sans', radius: 14 }, pal: 'warm' })) }}>Começar do zero</button>
     </Shell>
   )
 }
@@ -260,8 +263,8 @@ function SymbolPicker() {
 export function StudioMap() {
   const { theme: T, setTheme } = useStudio()
   return (
-    <Shell active="mapa" title="Estilo do mapa">
-      <h1 className="d s32">Estilo do mapa</h1>
+    <Shell active="mapa" title="Mapa">
+      <h1 className="d s32">Mapa</h1>
       <Sec title="Base do mapa" hint="O desenho das ruas e dos bairros por trás dos seus pins">
         <div className="g2" style={{ gap: 10 }}>
           {Object.entries(TONES).map(([k, t]) => <button key={k} aria-pressed={T.tone === k} className={'card col' + (T.tone === k ? ' sel' : '')} style={{ padding: 8, gap: 8, textAlign: 'left' }} onClick={() => setTheme({ tone: k })}><div style={{ borderRadius: 12, overflow: 'hidden', pointerEvents: 'none', position: 'relative' }}><FakeMap h={110} tone={k} n={5} lab={false} />{T.tone === k && <span style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: 'var(--ink)', display: 'grid', placeItems: 'center' }}><Icon n="check" s={14} c="#fff" /></span>}</div><b className="xs" style={{ paddingLeft: 4 }}>{t.label}</b></button>)}
@@ -303,27 +306,6 @@ export function StudioPins() {
         <div><Lb>Pin selecionado</Lb><div className="row wrap">{[['outline', 'Maior com contorno'], ['pulse', 'Pulsando'], ['color', 'Só cor']].map(([k, l]) => <button key={k} className={'chip' + (T.selected === k ? ' on' : '')} aria-pressed={T.selected === k} onClick={() => setTheme({ selected: k })}>{l}</button>)}</div></div>
       </Sec>
       <SymbolPicker />
-    </Shell>
-  )
-}
-
-// D10 · modelos prontos
-export function StudioTemplates() {
-  const { setTheme } = useStudio()
-  const { theme } = useStudio()
-  return (
-    <Shell active="modelos" layout="full" title="Modelos">
-      <div className="row jb wrap"><div><h1 className="d s32">Modelos prontos</h1><p className="sm mut">Escolha um ponto de partida. Dá para ajustar tudo depois.</p></div><button className="btn ln sm" onClick={() => { if (confirm('Voltar ao visual padrão? As categorias mantêm nome e símbolo.')) setTheme((t) => applyTemplate(t, { t: { accent: '#ff4b2b', bg: '#ffffff', fg: '#171717', tone: 'light', shape: 'drop', font: 'sans', radius: 14 }, pal: 'warm' })) }}>Começar do zero</button></div>
-      <div className="g3" style={{ gap: 18 }}>
-        {TEMPLATES.map((tpl) => {
-          const preview = applyTemplate(theme, tpl)
-          return (
-            <div key={tpl.id} className="card col" style={{ padding: 12, gap: 10 }}>
-              <div style={{ display: 'grid', placeItems: 'center', background: '#efeeec', borderRadius: 14, padding: 12, overflow: 'hidden', height: 300 }}><div style={{ transform: 'scale(.42)', transformOrigin: 'top center', height: 260 }}><PhonePreview themeOverride={preview} /></div></div>
-              <div className="row jb"><b>{tpl.name}</b><button className="btn sm" onClick={() => { setTheme(applyTemplate(theme, tpl)); toast(`Modelo ${tpl.name} aplicado ao rascunho`); navigate('/estudio') }}>Usar</button></div>
-            </div>)
-        })}
-      </div>
     </Shell>
   )
 }

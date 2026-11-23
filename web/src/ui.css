@@ -425,3 +425,5 @@ body{background:var(--cream)}.page{background:var(--cream)}
   .phone .ft .btn.blk:only-child{margin-left:auto}
 }
 .tplchip.on{background:var(--ink);color:#fff}.tplchip.on:hover{background:var(--ink)}
+.stm-t .pg-h h1{margin:0}.stm-t .pg-h p{margin:8px 0 0}
+@media (max-width:900px){.stm-t .d{font-size:28px}}
