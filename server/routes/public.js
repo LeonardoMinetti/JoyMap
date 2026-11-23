@@ -11,7 +11,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '
 export default function publicRoutes(app, x) {
   const { db, cfg } = x
   const live = (slug) => db.prepare("SELECT * FROM creators WHERE slug=? AND status='approved' AND published=1").get(String(slug || '').toLowerCase())
-  const pubPlace = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geo_quality, category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, tiktokId: p.post_id })
+  const pubPlace = (p, slug) => ({ photo: p.photo_v && slug ? `/api/public/${slug}/places/${p.id}/photo?v=${p.photo_v}` : null, id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geo_quality, category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, tiktokId: p.post_id, googleUrl: p.google_url || null, instagramUrl: p.instagram_url || null })
   const livePlaces = (id) => db.prepare("SELECT * FROM places WHERE creator_id=? AND status='confirmed' AND geo_status='found' AND lat IS NOT NULL AND hidden=0 ORDER BY id").all(id)
 
   // ---------- mapa de um criador ----------
@@ -26,11 +26,11 @@ export default function publicRoutes(app, x) {
     const row = live(c.req.param('slug'))
     if (!row) return c.json({ error: 'indisponivel' }, 404)
     const v = x.view(row)
-    const places = livePlaces(row.id).map(pubPlace)
+    const places = livePlaces(row.id).map((p) => pubPlace(p, row.slug))
     const ids = new Set(places.map((p) => p.id))
     const blocks = Object.fromEntries(v.theme.layout.blocks.map((b) => [b.id, b.on]))
-    const routes = db.prepare('SELECT id, name, note, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
-      .map((r) => ({ id: r.id, name: r.name, note: r.note, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)) })).filter((r) => r.placeIds.length)
+    const routes = db.prepare('SELECT id, name, note, color, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
+      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)) })).filter((r) => r.placeIds.length)
     return c.json({
       creator: {
         handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme,
@@ -39,6 +39,13 @@ export default function publicRoutes(app, x) {
       },
       places, routes,
     })
+  })
+  app.get('/api/public/:slug/places/:id/photo', (c) => {
+    const row = live(c.req.param('slug'))
+    const id = Number(c.req.param('id'))
+    const ok = row && db.prepare("SELECT 1 FROM places WHERE id=? AND creator_id=? AND status='confirmed' AND hidden=0").get(id, row.id)
+    const m = ok && db.prepare('SELECT mime, data FROM place_media WHERE place_id=?').get(id)
+    return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'public, max-age=86400' }) : c.body(null, 404)
   })
   app.get('/api/public/:slug/cover', (c) => {
     const row = live(c.req.param('slug'))

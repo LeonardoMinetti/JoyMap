@@ -8,6 +8,7 @@ import { useMe } from '../lib/me.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { catOf, fmtDate, symOf } from '../theme.jsx'
+import { resizeImage } from '../lib/image.js'
 import { findGroups, hasCoords, isReliable, issueOf, normName } from '../lib/places.js'
 
 // Carrega os lugares do criador (com recarga manual)
@@ -155,11 +156,21 @@ export function EditPlace({ id }) {
   const [places] = usePlaces()
   const [f, setF] = useState(null)
   const [trocar, setTrocar] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const pick = useRef(null)
   const p = places?.find((x) => x.id === Number(id))
-  useEffect(() => { if (p && !f) setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad }) }, [p, f])
+  useEffect(() => { if (p && !f) { setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad, googleUrl: p.googleUrl || '', instagramUrl: p.instagramUrl || '' }); setPhoto(p.photo || null) } }, [p, f])
   if (!places || !f) return <Guard need="approved">{places ? <Stage><Hd back="/revisar" title="Editar lugar" /><p className="bd mut">Lugar não encontrado.</p></Stage> : <Loading />}</Guard>
   const theme = me.creator.theme
-  const save = async () => { await api(`/creator/places/${p.id}`, { method: 'PATCH', body: f }); navigate('/revisar') }
+  const save = async () => {
+    try { await api(`/creator/places/${p.id}`, { method: 'PATCH', body: f }); navigate('/revisar') }
+    catch (x) { toast(x.message === 'google_invalido' ? 'O link do Google precisa ser do Google Maps (maps.app.goo.gl ou google.com/maps).' : x.message === 'instagram_invalido' ? 'Use o @ ou o link do perfil do Instagram do lugar (não de um post).' : 'Não foi possível salvar.') }
+  }
+  const sendPhoto = async (file) => {
+    try { const im = await resizeImage(file); const r = await api(`/creator/places/${p.id}/photo`, { method: 'PUT', body: { mime: im.mime, data: im.data } }); setPhoto(r.photo || im.url); toast('Foto salva') }
+    catch { toast('Use uma foto JPG, PNG ou WebP.') }
+    if (pick.current) pick.current.value = ''
+  }
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const cats = theme.categories
   return (
@@ -174,6 +185,14 @@ export function EditPlace({ id }) {
         <div><label className="lb">Post da indicação</label>
           {trocar ? <div className="in"><Icon n="link" s={16} c="#757575" /><input value={f.postUrl} onChange={set('postUrl')} placeholder="Cole o link do post ou vídeo" autoFocus /></div>
             : <div className="card soft row"><Icon n="link" s={18} /><span className="sm sp trunc">{f.postUrl ? `${f.postUrl.replace(/^https?:\/\/(www\.)?/, '')}${p.postedOn ? ` (${fmtDate(p.postedOn)})` : ''}` : 'Sem post vinculado'}</span><button className="tag" style={{ border: 0, cursor: 'pointer' }} onClick={() => setTrocar(true)}>{f.postUrl ? 'Trocar' : 'Adicionar'}</button></div>}</div>
+        <div><label className="lb">Foto do lugar</label>
+          <div className="row" style={{ gap: 12 }}>
+            <div className="sq ph" style={{ width: 88, height: 88, borderRadius: 16, overflow: 'hidden', flex: 'none', ...(photo ? { backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : {}) }}>{photo ? 'foto' : 'Sem foto'}</div>
+            <div className="sp col" style={{ gap: 6 }}><input ref={pick} type="file" accept="image/jpeg,image/png,image/webp" className="sr" id="pf" onChange={(e) => e.target.files[0] && sendPhoto(e.target.files[0])} />
+              <div className="row"><label htmlFor="pf" className="btn sec sm">{photo ? 'Trocar foto' : 'Escolher foto'}</label>{photo && <button className="link xs" onClick={async () => { await api(`/creator/places/${p.id}/photo`, { method: 'DELETE' }); setPhoto(null) }}>Remover</button>}</div>
+              <span className="xs mut">Use uma foto sua ou autorizada. Ela aparece no cartão e na página do lugar.</span></div></div></div>
+        <Field label="Link do Google (opcional)" id="n4"><div className="in"><Icon n="link" s={16} c="#757575" /><input id="n4" value={f.googleUrl} onChange={set('googleUrl')} placeholder="Cole o link do lugar no Google Maps" inputMode="url" /></div><span className="xs mut">No Google Maps, toque em Compartilhar e copie o link. Sem ele, o mapa oferece uma busca no Google pelo nome e endereço.</span></Field>
+        <Field label="Instagram do lugar (opcional)" id="n5"><div className="in"><Icon n="insta" s={16} c="#757575" /><input id="n5" value={f.instagramUrl} onChange={set('instagramUrl')} placeholder="@perfil ou link do perfil" autoCapitalize="none" /></div></Field>
         <Field label="Sua nota (opcional)" id="n3"><div className="in"><input id="n3" value={f.note} onChange={set('note')} placeholder="Peça o pão de queijo…" maxLength="200" /></div></Field>
         <div className="row"><div className="sp"><b className="sm">Publicidade</b><div className="xs mut">O mapa mostra o aviso "Publi" ao seguidor.</div></div><Switch on={f.ad} onChange={(v) => setF({ ...f, ad: v })} label="Publicidade" /></div>
       </div>

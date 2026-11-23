@@ -3,6 +3,7 @@
 // (sessionStorage): fechar a aba, ou tocar em "Recomeçar", volta ao início. Nada é enviado a lugar nenhum.
 import { sanitizeTheme, sanitizeSvg } from '../../../server/theme.js'
 import { extract, tiktokId } from '../../../server/extract.js'
+import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
 
@@ -58,7 +59,7 @@ async function S() {
 }
 const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(mem)) } catch { /* ok */ } }
 const out = (v) => { save(); return v }
-const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, photo: undefined })
+const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, googleUrl: p.googleUrl || null, instagramUrl: p.instagramUrl || null, photo: undefined })
 
 // ---------- estatísticas ilustrativas ----------
 function stats(s, days) {
@@ -143,6 +144,16 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/places/confirm-high') { let n = 0; s.places.forEach((x) => { if (x.status === 'pending' && x.confidence === 'high' && x.geoStatus === 'found' && x.geoQuality === 'address_exact') { x.status = 'confirmed'; n++ } }); return out({ confirmed: n }) }
   if (p === '/creator/places/merge') { const a = find(body.keep), b = find(body.drop); if (a.id === b.id) throw err('dados'); a.postUrl = a.postUrl || b.postUrl; b.status = 'removed'; return out({ ok: true }) }
   if (p === '/creator/places/keep-separate') { (body.ids || []).forEach((id) => { const x = s.places.find((v) => v.id === Number(id)); if (x) x.dupOk = true }); return out({ ok: true }) }
+  if ((m = p.match(/^\/creator\/places\/(\d+)\/photo$/))) {
+    const x = find(m[1])
+    if (method === 'DELETE') { delete s.photo[x.id]; return out({ ok: true }) }
+    if (method === 'PUT') {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(body.mime)) throw err('formato')
+      if (String(body.data || '').length > 540 * 1024) throw err('tamanho')
+      s.photo[x.id] = `data:${body.mime};base64,${body.data}`
+      return out({ ok: true, photo: s.photo[x.id] })
+    }
+  }
   if ((m = p.match(/^\/creator\/places\/(\d+)$/)) && method === 'PATCH') {
     const x = find(m[1])
     const name = 'name' in body ? String(body.name || '').slice(0, 80) : x.name
@@ -151,6 +162,10 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     if (status === 'confirmed' && !name) status = x.status
     if ('name' in body && name !== x.name) x.nameSrc = 'manual'
     if ('address' in body && body.address !== x.address) { x.lat = null; x.lon = null; x.geoStatus = 'none'; x.geoQuality = null }
+    const gUrl = 'googleUrl' in body ? cleanGoogleUrl(body.googleUrl) : x.googleUrl, iUrl = 'instagramUrl' in body ? cleanInstagramUrl(body.instagramUrl) : x.instagramUrl
+    if (gUrl === undefined) throw err('google_invalido')
+    if (iUrl === undefined) throw err('instagram_invalido')
+    x.googleUrl = gUrl; x.instagramUrl = iUrl
     Object.assign(x, { name, status }, 'address' in body ? { address: String(body.address || '').slice(0, 200) || null } : {}, 'category' in body ? { category: body.category } : {}, 'note' in body ? { note: String(body.note || '').slice(0, 200) } : {}, 'ad' in body ? { ad: !!body.ad } : {}, 'postUrl' in body ? { postUrl: String(body.postUrl || '').slice(0, 300) || null } : {})
     return out({ place: x })
   }
@@ -171,7 +186,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/routes' && method === 'GET') return { routes: s.routes }
   if (p === '/creator/routes' && method === 'PUT') {
     const own = new Set(s.places.map((v) => v.id))
-    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => ({ id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), placeIds: (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30) })).filter((r) => r.name)
+    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => ({ id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30) })).filter((r) => r.name)
     return out({ ok: true })
   }
   if (p === '/creator/domain') throw err('estatico', 503)

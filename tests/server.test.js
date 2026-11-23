@@ -301,3 +301,17 @@ test('mapa de demonstração: eventos não geram métricas e não dão erro', as
   assert.equal(r.status, 200)
   assert.equal(db.prepare('SELECT COUNT(*) n FROM events').get().n, 0)
 })
+
+test('links do lugar: só Google Maps e perfil do Instagram', async () => {
+  const { cleanGoogleUrl, cleanInstagramUrl, googleSearchUrl } = await import('../server/placelinks.js')
+  assert.equal(cleanGoogleUrl(''), null)
+  assert.equal(cleanGoogleUrl('maps.app.goo.gl/abc123'), 'https://maps.app.goo.gl/abc123')
+  assert.equal(cleanGoogleUrl('https://www.google.com/maps/place/Bar+X'), 'https://www.google.com/maps/place/Bar+X')
+  assert.equal(cleanGoogleUrl('https://evil.example/maps'), undefined)
+  assert.equal(cleanGoogleUrl('http://www.google.com/maps/x'), undefined)
+  assert.equal(cleanInstagramUrl('@bar.exemplo'), 'https://www.instagram.com/bar.exemplo/')
+  assert.equal(cleanInstagramUrl('https://www.instagram.com/bar.exemplo/?hl=pt'), 'https://www.instagram.com/bar.exemplo/')
+  assert.equal(cleanInstagramUrl('https://instagram.com/p/AbC123/'), undefined)
+  assert.equal(cleanInstagramUrl('https://tiktok.com/@x'), undefined)
+  assert.match(googleSearchUrl({ name: 'Bar X', address: 'Rua A, 1' }), /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=Bar%20X%20Rua%20A%2C%201$/)
+})

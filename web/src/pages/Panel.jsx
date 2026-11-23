@@ -5,7 +5,7 @@ import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { PanelPage, Note, Switch, Field, Loading, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
-import { fmtDM, fmtDate, num, onAccent, TONES, catOf } from '../theme.jsx'
+import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
 import { PlacePhoto, pubVars } from '../pub/shared.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -284,7 +284,7 @@ function RoutePreview({ route, places, theme }) {
   const rp = route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean)
   return (
     <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
-      <div className="ms-route" style={{ cursor: 'default', marginTop: 0 }}>
+      <div className="ms-route" style={{ cursor: 'default', marginTop: 0, ...(route.color ? { background: route.color, color: onColor(route.color) } : {}) }}>
         <b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
         <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
       </div>
@@ -338,6 +338,11 @@ export function Roteiros() {
             <div className="card col" style={{ gap: 12 }}>
               <span className="eb">Como aparece no seu mapa</span>
               <RoutePreview route={r} places={places} theme={theme} />
+              <div><span className="lb">Cor do cartão</span>
+                <div className="row wrap" style={{ gap: 8 }}>
+                  <button type="button" className={'chip' + (!r.color ? ' on' : '')} onClick={() => set({ color: null })}>Cor do mapa</button>
+                  {[...ACCENTS, ...CAT_COLORS].map((col) => <button key={col} type="button" aria-label={`Cor ${col}`} aria-pressed={r.color?.toLowerCase() === col} className={'dotsw' + (r.color?.toLowerCase() === col ? ' on' : '')} style={{ background: col }} onClick={() => set({ color: col })} />)}
+                  <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={r.color || theme.accent} onChange={(e) => set({ color: e.target.value })} aria-label="Outra cor do cartão" /></label></div></div>
               <div className="g2"><Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field><Field label="Observação" id="ro"><div className="in"><input id="ro" value={r.note || ''} maxLength="60" placeholder="Ex.: 3 h de passeio" onChange={(e) => set({ note: e.target.value })} /></div></Field></div>
             </div>
             <div className="card col" style={{ gap: 10 }}>

@@ -73,6 +73,7 @@ export function makeCtx(db, opts = {}) {
     id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoStatus: p.geo_status, geoQuality: p.geo_quality,
     category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, rec: p.rec, confidence: p.confidence, note: p.note, status: p.status,
     nameSrc: p.name_src, snippet: p.snippet, dupOk: !!p.dup_ok, hidden: !!p.hidden, reviewed: !!p.reviewed, tiktokId: p.post_id,
+    googleUrl: p.google_url || null, instagramUrl: p.instagram_url || null, photo: p.photo_v ? `/api/creator/places/${p.id}/photo?v=${p.photo_v}` : null,
   })
   const notice = (creatorId, text) => db.prepare('INSERT INTO notices(creator_id,text) VALUES (?,?)').run(creatorId, text)
   const logConsent = (creatorId, key, value) => db.prepare('INSERT INTO consent_log(creator_id,key,value,terms_version) VALUES (?,?,?,?)').run(creatorId, key, value ? 1 : 0, TERMS_VERSION)

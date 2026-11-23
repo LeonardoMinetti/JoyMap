@@ -4,6 +4,7 @@ import { extract, tiktokId, dateFromTiktokId } from '../extract.js'
 import { enqueueGeocode, searchPlaces } from '../geocode.js'
 import { sanitizeTheme, sanitizeSvg } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
+import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
 const CATEGORY = /^[a-z0-9_-]{1,20}$/
@@ -110,11 +111,15 @@ export default function creatorRoutes(app, x) {
     const found = Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lon)) && b.lat !== null && b.lat !== ''
     const address = b.address ? String(b.address).slice(0, 200) : null
     const category = CATEGORY.test(b.category || '') ? b.category : 'rest'
+    const gUrl = cleanGoogleUrl(b.googleUrl), iUrl = cleanInstagramUrl(b.instagramUrl)
+    if (gUrl === undefined) return c.json({ error: 'google_invalido' }, 400)
+    if (iUrl === undefined) return c.json({ error: 'instagram_invalido' }, 400)
     const r = db.prepare('INSERT INTO places(creator_id,name,address,municipality,neighborhood,lat,lon,geo_status,geo_quality,category,post_url,post_id,posted_on,status,confidence,name_src,post_key) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
       .run(me(c).id, name, address, b.municipality || null, b.neighborhood || null, found ? Number(b.lat) : null, found ? Number(b.lon) : null,
         found ? 'found' : address && cfg.geocode ? 'pending' : 'none', found ? (b.quality === 'address_exact' ? 'address_exact' : 'street_approx') : null, category, url || null, tid, tid ? dateFromTiktokId(tid) : null,
         found ? 'confirmed' : 'pending', 'manual', 'manual', `m:${randomBytes(4).toString('hex')}`)
     const id = Number(r.lastInsertRowid)
+    if (gUrl || iUrl) db.prepare('UPDATE places SET google_url=?, instagram_url=? WHERE id=?').run(gUrl, iUrl, id)
     if (!found && address && cfg.geocode) enqueueGeocode(db, id, cfg.fetchImpl)
     return c.json({ place: x.placeOut(db.prepare('SELECT * FROM places WHERE id=?').get(id)) })
   })
@@ -129,12 +134,16 @@ export default function creatorRoutes(app, x) {
     let status = ['confirmed', 'pending', 'removed'].includes(b.status) ? b.status : p.status
     if (p.status === 'unresolved' && name && !('status' in b)) status = 'pending'
     if (status === 'confirmed' && !name) status = p.status
+    const gUrl = 'googleUrl' in b ? cleanGoogleUrl(b.googleUrl) : p.google_url
+    const iUrl = 'instagramUrl' in b ? cleanInstagramUrl(b.instagramUrl) : p.instagram_url
+    if (gUrl === undefined) return c.json({ error: 'google_invalido' }, 400)
+    if (iUrl === undefined) return c.json({ error: 'instagram_invalido' }, 400)
     const postUrl = 'postUrl' in b ? String(b.postUrl || '').slice(0, 300) || null : p.post_url
     const tid = 'postUrl' in b ? tiktokId(postUrl) : p.post_id
     // corrigir o nome já resolve a dúvida sobre ele
     const nameSrc = 'name' in b && name !== p.name ? 'manual' : p.name_src
-    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=? WHERE id=?')
-      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, id)
+    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=?, google_url=?, instagram_url=? WHERE id=?')
+      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, gUrl, iUrl, id)
     if (address && address !== p.address && cfg.geocode) {
       db.prepare("UPDATE places SET geo_status='pending', lat=NULL, lon=NULL, reviewed=0 WHERE id=?").run(id)
       enqueueGeocode(db, id, cfg.fetchImpl)
@@ -202,6 +211,31 @@ export default function creatorRoutes(app, x) {
     db.prepare('DELETE FROM symbols WHERE id=? AND creator_id=?').run(id, me(c).id)
     return c.json({ ok: true })
   })
+  // foto do lugar (enviada pelo criador; o navegador já reduz a imagem antes)
+  const mine = (c) => db.prepare('SELECT id FROM places WHERE id=? AND creator_id=?').get(Number(c.req.param('id')), me(c).id)
+  cr.put('/places/:id/photo', async (c) => {
+    if (!mine(c)) return c.json({ error: 'nao_encontrado' }, 404)
+    const b = await c.req.json().catch(() => ({}))
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(b.mime)) return c.json({ error: 'formato' }, 400)
+    const buf = Buffer.from(String(b.data || ''), 'base64')
+    if (!buf.length || buf.length > 400 * 1024) return c.json({ error: 'tamanho' }, 400)
+    const magic = buf.subarray(0, 4).toString('latin1'), jpg = buf[0] === 0xff && buf[1] === 0xd8, png = magic === '\x89PNG', webp = magic === 'RIFF'
+    if (!(jpg || png || webp)) return c.json({ error: 'formato' }, 400)
+    const id = Number(c.req.param('id')), v = Date.now()
+    db.prepare('INSERT INTO place_media(place_id,creator_id,mime,data) VALUES (?,?,?,?) ON CONFLICT(place_id) DO UPDATE SET mime=excluded.mime, data=excluded.data').run(id, me(c).id, b.mime, buf)
+    db.prepare('UPDATE places SET photo_v=? WHERE id=?').run(v, id)
+    return c.json({ ok: true, photo: `/api/creator/places/${id}/photo?v=${v}` })
+  })
+  cr.get('/places/:id/photo', (c) => {
+    const m = mine(c) && db.prepare('SELECT mime, data FROM place_media WHERE place_id=?').get(Number(c.req.param('id')))
+    return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'private, max-age=300' }) : c.body(null, 404)
+  })
+  cr.delete('/places/:id/photo', (c) => {
+    if (!mine(c)) return c.json({ error: 'nao_encontrado' }, 404)
+    const id = Number(c.req.param('id'))
+    db.prepare('DELETE FROM place_media WHERE place_id=?').run(id); db.prepare('UPDATE places SET photo_v=NULL WHERE id=?').run(id)
+    return c.json({ ok: true })
+  })
   cr.put('/cover', async (c) => {
     const b = await c.req.json().catch(() => ({}))
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(b.mime)) return c.json({ error: 'formato' }, 400)
@@ -215,7 +249,7 @@ export default function creatorRoutes(app, x) {
     return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'no-store' }) : c.body(null, 404)
   })
   cr.delete('/cover', (c) => { db.prepare('DELETE FROM media WHERE creator_id=?').run(me(c).id); return c.json({ ok: true }) })
-  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, placeIds: j(r.place_ids, []) })) }))
+  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []) })) }))
   cr.put('/routes', async (c) => {
     const { routes } = await c.req.json().catch(() => ({}))
     const own = new Set(db.prepare("SELECT id FROM places WHERE creator_id=?").all(me(c).id).map((r) => r.id))
@@ -224,7 +258,7 @@ export default function creatorRoutes(app, x) {
       const name = String(r.name || '').trim().slice(0, 40)
       if (!name) return
       const ids = (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
-      db.prepare('INSERT INTO routes(creator_id,name,note,place_ids,pos) VALUES (?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), JSON.stringify(ids), i)
+      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,pos) VALUES (?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), i)
     })
     return c.json({ ok: true })
   })
@@ -300,7 +334,7 @@ export default function creatorRoutes(app, x) {
     const row = fresh(c)
     const places = db.prepare("SELECT * FROM places WHERE creator_id=? AND status!='removed'").all(row.id).map(x.placeOut)
     if (c.req.query('format') === 'csv') {
-      const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'postUrl', 'postedOn', 'ad', 'status']
+      const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'googleUrl', 'instagramUrl', 'postUrl', 'postedOn', 'ad', 'status']
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
       const csv = [cols.join(','), ...places.map((p) => cols.map((k) => esc(p[k])).join(','))].join('\n')
       return c.body(csv, 200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="meus-lugares.csv"' })
@@ -321,7 +355,7 @@ export default function creatorRoutes(app, x) {
     const { confirm } = await c.req.json().catch(() => ({}))
     if (confirm !== 'EXCLUIR') return c.json({ error: 'confirmacao' }, 400)
     const row = fresh(c)
-    for (const t of ['places', 'events', 'routes', 'symbols', 'media', 'consent_log', 'notices', 'interest', 'reports']) db.prepare(`DELETE FROM ${t} WHERE creator_id=?`).run(row.id)
+    for (const t of ['places', 'events', 'routes', 'symbols', 'media', 'place_media', 'consent_log', 'notices', 'interest', 'reports']) db.prepare(`DELETE FROM ${t} WHERE creator_id=?`).run(row.id)
     db.prepare('DELETE FROM creators WHERE id=?').run(row.id)
     db.prepare('DELETE FROM sessions WHERE user_id=?').run(row.user_id)
     return c.json({ ok: true })
