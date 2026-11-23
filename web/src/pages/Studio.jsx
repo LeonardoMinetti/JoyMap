@@ -165,25 +165,18 @@ const Sec = ({ title, hint, children, right }) => <section className="card col" 
 export function StudioHome() {
   const s = useStudio()
   const T = s.theme
-  const font = FONTS[T.font] || FONTS.sans
-  const shapeName = SHAPES[T.shape]
   const apply = (tpl) => { s.setTheme(applyTemplate(T, tpl)); toast(`Modelo ${tpl.name} aplicado ao rascunho`) }
+  // o modelo está "selecionado" quando tudo o que ele define é exatamente o que está configurado
+  const same = (tpl) => { const n = applyTemplate(T, tpl); const low = (v) => String(v).toLowerCase(); return ['accent', 'bg', 'tone', 'shape', 'font', 'radius'].every((k) => low(n[k]) === low(T[k])) && n.categories.every((c, i) => low(c.color) === low(T.categories[i].color)) }
+  const current = TEMPLATES.find(same)
   const dot = (c, k) => <i key={k} style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: '2px solid #fff', marginLeft: k ? -8 : 0, boxShadow: '0 0 0 1px rgba(0,0,0,.08)', display: 'inline-block' }} />
-  const cards = [
-    ['/estudio/cores', 'Cores e tema', `${font.label} · cantos ${RADIUS_MODES[radiusMode(T.radius)].label.toLowerCase()}`, <span className="row" style={{ gap: 0 }}>{[T.accent, T.bg, T.fg].map((c, k) => dot(c, k))}</span>],
-    ['/estudio/categorias', 'Categorias', 'A cor de cada uma', <span className="row" style={{ gap: 4 }}>{T.categories.slice(0, 5).map((c) => <i key={c.id} style={{ width: 14, height: 14, borderRadius: '50%', background: c.color, display: 'inline-block' }} />)}</span>],
-    ['/estudio/pins', 'Pins e símbolos', `Pin em ${shapeName.toLowerCase()} · pacote de símbolos`, <span className="row" style={{ gap: 4 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={20} c={c.color} /> })}</span>],
-    ['/estudio/mapa', 'Estilo do mapa', `${TONES[T.tone]?.label || 'Claro'} · rótulos ${T.mapLabels ? 'ligados' : 'desligados'}`, <div style={{ borderRadius: 10, overflow: 'hidden', width: 64, height: 36 }}><FakeMap h={36} tone={T.tone} n={0} lab={false} /></div>],
-  ]
   return (
     <Shell active="modelos" layout="main" previewWidth={460} title="Visão geral">
       <div><h1 className="d s32">Seu estilo</h1><p className="sm mut">Deixe o mapa com a sua cara. Tudo muda na prévia ao lado, em tempo real, e só vai ao ar quando você publicar.</p></div>
-      <Sec title="Comece por um modelo" hint="Aplica cores, fonte e pins de uma vez. Dá para ajustar tudo depois." right={<Link className="link xs" to="/estudio/modelos">Ver todos com prévia</Link>}>
-        <div className="row wrap" style={{ gap: 10 }}>{TEMPLATES.map((t) => <button key={t.id} type="button" className="tplchip" onClick={() => apply(t)}><span className="row" style={{ gap: 0 }}>{[t.t.accent, t.t.bg, t.t.fg].map((c, k) => dot(c, k))}</span>{t.name}</button>)}</div>
+      <Sec title="Modelos" hint="Aplica cores, fonte e pins de uma vez. Dá para ajustar tudo depois nas outras abas." right={<Link className="link xs" to="/estudio/modelos">Ver todos com prévia</Link>}>
+        <div className="row wrap" style={{ gap: 10 }}>{TEMPLATES.map((t) => { const on = current?.id === t.id; return <button key={t.id} type="button" className={'tplchip' + (on ? ' on' : '')} aria-pressed={on} onClick={() => apply(t)}><span className="row" style={{ gap: 0 }}>{[t.t.accent, t.t.bg, t.t.fg].map((c, k) => dot(c, k))}</span>{t.name}{on && <Icon n="check" s={14} c="#fff" />}</button> })}</div>
+        {!current && <span className="xs mut">Seu estilo está personalizado: nenhum modelo corresponde exatamente ao que está configurado.</span>}
       </Sec>
-      <div className="g2" style={{ gap: 14 }}>
-        {cards.map(([to, t, d, vis]) => <Link key={to} className="card click col" style={{ gap: 10 }} to={to}><div className="row jb"><b>{t}</b><Icon n="next" s={16} c="#8a8a8a" /></div><div style={{ minHeight: 36, display: 'flex', alignItems: 'center' }}>{vis}</div><span className="xs mut">{d}</span></Link>)}
-      </div>
     </Shell>
   )
 }
