@@ -295,7 +295,7 @@ export function Roteiros() {
         <span className="sm mut">Você escolhe: cada roteiro pode continuar grátis no seu mapa ou, quando a venda abrir, ser oferecido pago para quem quiser ir além. Nada muda para os que ficarem grátis. Preço e comissão ainda não estão definidos, então hoje nenhum roteiro é cobrado.</span>
         <div className="row jb wrap"><span className="sm">Quer participar do teste? Avisamos quando abrir para o seu perfil.</span><button className="btn sm" disabled={on !== false} onClick={async () => { await api('/creator/interest', { method: 'POST', body: { kind: 'listas' } }); setOn(true); toast('Você está na lista') }}>{on ? 'Você está na lista' : 'Entrar na lista'}</button></div>
       </div>
-      <Note>Os roteiros aparecem no seu mapa quando o bloco "Roteiros" está ligado no Estúdio, em Layout.</Note>
+      <Note>Os roteiros salvos aparecem na aba Roteiros do seu mapa.</Note>
     </PanelPage>
   )
 }

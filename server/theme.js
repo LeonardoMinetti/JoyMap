@@ -69,7 +69,7 @@ export function sanitizeTheme(input = {}) {
     linkStyle: pick(LINK_STYLES, t.linkStyle, 'fill'),
     social: { instagram: t.social?.instagram !== false, tiktok: !!t.social?.tiktok },
     bio: String(t.bio || '').slice(0, 160),
-    layout: sanitizeLayout(input?.layout, input || {}),
+    layout: { ...DEFAULT_LAYOUT, blocks: DEFAULT_LAYOUT.blocks.map((b) => ({ ...b })) }, // o layout da página é fixo: o criador não o edita
   }
   const given = new Map((Array.isArray(t.categories) ? t.categories : []).map((c) => [String(c?.id), c || {}]))
   const okIcon = (i) => ICONS.includes(i) || /^custom:\d{1,9}$/.test(String(i)) || /^lib:(fluent3d|noto|lucide):[a-z0-9-]{1,48}$/.test(String(i))

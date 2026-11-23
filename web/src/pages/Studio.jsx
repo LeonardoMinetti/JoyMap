@@ -65,8 +65,8 @@ export function PhonePreview({ fake, themeOverride, width = 300, height = 620, i
 }
 
 // Prévia principal do Estúdio: iPhone com a tela real que o seguidor vê. Cada aba do Estúdio abre a tela em que a edição aparece.
-const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A ordem da página, a capa e a lista de lugares.']]
-const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', mapa: 'map', pins: 'place', layout: 'list' }
+const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A lista de lugares.']]
+const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', mapa: 'map', pins: 'place' }
 function StudioPhone({ active, fake }) {
   const s = useStudio()
   const theme = s.data.creator.theme
@@ -101,7 +101,7 @@ function StudioPhone({ active, fake }) {
 }
 
 const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['pins', 'Pins e símbolos', 'flag', '/estudio/pins'],
-  ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa'], ['layout', 'Layout', 'menu', '/estudio/layout']]
+  ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa']]
 // O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
 function StudioHead({ active }) {
   const s = useStudio()
@@ -169,7 +169,6 @@ export function StudioHome() {
         {mini('/estudio/categorias', <div className="row" style={{ gap: 6 }}>{T.categories.slice(0, 3).map((c) => { const { n, sym } = symOf(c, s.c.symbols); return <Icon key={c.id} n={n} sym={sym} s={22} c={c.color} /> })}</div>, 'Categorias', 'A cor de cada uma')}
         {mini('/estudio/pins', <div className="row" style={{ gap: 6 }}>{sq('#ff4b2b', '50%', 22)}{sq('#2d7ff9', 6, 22)}<i className="sq" style={{ width: 22, height: 22, background: '#12b76a', clipPath: 'polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)' }} /></div>, 'Pins e símbolos', 'Formato e pacote de símbolos')}
         {mini('/estudio/mapa', <div style={{ borderRadius: 8, overflow: 'hidden', height: 30 }}><FakeMap h={30} tone={T.tone} n={0} lab={false} /></div>, 'Estilo do mapa', 'Base e rótulos')}
-        {mini('/estudio/layout', <div className="ph" style={{ height: 30 }}>blocos</div>, 'Layout da página', 'Ordem, capa, lista ou grade')}
         {mini('/estudio/modelos', <Icon n="layers" s={22} />, 'Modelos prontos', 'Comece por um e ajuste')}
       </div>
       <Note>Dica: comece por um modelo e ajuste só o que importa. Todas as escolhas valem para o mapa, os cartões e a página.</Note>
@@ -288,55 +287,6 @@ export function StudioPins() {
       <div className="sep" />
       <SymbolPicker />
     </Shell>
-  )
-}
-
-// D7 · layout da página (+ roteiros)
-const BLOCK = { header: ['Cabeçalho', 'Foto, nome e bio'], filters: ['Filtros por categoria', ''], map: ['Mapa', ''], list: ['Lista de lugares', ''], routes: ['Roteiros', 'Coleções de lugares'] }
-export function StudioLayout() {
-  const s = useStudio()
-  const { theme: T, setTheme, c: cr } = s
-  const L = T.layout
-  const setL = (patch) => setTheme((t) => ({ layout: { ...t.layout, ...patch } }))
-  const sort = useSortable(L.blocks, (b) => setL({ blocks: b }))
-  const [msg, setMsg] = useState('')
-  const coverFile = useRef(null)
-  const pickCover = async (f) => {
-    setMsg('')
-    try {
-      const url = await upload(f, 600 * 1024)
-      const [, mime, data] = /^data:(.*?);base64,(.*)$/.exec(url)
-      await api('/creator/cover', { method: 'PUT', body: { mime, data } })
-      await s.reload(); s.bumpCover(); setL({ cover: true })
-    } catch (e) { setMsg(e.message === 'size' ? 'A imagem passa de 600 KB.' : 'Use JPG, PNG ou WebP.') }
-    if (coverFile.current) coverFile.current.value = ''
-  }
-  const detail = (id) => id === 'map' ? (<div className="row" style={{ gap: 4 }}>Altura: {[['sm', 'pequena'], ['md', 'média'], ['lg', 'grande']].map(([k, l]) => <button key={k} className={'chip'} style={{ padding: '3px 8px', fontSize: 11, ...(L.mapHeight === k ? { background: 'var(--ink)', color: '#fff', borderColor: 'var(--ink)' } : {}) }} onClick={() => setL({ mapHeight: k })}>{l}</button>)}</div>) : id === 'list' ? `Cartões em ${L.listStyle === 'rows' ? 'linhas' : 'grade'}` : BLOCK[id][1]
-  return (
-    <Shell active="layout" title="Layout">
-      <h1 className="d s32">Layout da página</h1>
-      <p className="sm mut">Arraste os blocos para mudar a ordem. Desligue o que não quiser mostrar.</p>
-      {L.blocks.map((b, i) => (
-        <div key={b.id} className="card row" {...sort.props(i)}>{sort.handle(i)}<div className="sp"><b className="sm">{BLOCK[b.id][0]}</b><div className="xs mut">{detail(b.id)}</div></div><Switch on={b.on} disabled={b.id === 'header'} label={BLOCK[b.id][0]} onChange={(v) => setL({ blocks: L.blocks.map((x) => (x.id === b.id ? { ...x, on: v } : x)) })} /></div>))}
-      <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
-        <div className="sp"><span className="lb">Imagem de capa</span>
-          <div className="ph" style={{ height: 70, ...(cr.hasCover ? { backgroundImage: `url(/api/creator/cover?v=${s.coverVer})`, backgroundSize: 'cover', backgroundPosition: 'center', color: 'transparent' } : {}) }}>{cr.hasCover ? 'capa' : 'Sem capa'}</div>
-          <input ref={coverFile} type="file" accept="image/jpeg,image/png,image/webp" className="sr" id="coverfile" onChange={(e) => pickCover(e.target.files[0])} />
-          <div className="row" style={{ marginTop: 6 }}><label htmlFor="coverfile" className="btn sec sm">{cr.hasCover ? 'Trocar' : 'Escolher imagem'}</label>{cr.hasCover && <><label className="row xs" style={{ gap: 6 }}><Switch on={L.cover} onChange={(v) => setL({ cover: v })} label="Mostrar capa" />Mostrar</label><button className="link xs" onClick={async () => { await api('/creator/cover', { method: 'DELETE' }); await s.reload(); setL({ cover: false }) }}>Remover</button></>}</div>
-          {msg && <p className="err" role="alert">{msg}</p>}<span className="xs mut">Até 600 KB. JPG, PNG ou WebP.</span></div>
-        <div className="sp"><span className="lb">Lista</span><div className="row">{[['grid', 'Grade'], ['rows', 'Linhas']].map(([k, l]) => <button key={k} className={'chip' + (L.listStyle === k ? ' on' : '')} onClick={() => setL({ listStyle: k })}>{l}</button>)}</div></div>
-      </div>
-      <RoutesEditor />
-    </Shell>
-  )
-}
-function RoutesEditor() {
-  const s = useStudio()
-  return (
-    <div className="card row" style={{ gap: 10 }}>
-      <div className="sp"><b>Roteiros do mapa</b><div className="sm mut">{s.routes.length ? `${s.routes.length} roteiro${s.routes.length === 1 ? '' : 's'}` : 'Nenhum roteiro ainda'} · criar e editar fica na área Roteiros do painel.</div></div>
-      <Link className="btn ln sm" to="/painel/roteiros">Abrir Roteiros</Link>
-    </div>
   )
 }
 

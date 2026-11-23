@@ -57,10 +57,10 @@ test('tema: layout, pins e links têm limites; cabeçalho nunca some; símbolo p
   const t = sanitizeTheme({ pinSize: 999, selected: 'x', layout: { blocks: [{ id: 'map', on: true }, { id: 'header', on: false }, { id: 'zzz', on: true }], listStyle: 'rows' }, categories: [{ id: 'pizza', name: 'A', color: '#111111', icon: 'custom:7' }] })
   assert.equal(t.pinSize, 55) // o tamanho do pin não é mais editável
   assert.equal(t.selected, 'outline')
-  assert.equal(t.layout.blocks[0].id, 'map')
+  assert.equal(t.layout.blocks[0].id, 'header') // layout fixo
   assert.equal(t.layout.blocks.find((b) => b.id === 'header').on, true)
   assert.equal(t.layout.blocks.length, 5)
-  assert.equal(t.layout.listStyle, 'rows')
+  assert.equal(t.layout.listStyle, 'grid')
   assert.equal(t.categories.find((c) => c.id === 'pizza').icon, 'custom:7')
   assert.ok(!sanitizeTheme({}).layout.blocks.some((b) => b.id === 'links'))
   assert.deepEqual(sanitizeSvg('<svg viewBox="0 0 10 10"><path d="M1 1L9 9"/></svg>'), { d: 'M1 1L9 9', vb: '0 0 10 10', mode: 'fill' })
