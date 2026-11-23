@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Logo, Guard, Loading, Note, Switch, Side, useTitle } from '../lib/ui.jsx'
+import { Logo, Guard, Loading, Note, Switch, Side, Tabs, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import FakeMap from '../FakeMap.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -130,9 +130,6 @@ const NAV = [['modelos', 'Modelos', 'layers', '/estudio'], ['cores', 'Cores e te
 // O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
 function StudioHead({ active }) {
   const s = useStudio()
-  const ref = React.useRef(null)
-  // no celular as abas rolam na horizontal: mantém a ativa à vista
-  React.useEffect(() => { const e = ref.current?.querySelector('.on'); if (e && ref.current.scrollWidth > ref.current.clientWidth) ref.current.scrollTo({ left: e.offsetLeft - 48, behavior: 'auto' }) }, [active])
   return (
     <div className="stm-h">
       <div className="stm-t">
@@ -143,9 +140,7 @@ function StudioHead({ active }) {
           <button type="button" className="btn sm" disabled={!s.dirty || s.blocked} title={s.blocked ? 'A cor principal está igual ao fundo' : undefined} onClick={s.publish}>Publicar</button>
         </div>
       </div>
-      <nav className="stm-tabs" ref={ref} aria-label="Seções do estúdio">
-        {NAV.map(([k, l, i, to]) => <Link key={k} className={'stm-tab' + (k === active ? ' on' : '')} to={to}><Icon n={i} s={16} c="currentColor" />{l}</Link>)}
-      </nav>
+      <Tabs items={NAV} active={active} label="Seções do estúdio" />
     </div>
   )
 }

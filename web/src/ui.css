@@ -287,8 +287,6 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .side .it:not(.on) .it-ic svg{opacity:.65}
 .app .main .bars i{background:#dcdcdc}.app .main .bars i.hi{background:var(--ink)}
 .app .main .note{background:var(--soft);color:var(--ink2)}
-.sub-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.sub-tabs::-webkit-scrollbar{display:none}
-.sub-tabs a{padding:10px 14px;font:600 14px var(--body);color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}.sub-tabs a:hover{color:var(--ink)}.sub-tabs a.on{color:var(--ink);border-bottom-color:var(--ink)}
 .side .av{background:var(--ink);color:#fff}
 .main{padding:36px clamp(24px,4vw,56px) 64px;gap:24px}
 .card{border:0;border-radius:24px;padding:20px;background:#fff;box-shadow:0 6px 20px rgba(23,23,19,.07)}
@@ -318,10 +316,10 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .stm-st{display:inline-flex;align-items:center;gap:8px;font:600 13px var(--body);color:var(--mut)}
 .stm-st i{width:9px;height:9px;border-radius:50%;background:#17b26a;flex:none}
 .stm-st.dirty{color:var(--ink)}.stm-st.dirty i{background:#FF6A4D}
-.stm-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 16px;scrollbar-width:none}
-.stm-tabs::-webkit-scrollbar{display:none}
-.stm-tab{flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:99px;background:#fff;font:600 13px var(--body);color:var(--ink2);box-shadow:0 2px 8px rgba(23,23,19,.06);transition:background .2s,color .2s}
-.stm-tab:hover{color:var(--ink)}.stm-tab.on{background:var(--ink);color:#fff}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0;scrollbar-width:none}.stm-h .tabs{padding-bottom:16px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:99px;background:#fff;font:600 13px var(--body);color:var(--ink2);box-shadow:0 2px 8px rgba(23,23,19,.06);transition:background .2s,color .2s}
+.tab:hover{color:var(--ink)}.tab.on{background:var(--ink);color:#fff}
 .stbody{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:36px;align-items:start}
 .stbody.full{grid-template-columns:minmax(0,1fr)}
 .stbody .ctl{display:flex;flex-direction:column;gap:16px;min-width:0}
@@ -333,11 +331,11 @@ body{background:var(--cream)}.page{background:var(--cream)}
   .stm-h{top:52px;margin:-18px -16px 0;padding:14px 16px 0;gap:10px}
   .stm-t{align-items:center}.stm-t .eb{display:none}.stm-t .d{font-size:20px}
   .stm-act{gap:10px}.stm-st{font-size:12px}
-  .stm-tabs{margin:0 -16px;padding:2px 16px 12px}
+  .stm-h .tabs{margin:0 -16px;padding:2px 16px 12px}
   .stbody{grid-template-columns:1fr;gap:18px}
   .stbody .prev{position:static;order:-1;padding:0}.stbody .prev>div{zoom:.6}
 }
-@media (min-width:901px){.stm-tabs{flex-wrap:wrap;overflow:visible}}
+@media (min-width:901px){.tabs{flex-wrap:wrap;overflow:visible}}
 @media (max-width:900px){.main{overflow-x:clip}.mtabs .on{color:var(--ink)}.mtop .av{background:var(--ink);color:#fff}.mmore-g a.on{background:var(--ink);color:#fff}}
 /* fluxos em formato de celular (candidatura, onboarding, montagem): no computador viram um cartão macio centralizado */
 @media (min-width:640px){
@@ -377,7 +375,6 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .plc{display:flex;flex-direction:column;gap:6px;padding:10px;cursor:pointer;transition:transform .15s,box-shadow .15s}.plc:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(23,23,19,.13)}
 .plc-ph{position:relative}.plc-ph .tag{position:absolute;top:8px;left:8px}
 .trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.sub-tabs button{padding:10px 14px;font:600 14px var(--body);color:var(--mut);border:0;background:none;border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px;cursor:pointer}.sub-tabs button:hover{color:var(--ink)}.sub-tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
 .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}.seg::-webkit-scrollbar{display:none}.seg button{white-space:nowrap;flex:none}
 .swatch.big{width:48px;height:48px;border-radius:14px;display:grid;place-items:center}
 .dotsw.sm{width:24px;height:24px}

@@ -88,6 +88,18 @@ export function Side({ active }) {
   )
 }
 
+// Abas de navegação entre seções de uma mesma área (Estúdio, Minha conta). Padrão único do painel.
+export function Tabs({ items, active, label }) {
+  const ref = React.useRef(null)
+  // no celular as abas rolam na horizontal: mantém a ativa à vista
+  React.useEffect(() => { const e = ref.current?.querySelector('.on'); if (e && ref.current.scrollWidth > ref.current.clientWidth) ref.current.scrollTo({ left: e.offsetLeft - 48, behavior: 'auto' }) }, [active])
+  return (
+    <nav className="tabs" ref={ref} aria-label={label}>
+      {items.map(([k, l, i, to]) => <Link key={k} className={'tab' + (k === active ? ' on' : '')} to={to} aria-current={k === active ? 'page' : undefined}><Icon n={i} s={16} c="currentColor" />{l}</Link>)}
+    </nav>
+  )
+}
+
 // Cabeçalho das telas de celular
 export function Hd({ back, title, right, close }) {
   return (

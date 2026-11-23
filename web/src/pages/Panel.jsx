@@ -2,18 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { PanelPage, Note, Switch, Field, Loading, useTitle } from '../lib/ui.jsx'
+import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
 import { PlacePhoto, pubVars } from '../pub/shared.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 
-const ACCOUNT_TABS = [['conta', 'Perfil', '/painel/conta'], ['contas', 'Contas conectadas', '/painel/contas'], ['privacidade', 'Privacidade', '/painel/privacidade'], ['plano', 'Plano e cobrança', '/painel/plano']]
+const ACCOUNT_TABS = [['conta', 'Perfil', 'user', '/painel/conta'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'], ['plano', 'Plano e cobrança', 'card', '/painel/plano']]
 const AccountPage = ({ tab, children }) => (
   <PanelPage active="conta">
     <h1 className="d s44">Minha conta</h1>
-    <nav className="sub-tabs" aria-label="Minha conta">{ACCOUNT_TABS.map(([k, l, to]) => <Link key={k} to={to} className={k === tab ? 'on' : ''} aria-current={k === tab ? 'page' : undefined}>{l}</Link>)}</nav>
+    <Tabs items={ACCOUNT_TABS} active={tab} label="Minha conta" />
     {children}
   </PanelPage>
 )
