@@ -620,3 +620,4 @@
 @media (max-width:980px){.pn{grid-template-columns:1fr;max-width:520px;margin:0 auto;width:100%}.pn-who{min-height:0}}
 @media (prefers-reduced-motion:reduce){.pn-cmp-p,.pn-cmp-btn i{transition:none}}
 .pn-ul{align-content:start}
+.pn-price{flex-wrap:wrap}.pn-price b{white-space:nowrap;font-size:clamp(32px,3.3vw,46px)}

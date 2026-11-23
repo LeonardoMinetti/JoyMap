@@ -73,31 +73,32 @@ export function Monetize() {
 // Seção 11 · Planos e condições de entrada
 // Valores do plano de negócio: hipóteses a validar no período de testes. Nenhuma cobrança está ativa.
 const SOON = 'Em desenvolvimento'
+// `hide: true` oculta o item da página (fica aqui para voltar quando fizer sentido), sem apagar.
 const PLANS = [
   { k: 'free', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
-    items: [['Posts recentes no mapa'], ['Visual básico'], ['Visitas totais no painel'], ['Exportar seus dados'], ['Marca wagli na página e territórios patrocinados escolhidos pela wagli', SOON]] },
-  { k: 'creator', name: 'Criador', price: ['R$ 29', 'R$ 290'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer controle e marca própria.', trial: true, main: true,
-    items: [['Mapa completo, com todo o histórico'], ['Estúdio de estilo completo'], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota'], ['Sem a marca wagli na página'], ['Você aprova cada território patrocinado', SOON], ['Roteiros pagos, com taxa de 8% por venda', SOON]] },
-  { k: 'pro', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vive de publi e vende roteiros.', trial: true,
-    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Domínio próprio'], ['Fechar publi direto com restaurantes', SOON], ['Pin em destaque, sempre com a marca de publi', SOON], ['Relatório de publi para marcas', SOON], ['Roteiros pagos, com taxa de 5% por venda', SOON]] },
-]
+    items: [['Posts recentes no mapa'], ['Você adiciona e atualiza os lugares manualmente'], ['Visual básico'], ['Visitas totais no painel'], ['Marca wagli na página'], ['Exportar seus dados']] },
+  { k: 'creator', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
+    items: [['Mapa completo, com todo o histórico'], ['Atualização automática do mapa, a partir dos seus posts', SOON], ['Estúdio de estilo completo'], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota'], ['Marca wagli na página'], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', SOON]] },
+  { k: 'pro', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
+    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Sem a marca wagli na página'], ['Domínio próprio'], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', SOON], ['Fechar publi direto com restaurantes', SOON, true], ['Pin em destaque, sempre com a marca de publi', SOON, true], ['Relatório de publi para marcas', SOON, true]] },
+].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
 const Y = 'Sim', N = 'Não'
 const COMPARE = [
-  ['Preço', 'R$ 0', 'R$ 29 por mês ou R$ 290 por ano', 'R$ 79 por mês ou R$ 790 por ano'],
-  ['Para quem', 'Engajar o público, sem vender nada', 'Controle e marca própria', 'Quem vive de publi e vende roteiros'],
+  ['Preço', 'R$ 0', 'R$ 39,90 por mês ou R$ 399 por ano', 'R$ 79 por mês ou R$ 790 por ano'],
+  ['Para quem', 'Engajar o público, sem vender nada', 'Mapa completo, sempre em dia', 'Vender roteiros e ter a marca própria'],
   ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico'],
-  ['Marca wagli na página', Y, N, N],
+  ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', true],
+  ['Marca wagli na página', Y, Y, N],
   ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo'],
   ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior'],
-  ['Territórios patrocinados', 'A wagli escolhe quais aparecem', 'Só os que você aprovar', 'Só os que você aprovar', true],
   ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', true],
-  ['Relatório de publi para marcas', N, N, Y, true],
-  ['Fechar publi direto com restaurantes', N, N, Y, true],
-  ['Pin em destaque para restaurante com publi', N, N, Y, true],
+  ['Relatório de publi para marcas', N, N, Y, true, true],
+  ['Fechar publi direto com restaurantes', N, N, Y, true, true],
+  ['Pin em destaque para restaurante com publi', N, N, Y, true, true],
   ['Domínio próprio', N, N, Y],
-  ['Taxa sobre roteiros pagos', 'Não disponível', '8%', '5%', true],
+  ['Roteiros que podem ser vendidos', 'Só roteiros gratuitos', 'Sim, com taxa de 8% por venda', 'Sim, com taxa de 5% por venda', true],
   ['Exportar dados (JSON e CSV)', Y, Y, Y],
-]
+].filter((r) => !r[5])
 function Compare({ open, setOpen }) {
   return (
     <div className="pn-cmp">
@@ -131,7 +132,7 @@ export function PlansBlock({ min, compact }) {
     <section id="planos" className="sec" aria-labelledby="planos-h" style={{ background: 'var(--cream)' }}>
       <div className="w col" style={{ gap: 32 }}>
         <div className="sec-h c"><span className="eb">Planos e condições de entrada</span><h2 id="planos-h" className="d h-sec">Comece pelo seu <span style={hl}>mapa.</span></h2>
-          <p className="lead">Um plano grátis para engajar o público e dois pagos para quem quer controle, marca própria e renda. Você paga pouco e a wagli ganha quando você ganha.</p></div>
+          <p className="lead">Um plano grátis, em que você mesmo atualiza o mapa, e dois pagos, para quem quer o mapa completo sempre em dia e roteiros que podem ser vendidos. Você paga pouco e a wagli ganha quando você ganha.</p></div>
         <div className="row" style={{ justifyContent: 'center' }}>
           <div className="pl-per pn-per" role="group" aria-label="Periodicidade da assinatura"><button type="button" aria-pressed={!annual} className={'chip' + (!annual ? ' on' : '')} onClick={() => setAnnual(false)}>Mensal</button><button type="button" aria-pressed={annual} className={'chip' + (annual ? ' on' : '')} onClick={() => setAnnual(true)}>Anual · 2 meses grátis</button></div>
         </div>
