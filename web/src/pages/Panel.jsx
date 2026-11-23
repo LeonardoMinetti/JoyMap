@@ -28,14 +28,19 @@ const usePlacesList = () => { const [p, setP] = useState(null); const load = () 
 const sampleTag = (n) => (n < 30 ? <span className="tag wn" title="Poucas visitas: os números ainda variam muito">Amostra pequena</span> : null)
 
 // F1 · visão geral
+const Delta = ({ children }) => <span className="xs mut">{children}</span>
+function Kpi({ v, l, hint }) { return <div className="kpi" title={hint}><b>{num(v)}</b><span>{l}</span></div> }
 export function Overview() {
   useTitle('Visão geral')
   const { me, reload } = useMe()
   const [days, setDays] = useState(30)
   const s = useStats(days)
   const [places] = usePlacesList()
-  const todo = places ? places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length : 0
+  const [routes, setRoutes] = useState(null)
+  const [hov, setHov] = useState(null)
+  useEffect(() => { api('/creator/routes').then((d) => setRoutes(d.routes)).catch(() => setRoutes([])) }, [])
   const c = me.creator
+  const theme = c.theme
   const series = useMemo(() => {
     if (!s || s.error) return []
     const m = new Map(s.perDay.map((d) => [d.d, d.n]))
@@ -43,20 +48,45 @@ export function Overview() {
   }, [s, days])
   const max = Math.max(1, ...series.map((x) => x.n))
   const peak = series.reduce((a, b) => (b.n > a.n ? b : a), { n: 0 })
+  const shown = hov != null ? series[hov] : peak
+  const live = (places || []).filter((p) => p.status === 'confirmed')
+  const todo = places ? [
+    { n: places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length, one: 'lugar ou post para revisar', many: 'lugares e posts para revisar', to: '/painel/atualizar', icon: 'spark' },
+    { n: live.filter((p) => !p.photo).length, one: 'lugar sem foto', many: 'lugares sem foto', to: '/painel/lugares?f=semfoto', icon: 'image' },
+    { n: live.filter((p) => !hasCoords(p)).length, one: 'lugar sem localização no mapa', many: 'lugares sem localização no mapa', to: '/painel/lugares?f=nocoord', icon: 'pin' },
+    ...(routes && !routes.length && live.length > 2 ? [{ n: 1, one: 'Monte seu primeiro roteiro com os lugares do mapa', many: '', to: '/painel/roteiros', icon: 'route', plain: true }] : []),
+  ].filter((t) => t.n > 0) : []
+  const top = s && !s.error ? s.topPlaces.slice(0, 5) : []
+  const topMax = Math.max(1, ...top.map((p) => p.opens))
+  const byId = new Map((places || []).map((p) => [p.id, p]))
   return (
     <PanelPage active="visao">
       {me.notices.map((n) => <div key={n.id} className="note row"><Icon n="alert" s={18} c="#93370d" /><span className="sp">{n.text}</span><button className="btn sm ln" onClick={async () => { await api('/creator/notices/seen', { method: 'POST' }); reload() }}>Entendi</button></div>)}
       {!c.published && <div className="note row"><span className="sp"><b>Seu mapa ainda não está no ar.</b> Revise os lugares e publique para os seguidores verem.</span><Link className="btn sm" to="/revisar">Revisar e publicar</Link></div>}
-      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row">{s && !s.error && sampleTag(s.sessions)}<button className={'chip' + (days === 30 ? ' on' : '')} onClick={() => setDays(30)}>30 dias</button><button className={'chip' + (days === 7 ? ' on' : '')} onClick={() => setDays(7)}>7 dias</button><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{todo ? ` (${todo})` : ''}</Link></div>} />
+      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{places && todo[0] && todo[0].to === '/painel/atualizar' ? ` (${todo[0].n})` : ''}</Link></div>} />
+      {places && <div className="card col" style={{ gap: 10 }}>
+        <div className="row jb"><b>Para fazer</b>{todo.length === 0 && <span className="tag ok">Tudo em dia</span>}</div>
+        {todo.length === 0 ? <span className="sm mut">Nada pendente: seus lugares estão revisados, com foto e localizados no mapa.</span> : todo.map((t) => (
+          <Link key={t.to} to={t.to} className="todo"><span className="todo-ic"><Icon n={t.icon} s={18} /></span><span className="sp sm">{t.plain ? <b>{t.one}</b> : <><b>{t.n}</b> {t.n === 1 ? t.one : t.many}</>}</span><Icon n="next" s={16} c="#8a8a8a" /></Link>))}
+      </div>}
       {!s ? <Loading /> : s.error ? <p className="err">Não foi possível carregar.</p> : <>
-        <div className="g4"><div className="kpi"><b>{num(s.sessions)}</b><span>sessões</span></div><div className="kpi"><b>{num(s.placeOpens)}</b><span>lugares abertos</span></div><div className="kpi"><b>{num(s.routeClicks)}</b><span>cliques em rota</span></div><div className="kpi"><b>{num(s.postOpens)}</b><span>voltas aos seus posts</span></div></div>
+        <div className="g4"><Kpi v={s.sessions} l="sessões" hint="Visitas ao seu mapa" /><Kpi v={s.placeOpens} l="lugares abertos" hint="Vezes que um lugar foi aberto" /><Kpi v={s.routeClicks} l="cliques em rota" hint="Quem pediu rota até o lugar" /><Kpi v={s.postOpens} l="voltas aos seus posts" hint="Quem voltou ao post original" /></div>
         <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
-          <div className="card col"><b>Sessões por dia</b>{s.sessions ? <><div className="bars">{series.map((d) => <i key={d.d} className={d.d === peak.d && d.n ? 'hi' : ''} title={`${fmtDM(d.d)}: ${d.n}`} style={{ height: `${Math.max(2, (d.n / max) * 100)}%` }} />)}</div><span className="xs mut">{peak.n ? `Pico em ${fmtDM(peak.d)}: ${peak.n} sessões.` : ''}</span></> : <p className="sm mut">Ainda sem visitas. Publique o mapa e coloque o link na bio.</p>}</div>
+          <div className="card col"><div className="row jb wrap"><b>Sessões por dia</b>{s.sessions > 0 && <span className="sm" aria-live="polite"><b>{fmtDM(shown.d)}</b> · {shown.n} sess{shown.n === 1 ? 'ão' : 'ões'}{hov == null && peak.n ? <Delta> (pico)</Delta> : null}</span>}</div>
+            {s.sessions ? <div className="bars" onMouseLeave={() => setHov(null)}>{series.map((d, i) => <i key={d.d} tabIndex={0} role="img" aria-label={`${fmtDM(d.d)}: ${d.n} sessões`} className={(d.d === shown.d && d.n ? 'hi' : '')} onMouseEnter={() => setHov(i)} onFocus={() => setHov(i)} onBlur={() => setHov(null)} style={{ height: `${Math.max(2, (d.n / max) * 100)}%` }} />)}</div> : <p className="sm mut">Ainda sem visitas. Publique o mapa e coloque o link na bio.</p>}</div>
           <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
-            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><Link className="btn sm" to="/painel/buscas" style={{ alignSelf: 'flex-start' }}>Ver buscas</Link></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>
+            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>
         </div>
-        <div className="g2"><div className="card row">{s.featured ? <><Photo /><div className="sp"><span className="eb">Indicação em destaque</span><div className="b">{s.featured.name}</div><div className="xs mut">{s.featured.routes} cliques em rota</div></div></> : <span className="sm mut">A indicação em destaque aparece quando houver cliques em rota.</span>}</div>
-          <div className="card soft"><span className="xs mut">{s.note}</span></div></div>
+        <div className="g2" style={{ gridTemplateColumns: '3fr 2fr' }}>
+          <div className="card col" style={{ gap: 10 }}><div className="row jb"><b>Lugares mais abertos</b><Link className="link xs" to="/painel/lugares">Ver todos</Link></div>
+            {top.length ? top.map((p, i) => { const pl = byId.get(p.id); return (
+              <Link key={p.id} to={`/revisar/${p.id}`} className="rank"><b className="sm" style={{ width: 18 }}>{i + 1}</b>{pl ? <PlacePhoto place={pl} theme={theme} size={40} style={{ borderRadius: 12 }} /> : <Photo s={40} />}
+                <div className="sp col" style={{ gap: 4 }}><div className="row jb"><b className="sm trunc">{p.name}</b><span className="xs mut">{p.opens} aberturas · {p.routes} rotas</span></div><div className="hb"><i style={{ width: `${(p.opens / topMax) * 100}%` }} /></div></div></Link>) })
+              : <p className="sm mut">Os lugares mais abertos aparecem aqui quando houver visitas.</p>}</div>
+          <div className="col" style={{ gap: 16, minWidth: 0 }}>
+            <div className="card row">{s.featured ? <><Photo /><div className="sp"><span className="eb">Indicação em destaque</span><div className="b">{s.featured.name}</div><div className="xs mut">{s.featured.routes} cliques em rota</div></div></> : <span className="sm mut">A indicação em destaque aparece quando houver cliques em rota.</span>}</div>
+            <div className="card soft"><span className="xs mut">{s.note}</span></div></div>
+        </div>
         <AudienceBlock s={s} /></>}
     </PanelPage>
   )
@@ -66,14 +96,28 @@ export function Overview() {
 export function Searches() {
   useTitle('Buscas')
   const s = useStats(30)
+  const [f, setF] = useState('all')
+  const [q, setQ] = useState('')
+  if (!s) return <PanelPage active="buscas"><Loading /></PanelPage>
+  const rows = (s.searches || []).filter((x) => (f === 'all' || (f === 'empty' && x.empty > 0) || (f === 'ok' && x.empty === 0)) && (!q || x.term.toLowerCase().includes(q.toLowerCase())))
+  const total = (s.searches || []).reduce((n, x) => n + x.count, 0)
+  const empty = (s.searches || []).reduce((n, x) => n + x.empty, 0)
+  const mx = Math.max(1, ...(s.searches || []).map((x) => x.count))
   return (
     <PanelPage active="buscas">
-      <Head title="Buscas e oportunidades" sub="O que sua audiência procura no seu mapa" right={s && !s.error && sampleTag(s.sessions)} />
-      {!s ? <Loading /> : <>
-        <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Termo</th><th>Buscas</th><th>Com resultado</th><th>Sem resultado</th><th /></tr></thead><tbody>
-          {s.searches.map((x) => <tr key={x.term}><td><b>{x.term}</b></td><td>{x.count}</td><td>{x.withResults}</td><td>{x.empty ? <span className="tag wn">{x.empty}</span> : 0}</td><td>{x.empty > 0 && <Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(x.term)}`}>Indicar lugar</Link>}</td></tr>)}
-          {!s.searches.length && <tr><td colSpan="5" className="mut">Ainda sem buscas no seu mapa.</td></tr>}</tbody></table></div>
-        <div className="g2"><div className="card col"><b>Pedidos de indicação</b><span className="sm mut">Seguidores que tocaram em "Pedir uma indicação" (anônimo).</span><b className="d s32">{s.requests} pedido{s.requests === 1 ? '' : 's'}</b></div><div className="card soft"><span className="xs mut">Termos passam por filtro que remove e-mails, telefones e links antes de serem guardados.</span></div></div></>}
+      <Head title="Buscas e oportunidades" sub="O que sua audiência procura no seu mapa · últimos 30 dias" right={!s.error && sampleTag(s.sessions)} />
+      <div className="g3"><Kpi v={total} l="buscas" /><Kpi v={empty} l="sem resultado" hint="Buscas em que o mapa não tinha o que a pessoa procurava" /><Kpi v={s.requests} l={`pedido${s.requests === 1 ? '' : 's'} de indicação`} hint='Quem tocou em "Pedir uma indicação" (anônimo)' /></div>
+      <div className="row wrap jb"><div className="seg" role="group" aria-label="Filtrar buscas">{[['all', 'Todas'], ['empty', 'Sem resultado'], ['ok', 'Com resultado']].map(([k, l]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}</button>)}</div><div className="in" style={{ minHeight: 40, width: 240 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar termo" aria-label="Buscar termo" /></div></div>
+      <div className="card col" style={{ gap: 4, padding: 12 }}>
+        {rows.map((x) => (
+          <div key={x.term} className="srch">
+            <div className="sp col" style={{ gap: 6 }}><div className="row jb"><b>{x.term}</b><span className="xs mut">{x.count} busca{x.count === 1 ? '' : 's'}</span></div>
+              <div className="hb split" title={`${x.withResults} com resultado, ${x.empty} sem`}><i style={{ width: `${(x.withResults / mx) * 100}%` }} /><i className="warn" style={{ width: `${(x.empty / mx) * 100}%` }} /></div></div>
+            {x.empty > 0 ? <><span className="tag wn">{x.empty} sem resultado</span><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(x.term)}`}>Indicar lugar</Link></> : <span className="tag ok">Atendida</span>}
+          </div>))}
+        {!rows.length && <p className="sm mut" style={{ padding: 12 }}>{(s.searches || []).length ? 'Nenhuma busca neste filtro.' : 'Ainda sem buscas no seu mapa.'}</p>}
+      </div>
+      <div className="card soft"><span className="xs mut">Os termos passam por um filtro que remove e-mails, telefones e links antes de serem guardados. Barra cinza: buscas com resultado; barra amarela: sem resultado.</span></div>
     </PanelPage>
   )
 }
@@ -81,24 +125,51 @@ export function Searches() {
 // F3 · lugares
 export function PlacesPage() {
   useTitle('Lugares')
-  const [places] = usePlacesList()
+  const [places, reload] = usePlacesList()
   const s = useStats(30)
   const { me } = useMe()
-  const [f, setF] = useState('all')
+  const theme = me.creator.theme
+  const [f, setF] = useState(() => new URLSearchParams(location.search).get('f') || 'all')
   const [q, setQ] = useState('')
+  const [cat, setCat] = useState('')
+  const [sort, setSort] = useState('recent')
+  const [view, setView] = useState('grid')
   if (!places) return <PanelPage active="lugares"><Loading /></PanelPage>
   const live = places.filter((p) => p.status === 'pending' || p.status === 'confirmed')
   const perf = new Map((s?.topPlaces || []).map((p) => [p.id, p]))
-  const cnt = { pending: live.filter((p) => p.status === 'pending').length, ad: live.filter((p) => p.ad).length, nocoord: live.filter((p) => !hasCoords(p)).length }
-  const list = live.filter((p) => (f === 'all' || (f === 'pending' && p.status === 'pending') || (f === 'ad' && p.ad) || (f === 'nocoord' && !hasCoords(p))) && (!q || `${p.name} ${p.address || ''}`.toLowerCase().includes(q.toLowerCase())))
+  const FIL = [['all', 'Todos', () => true], ['pending', 'Pendentes', (p) => p.status === 'pending'], ['ad', 'Publi', (p) => p.ad], ['nocoord', 'Sem localização', (p) => !hasCoords(p)], ['semfoto', 'Sem foto', (p) => !p.photo]]
+  const test = FIL.find((x) => x[0] === f)[2]
+  let list = live.filter((p) => test(p) && (!cat || p.category === cat) && (!q || `${p.name} ${p.neighborhood || ''} ${p.address || ''}`.toLowerCase().includes(q.toLowerCase())))
+  list = [...list].sort((a, b) => sort === 'name' ? (a.name || '').localeCompare(b.name || '') : sort === 'opens' ? (perf.get(b.id)?.opens || 0) - (perf.get(a.id)?.opens || 0) : b.id - a.id)
+  const cats = theme.categories.filter((c) => live.some((p) => p.category === c.id))
+  const status = (p) => { const is = issueOf(p, places); return p.ad ? ['ax', 'Publi'] : [is.k, is.tag === 'Ver unidades' ? (p.status === 'confirmed' ? 'Confirmado' : 'Para revisar') : is.tag] }
+  const confirm1 = async (e, p) => { e.stopPropagation(); await api(`/creator/places/${p.id}`, { method: 'PATCH', body: { status: 'confirmed' } }); toast('Lugar confirmado'); reload() }
   return (
     <PanelPage active="lugares">
-      <Head title="Lugares" sub={`${live.length} lugares no seu mapa`} right={<div className="row"><div className="in" style={{ minHeight: 40, width: 240 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar" aria-label="Buscar lugar" /></div><Link className="btn sm" to="/adicionar">Adicionar lugar</Link></div>} />
-      <div className="row wrap">{[['all', 'Todos'], ['pending', `Pendentes (${cnt.pending})`], ['ad', `Publi (${cnt.ad})`], ['nocoord', `Sem coordenadas (${cnt.nocoord})`]].map(([k, l]) => <button key={k} className={'chip' + (f === k ? ' on' : '')} onClick={() => setF(k)}>{l}</button>)}</div>
-      <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Lugar</th><th>Categoria</th><th>Aberturas</th><th>Rotas</th><th>Status</th></tr></thead><tbody>
-        {list.map((p) => { const is = issueOf(p, places); const pf = perf.get(p.id); const st = p.ad ? ['ax', 'Publi'] : [is.k, is.tag === 'Ver unidades' ? (p.status === 'confirmed' ? 'Confirmado' : 'Para revisar') : is.tag]; return (
-          <tr key={p.id} className="click" style={{ cursor: 'pointer' }} onClick={() => navigate(`/revisar/${p.id}`)}><td><b>{p.name || 'Sem nome'}</b><div className="xs mut">{is.link ? is.detail : p.neighborhood || p.municipality || p.address || ''}</div></td><td>{catOf(me.creator.theme, p.category).name}</td><td>{pf?.opens || 0}</td><td>{pf?.routes || 0}</td><td><span className={`tag ${st[0]}`}>{st[1]}</span></td></tr>) })}
-        {!list.length && <tr><td colSpan="5" className="mut">Nenhum lugar nesta lista.</td></tr>}</tbody></table></div>
+      <Head title="Lugares" sub={`${live.length} lugares no seu mapa`} right={<div className="row wrap"><Link className="btn ln sm" to="/colar-posts?voltar=/painel/atualizar">Colar posts</Link><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></div>} />
+      <div className="row wrap jb">
+        <div className="seg" role="group" aria-label="Filtrar lugares">{FIL.map(([k, l, fn]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}{k !== 'all' && <span className="n">{live.filter(fn).length}</span>}</button>)}</div>
+        <div className="row wrap"><div className="in" style={{ minHeight: 40, width: 220 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar nome ou bairro" aria-label="Buscar lugar" /></div>
+          <select className="selbox" aria-label="Ordenar" value={sort} onChange={(e) => setSort(e.target.value)}><option value="recent">Mais recentes</option><option value="opens">Mais abertos</option><option value="name">Nome (A–Z)</option></select>
+          <div className="seg" role="group" aria-label="Visualização"><button className={view === 'grid' ? 'on' : ''} aria-label="Cartões" onClick={() => setView('grid')}><Icon n="grid" s={16} c={view === 'grid' ? '#fff' : '#6b6b6b'} /></button><button className={view === 'list' ? 'on' : ''} aria-label="Lista" onClick={() => setView('list')}><Icon n="menu" s={16} c={view === 'list' ? '#fff' : '#6b6b6b'} /></button></div></div>
+      </div>
+      <div className="row wrap" style={{ gap: 6 }}><button className={'chip' + (!cat ? ' on' : '')} onClick={() => setCat('')}>Todas as categorias</button>{cats.map((c) => <button key={c.id} className={'chip' + (cat === c.id ? ' on' : '')} onClick={() => setCat(cat === c.id ? '' : c.id)}><span style={{ width: 10, height: 10, borderRadius: '50%', background: c.color, display: 'inline-block' }} />{c.name}</button>)}</div>
+      {view === 'grid' ? (
+        <div className="plgrid">{list.map((p) => { const st = status(p); const pf = perf.get(p.id); const cc = catOf(theme, p.category); return (
+          <div key={p.id} className="card plc" role="button" tabIndex={0} onClick={() => navigate(`/revisar/${p.id}`)} onKeyDown={(e) => e.key === 'Enter' && navigate(`/revisar/${p.id}`)}>
+            <div className="plc-ph"><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 16, display: 'grid', placeItems: 'center' }} label="Sem foto" /><span className={`tag ${st[0]}`}>{st[1]}</span></div>
+            <b className="sm trunc">{p.name || 'Sem nome'}</b>
+            <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: cc.color, flex: 'none' }} /><span className="xs mut trunc">{cc.name}{p.neighborhood ? ` · ${p.neighborhood}` : ''}</span></div>
+            <div className="row jb xs mut"><span>{pf?.opens || 0} aberturas · {pf?.routes || 0} rotas</span>{p.googleUrl && <Icon n="ext" s={12} />}{p.instagramUrl && <Icon n="insta" s={12} />}</div>
+            {p.status === 'pending' && <button className="btn sm blk" onClick={(e) => confirm1(e, p)}>Confirmar</button>}
+          </div>) })}
+          {!list.length && <p className="mut sm" style={{ gridColumn: '1/-1' }}>Nenhum lugar nesta lista.</p>}</div>
+      ) : (
+        <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Lugar</th><th>Categoria</th><th>Aberturas</th><th>Rotas</th><th>Status</th></tr></thead><tbody>
+          {list.map((p) => { const st = status(p); const pf = perf.get(p.id); return (
+            <tr key={p.id} className="click" style={{ cursor: 'pointer' }} onClick={() => navigate(`/revisar/${p.id}`)}><td><div className="row"><PlacePhoto place={p} theme={theme} size={36} style={{ borderRadius: 10 }} label="" /><div><b>{p.name || 'Sem nome'}</b><div className="xs mut">{p.neighborhood || p.municipality || p.address || ''}</div></div></div></td><td>{catOf(theme, p.category).name}</td><td>{pf?.opens || 0}</td><td>{pf?.routes || 0}</td><td><span className={`tag ${st[0]}`}>{st[1]}</span></td></tr>) })}
+          {!list.length && <tr><td colSpan="5" className="mut">Nenhum lugar nesta lista.</td></tr>}</tbody></table></div>
+      )}
     </PanelPage>
   )
 }
@@ -239,30 +310,51 @@ export function Promote() {
   const { me, reload } = useMe()
   const [places] = usePlacesList()
   const [qrImg, setQrImg] = useState(null)
+  const [tab, setTab] = useState('link')
+  const [kind, setKind] = useState('map')
   const c = me.creator
   const url = `${location.origin}/@${c.slug}`
   const embed = `<iframe src="${url}/incorporar" width="100%" height="480" style="border:0" title="Mapa de ${c.displayName}" loading="lazy"></iframe>`
   useEffect(() => { QRCode.toDataURL(url, { margin: 1, width: 700 }).then((d) => { const i = new Image(); i.onload = () => setQrImg(i); i.src = d }) }, [url])
   const copy = (t, m) => navigator.clipboard?.writeText(t).then(() => toast(m)).catch(() => toast(t))
   const confirmed = (places || []).filter((p) => p.status === 'confirmed')
-  const tiles = [['map', 'Mapa completo'], ['week', 'Lugar da semana'], ['qr', 'QR para mesa de evento'], ['bio', 'Chamada para a bio']]
-  const refs = useRef({})
-  useEffect(() => { if (!places) return; for (const [k] of tiles) if (refs.current[k]) drawStory(k, refs.current[k], { c, places: confirmed, url, qrImg }) }, [places, qrImg])
+  const tiles = [['map', 'Mapa completo', 'Todos os pins do seu mapa'], ['week', 'Lugar da semana', 'Destaque uma indicação'], ['qr', 'QR para mesa de evento', 'Aponte a câmera e abra o mapa'], ['bio', 'Chamada para a bio', 'Texto para stories e posts']]
+  const thumbs = useRef({})
+  const big = useRef(null)
+  useEffect(() => { if (tab !== 'imagens' || !places) return; for (const [k] of tiles) if (thumbs.current[k]) drawStory(k, thumbs.current[k], { c, places: confirmed, url, qrImg }) }, [tab, places, qrImg])
+  useEffect(() => { if (tab === 'imagens' && places && big.current) drawStory(kind, big.current, { c, places: confirmed, url, qrImg }) }, [tab, kind, places, qrImg])
+  const download = (k) => { const cv = document.createElement('canvas'); drawStory(k, cv, { c, places: confirmed, url, qrImg }); const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `${k}-${c.slug}.png`; a.click() }
   const flag = async (k) => { await api('/creator/settings', { method: 'PUT', body: { [k]: !c.settings[k] } }); reload() }
+  const bio = [['bioLinkIg', 'Instagram', 'insta', 'Perfil → Editar perfil → Links → cole o endereço do mapa.'], ['bioLinkTiktok', 'TikTok', 'tiktok', 'Perfil → Editar perfil → Site → cole o endereço do mapa.']]
   return (
     <PanelPage active="divulgar">
-      <Head title="Divulgar" />
-      <div className="card row"><Icon n="link" s={20} /><b className="sp trunc">{location.host}/@{c.slug}</b><button className="btn sm" onClick={() => copy(url, 'Link copiado')}>Copiar link</button></div>
-      <AddressCard />
-      <div className="g2">
-        <div className="card col"><b>Link na bio</b><span className="sm mut">Troque o link do seu perfil pelo do mapa e marque aqui quando fizer (só você consegue trocar, no app da rede).</span><div className="row wrap"><button className={'tag ' + (c.settings.bioLinkIg ? 'ok' : 'wn')} style={{ border: 0, cursor: 'pointer' }} onClick={() => flag('bioLinkIg')}>Instagram: {c.settings.bioLinkIg ? 'link atualizado' : 'ainda não'}</button><button className={'tag ' + (c.settings.bioLinkTiktok ? 'ok' : 'wn')} style={{ border: 0, cursor: 'pointer' }} onClick={() => flag('bioLinkTiktok')}>TikTok: {c.settings.bioLinkTiktok ? 'link atualizado' : 'ainda não'}</button></div></div>
-        <div className="card col"><b>Incorporar em outro site</b><div className="card soft xs" style={{ fontFamily: "'Courier New',monospace", wordBreak: 'break-all' }}>{embed}</div><button className="btn sec sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(embed, 'Código copiado')}>Copiar código</button></div>
-      </div>
-      <span className="eb">Modelos para stories e posts</span>
-      <div className="g4">{tiles.map(([k, l]) => (
-        <div key={k} className="card col" style={{ padding: 10 }}><div style={{ borderRadius: 12, overflow: 'hidden', background: 'var(--soft)' }}><canvas ref={(el) => { refs.current[k] = el }} style={{ width: '100%', display: 'block' }} /></div><b className="xs">{l}</b>
-          <button className="btn sec sm" disabled={!places} onClick={() => { const cv = document.createElement('canvas'); drawStory(k, cv, { c, places: confirmed, url, qrImg }); const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `${k}-${c.slug}.png`; a.click() }}>Baixar PNG</button></div>))}</div>
-      <span className="xs mut">As imagens têm 1080×1350 e usam as cores do seu mapa.</span>
+      <Head title="Divulgar" sub="Leve seguidores ao seu mapa: link, QR code e imagens prontas" />
+      <nav className="sub-tabs" role="tablist" aria-label="Divulgar">{[['link', 'Link e endereço'], ['imagens', 'Imagens para posts'], ['incorporar', 'Incorporar em outro site']].map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</nav>
+      {tab === 'link' && <>
+        <div className="card row" style={{ gap: 14, padding: 22 }}><span className="todo-ic" style={{ width: 44, height: 44 }}><Icon n="link" s={20} /></span><div className="sp" style={{ minWidth: 0 }}><span className="eb">O link do seu mapa</span><b className="d s26 trunc" style={{ display: 'block' }}>{location.host}/@{c.slug}</b></div><button className="btn" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><a className="btn ln" href={url} target="_blank" rel="noopener noreferrer">Abrir</a></div>
+        <div><span className="eb">Link na bio</span><p className="sm mut" style={{ margin: '4px 0 10px' }}>Troque o link do seu perfil pelo do mapa e marque quando fizer. Só você consegue trocar, no app da rede.</p>
+          <div className="g2">{bio.map(([k, l, ic, how]) => (
+            <div key={k} className="card col" style={{ gap: 10 }}>
+              <div className="row"><Icon n={ic} s={22} /><b className="sp">{l}</b><span className={'tag ' + (c.settings[k] ? 'ok' : 'wn')}>{c.settings[k] ? 'Link atualizado' : 'Ainda não'}</span></div>
+              <span className="sm mut">{how}</span>
+              <div className="row"><button className="btn sm ln" onClick={() => copy(url, 'Link copiado')}>Copiar link</button><label className="row xs" style={{ gap: 8, cursor: 'pointer' }}><Switch on={!!c.settings[k]} onChange={() => flag(k)} label={`Link na bio do ${l} atualizado`} />Já atualizei</label></div>
+            </div>))}</div></div>
+        <AddressCard />
+      </>}
+      {tab === 'imagens' && <div className="g2" style={{ gridTemplateColumns: 'minmax(240px,320px) 1fr', alignItems: 'start' }}>
+        <div className="col" style={{ gap: 10, minWidth: 0 }}>{tiles.map(([k, l, d]) => (
+          <button key={k} type="button" className={'card row' + (kind === k ? ' sel' : '')} style={{ gap: 12, padding: 10, textAlign: 'left' }} aria-pressed={kind === k} onClick={() => setKind(k)}>
+            <div style={{ width: 56, borderRadius: 10, overflow: 'hidden', background: 'var(--soft)', flex: 'none' }}><canvas ref={(el) => { thumbs.current[k] = el }} style={{ width: '100%', display: 'block' }} /></div>
+            <div className="sp"><b className="sm">{l}</b><div className="xs mut">{d}</div></div></button>))}
+          <span className="xs mut">As imagens têm 1080×1350 e usam as cores do seu mapa.</span></div>
+        <div className="card col" style={{ gap: 12, alignItems: 'center', minWidth: 0 }}>
+          <div style={{ width: 'min(340px, 100%)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 12px 34px rgba(23,23,19,.16)' }}><canvas ref={big} style={{ width: '100%', display: 'block' }} /></div>
+          <div className="row wrap"><button className="btn" disabled={!places} onClick={() => download(kind)}>Baixar PNG</button><button className="btn ln" onClick={() => copy(url, 'Link copiado')}>Copiar link para a legenda</button></div>
+        </div></div>}
+      {tab === 'incorporar' && <div className="card col" style={{ gap: 12 }}>
+        <b>Mapa dentro do seu site ou blog</b><span className="sm mut">Cole este código na página onde o mapa deve aparecer. Ele mostra só o mapa, com os seus pins.</span>
+        <div className="card soft xs" style={{ fontFamily: "'Courier New',monospace", wordBreak: 'break-all' }}>{embed}</div>
+        <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => copy(embed, 'Código copiado')}>Copiar código</button></div>}
     </PanelPage>
   )
 }
@@ -453,16 +545,30 @@ export function Account() {
   const [name, setName] = useState(c.displayName)
   const paused = c.settings.paused || c.settings.adminPaused
   const save = async () => { await api('/creator/account', { method: 'PUT', body: { displayName: name } }); await reload(); toast('Nome salvo') }
+  const togglePause = async () => { await api('/creator/pause', { method: 'POST', body: { paused: !c.settings.paused } }); await reload(); toast(c.settings.paused ? 'Mapa de volta ao ar' : 'Mapa pausado') }
   const del = async () => {
     if (prompt('Isto apaga o mapa e a conta e não dá para desfazer. Digite EXCLUIR para confirmar:') !== 'EXCLUIR') return
     await api('/creator/account', { method: 'DELETE', body: { confirm: 'EXCLUIR' } }); await reload(); navigate('/')
   }
+  const url = `${location.host}/@${c.slug}`
   return (
     <AccountPage tab="conta">
-      <div className="g2"><Field label="Nome" id="n"><div className="row"><div className="in sp"><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength="60" /></div><button className="btn" disabled={!name.trim() || name === c.displayName} onClick={save}>Salvar</button></div></Field><Field label="E-mail" id="m"><div className="in" style={{ background: 'var(--soft)' }}><input id="m" value={me.user.email} readOnly /></div></Field></div>
-      <div className="card row"><div className="sp"><b>{c.settings.paused ? 'Mapa pausado' : 'Pausar o mapa'}</b><div className="sm mut">Tira o mapa do ar sem apagar nada. Seguidores veem "Mapa indisponível".{c.settings.adminPaused && ' (Pausado pela equipe: fale com a gente para esclarecer.)'}</div></div><button className="btn ln sm" disabled={c.settings.adminPaused} onClick={async () => { await api('/creator/pause', { method: 'POST', body: { paused: !c.settings.paused } }); await reload(); toast(c.settings.paused ? 'Mapa de volta ao ar' : 'Mapa pausado') }}>{paused ? (c.settings.adminPaused ? 'Pausado' : 'Retomar') : 'Pausar'}</button></div>
-      <div className="card row"><div className="sp"><b>Exportar meus dados</b><div className="sm mut">Lugares, categorias, estilo e métricas agregadas em JSON e CSV.</div></div><div className="row"><a className="btn sec sm" href="/api/creator/export" download onClick={dlDemo()}>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download onClick={dlDemo('csv')}>CSV</a></div></div>
-      <div className="card col" style={{ borderColor: 'var(--bad)', gap: 10 }}><b className="acc">Zona de risco</b><div className="row"><div className="sp"><b className="sm">Excluir conta e mapa</b><div className="sm mut">Remove o mapa e as fontes derivadas. Cópias técnicas somem no prazo da Política. Não dá para desfazer.</div></div><button className="btn bd2 sm" onClick={del}>Excluir</button></div></div>
+      <div className="g2" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
+        <div className="card col" style={{ gap: 16 }}>
+          <div className="row" style={{ gap: 14 }}><div className="av" style={{ width: 64, height: 64, fontSize: 28 }}>{(name || '?').trim().slice(0, 1).toUpperCase()}</div><div className="sp" style={{ minWidth: 0 }}><b className="d s26 trunc" style={{ display: 'block' }}>{name || 'Seu nome'}</b><span className="sm mut">@{c.handle}</span></div></div>
+          <Field label="Nome no mapa" id="n"><div className="row"><div className="in sp"><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength="60" /></div><button className="btn" disabled={!name.trim() || name === c.displayName} onClick={save}>Salvar</button></div></Field>
+          <Field label="E-mail de acesso" id="m"><div className="in" style={{ background: 'var(--soft)' }}><Icon n="mail" s={16} c="#757575" /><input id="m" value={me.user.email} readOnly /></div></Field>
+        </div>
+        <div className="card col" style={{ gap: 12 }}>
+          <div className="row jb"><b>Seu mapa</b><span className={'tag ' + (paused ? 'wn' : c.published ? 'ok' : '')}>{paused ? 'Pausado' : c.published ? 'No ar' : 'Rascunho'}</span></div>
+          <span className="sm mut trunc">{url}</span>
+          <div className="sep" />
+          <div className="row"><div className="sp"><b className="sm">Mapa no ar</b><div className="xs mut">Desligue para tirar do ar sem apagar nada. Seguidores veem "Mapa indisponível".{c.settings.adminPaused && ' (Pausado pela equipe: fale com a gente.)'}</div></div><Switch on={!paused} disabled={c.settings.adminPaused} onChange={togglePause} label="Mapa no ar" /></div>
+          <div className="sep" />
+          <div><b className="sm">Exportar meus dados</b><div className="xs mut" style={{ marginBottom: 8 }}>Lugares, categorias, estilo e métricas agregadas.</div><div className="row"><a className="btn sec sm" href="/api/creator/export" download onClick={dlDemo()}>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download onClick={dlDemo('csv')}>CSV</a></div></div>
+        </div>
+      </div>
+      <div className="card col" style={{ borderColor: 'var(--bad)', gap: 10 }}><b className="acc">Zona de risco</b><div className="row wrap"><div className="sp"><b className="sm">Excluir conta e mapa</b><div className="sm mut">Remove o mapa e as fontes derivadas. Cópias técnicas somem no prazo da Política. Não dá para desfazer.</div></div><button className="btn bd2 sm" onClick={del}>Excluir</button></div></div>
       <Note>Dúvidas sobre dados pessoais? Escreva para [e-mail de privacidade].</Note>
     </AccountPage>
   )
