@@ -10,11 +10,12 @@ import * as Pn from './pages/Panel.jsx'
 import * as Net from './pages/Network.jsx'
 import * as Ad from './pages/Admin.jsx'
 import { Voo } from './pages/Voo.jsx'
+import { RestaurantsLanding } from './landing/restaurants.jsx'
 import Public from './pub/Public.jsx'
 import { STATIC } from './lib/base.js'
 import { isCreatorPath, demoReset, demoLeave } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
@@ -27,7 +28,7 @@ const ROUTES = {
   '/painel/roteiros': <Pn.Roteiros />, '/painel/listas': <Redirect to="/painel/roteiros" />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': <Redirect to="/estudio" />, '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': <Redirect to="/estudio/pins" />,
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': <Redirect to="/estudio" />, '/estudio/links': <Redirect to="/estudio" />, '/estudio/endereco': <Redirect to="/painel/divulgar" />,
-  '/rede': <Net.NetworkMap />, '/rede/lugar': <Net.NetworkPlace />, '/restaurantes': <Net.Claim />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
+  '/rede': <Net.NetworkMap />, '/rede/lugar': <Net.NetworkPlace />, '/restaurantes': <Net.Claim />, '/para-restaurantes': <RestaurantsLanding />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
   '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
 }
 
