@@ -24,7 +24,7 @@ const ROUTES = {
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
   '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
   '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Redirect to="/painel" />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
-  '/painel/listas': <Pn.Lists />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
+  '/painel/roteiros': <Pn.Roteiros />, '/painel/listas': <Redirect to="/painel/roteiros" />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': ST(<St.StudioTemplates />), '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': ST(<St.StudioSymbols />),
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': ST(<St.StudioLayout />), '/estudio/links': ST(<St.StudioLinks />), '/estudio/endereco': ST(<St.StudioAddress />),
   '/rede': <Net.NetworkMap />, '/rede/lugar': <Net.NetworkPlace />, '/restaurantes': <Net.Claim />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,

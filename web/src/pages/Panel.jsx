@@ -215,20 +215,37 @@ export function Promote() {
   )
 }
 
-// F7 · listas à venda (em breve)
-export function Lists() {
-  useTitle('Listas à venda')
+// F7 · roteiros (grátis no mapa; a venda ainda não está aberta)
+export function Roteiros() {
+  useTitle('Roteiros')
+  const [places] = usePlacesList()
+  const [rows, setRows] = useState(null)
+  const [saved, setSaved] = useState(true)
   const [on, setOn] = useState(null)
-  useEffect(() => { api('/creator/interest').then((d) => setOn(d.listas)) }, [])
+  useEffect(() => { api('/creator/routes').then((d) => setRows(d.routes)); api('/creator/interest').then((d) => setOn(d.listas)) }, [])
+  if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
+  const confirmed = places.filter((p) => p.status === 'confirmed')
+  const edit = (next) => { setRows(next); setSaved(false) }
+  const set = (i, patch) => edit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+  const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows } }); const d = await api('/creator/routes'); setRows(d.routes); setSaved(true); toast('Roteiros salvos (já valem no mapa publicado)') }
   return (
-    <PanelPage active="listas">
-      <div className="row"><h1 className="d s44">Listas à venda</h1><span className="tag wn">Em breve</span></div>
-      <div className="hero col" style={{ padding: 32, gap: 10 }}><b className="d s32">Venda seus roteiros e guias</b><span className="mut" style={{ maxWidth: 520 }}>Monte listas exclusivas, como "Fim de semana em Campos do Jordão", e ofereça para quem quiser ir além do mapa gratuito. Prévia de produto: não é oferta nem promessa de receita.</span></div>
-      <div className="g3">
-        <div className="card col" style={{ gap: 6 }}><b>Roteiro pago</b><span className="sm mut">Lugares, ordem, dicas e horários.</span><div className="ph" style={{ height: 90 }}>preview</div></div>
-        <div className="card col" style={{ gap: 6 }}><b>Preço e acesso</b><span className="sm mut">Você define o valor; o pagamento passa por um provedor.</span><div className="in ph" style={{ marginTop: 6 }}>R$ [valor]</div></div>
-        <div className="card col" style={{ gap: 6 }}><b>Comissão da plataforma</b><span className="sm mut">[percentual a definir]</span></div></div>
-      <div className="card row jb wrap"><div><b>Quer participar do teste?</b><div className="sm mut">Avisamos quando abrir para o seu perfil.</div></div><button className="btn" disabled={on !== false} onClick={async () => { await api('/creator/interest', { method: 'POST', body: { kind: 'listas' } }); setOn(true); toast('Você está na lista') }}>{on ? 'Você está na lista' : 'Entrar na lista'}</button></div>
+    <PanelPage active="roteiros">
+      <Head title="Roteiros" sub="Coleções de lugares na ordem em que você indica, como “Domingo de café”" right={<div className="row"><button className="btn ln sm" disabled={rows.length >= 12} onClick={() => edit([...rows, { name: '', note: '', placeIds: [] }])}><Icon n="plus" s={14} />Novo roteiro</button><button className="btn sm" disabled={saved} onClick={save}>{saved ? 'Salvo' : 'Salvar roteiros'}</button></div>} />
+      {!rows.length && <div className="card col" style={{ gap: 6 }}><b>Nenhum roteiro ainda</b><span className="sm mut">Reúna dois ou mais lugares do seu mapa em um roteiro: um passeio por bairro, uma noite, um fim de semana. Seus seguidores abrem o roteiro e seguem lugar por lugar.</span></div>}
+      {rows.map((r, i) => (
+        <div key={r.id || `n${i}`} className="card col" style={{ gap: 12 }}>
+          <div className="row"><input className="in sp" style={{ minHeight: 44 }} aria-label="Nome do roteiro" placeholder="Nome do roteiro" value={r.name} maxLength="40" onChange={(e) => set(i, { name: e.target.value })} /><input className="in sp" style={{ minHeight: 44 }} aria-label="Observação" placeholder="Ex.: 3 h de passeio" value={r.note || ''} maxLength="60" onChange={(e) => set(i, { note: e.target.value })} /><button className="btn ln sm" aria-label="Remover roteiro" onClick={() => edit(rows.filter((_, j) => j !== i))}><Icon n="trash" s={14} /></button></div>
+          <div><span className="xs mut">Lugares do roteiro ({r.placeIds.length})</span>
+            <div className="row wrap" style={{ gap: 6, marginTop: 6 }}>{confirmed.map((p) => <button key={p.id} className={'chip' + (r.placeIds.includes(p.id) ? ' on' : '')} style={{ fontSize: 12, padding: '5px 10px' }} onClick={() => set(i, { placeIds: r.placeIds.includes(p.id) ? r.placeIds.filter((x) => x !== p.id) : [...r.placeIds, p.id] })}>{p.name}</button>)}{!confirmed.length && <span className="sm mut">Confirme lugares no mapa para montar roteiros.</span>}</div></div>
+          <div className="sep" />
+          <div className="row wrap jb"><div className="row" role="group" aria-label="Como oferecer este roteiro"><button className="chip on" aria-pressed="true">Grátis no mapa</button><button className="chip" disabled title="A venda de roteiros ainda não está aberta">Vender · em breve</button></div><span className="xs mut">{r.id ? 'Aparece no mapa publicado' : 'Salve para publicar no mapa'}</span></div>
+        </div>))}
+      <div className="card soft col" style={{ gap: 8 }}>
+        <div className="row"><b>Vender roteiros</b><span className="tag wn">Em breve</span></div>
+        <span className="sm mut">Você escolhe: cada roteiro pode continuar grátis no seu mapa ou, quando a venda abrir, ser oferecido pago para quem quiser ir além. Nada muda para os que ficarem grátis. Preço e comissão ainda não estão definidos, então hoje nenhum roteiro é cobrado.</span>
+        <div className="row jb wrap"><span className="sm">Quer participar do teste? Avisamos quando abrir para o seu perfil.</span><button className="btn sm" disabled={on !== false} onClick={async () => { await api('/creator/interest', { method: 'POST', body: { kind: 'listas' } }); setOn(true); toast('Você está na lista') }}>{on ? 'Você está na lista' : 'Entrar na lista'}</button></div>
+      </div>
+      <Note>Os roteiros aparecem no seu mapa quando o bloco "Roteiros" está ligado no Estúdio, em Layout.</Note>
     </PanelPage>
   )
 }

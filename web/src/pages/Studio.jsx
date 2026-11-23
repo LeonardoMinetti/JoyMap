@@ -380,21 +380,10 @@ export function StudioLayout() {
 }
 function RoutesEditor() {
   const s = useStudio()
-  const [rows, setRows] = useState(s.routes)
-  useEffect(() => { setRows(s.routes) }, [s.routes])
-  const confirmed = s.places.filter((p) => p.status === 'confirmed')
-  const set = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows } }); s.loadPlaces(); toast('Roteiros salvos (já valem no mapa publicado)') }
   return (
-    <div className="card col" style={{ gap: 10 }}>
-      <div className="row jb"><b>Roteiros do mapa</b><button className="btn ln sm" disabled={rows.length >= 12} onClick={() => setRows([...rows, { name: '', note: '', placeIds: [] }])}><Icon n="plus" s={14} />Novo roteiro</button></div>
-      {!rows.length && <p className="sm mut">Monte coleções como "Domingo de café". Ligue o bloco "Roteiros" para mostrá-las na página.</p>}
-      {rows.map((r, i) => (
-        <div key={i} className="card soft col" style={{ gap: 8 }}>
-          <div className="row"><input className="in sp" style={{ minHeight: 40 }} aria-label="Nome do roteiro" placeholder="Nome do roteiro" value={r.name} maxLength="40" onChange={(e) => set(i, { name: e.target.value })} /><input className="in sp" style={{ minHeight: 40 }} aria-label="Observação" placeholder="Ex.: 3 h de passeio" value={r.note || ''} maxLength="60" onChange={(e) => set(i, { note: e.target.value })} /><button className="btn ln sm" aria-label="Remover roteiro" onClick={() => setRows(rows.filter((_, j) => j !== i))}><Icon n="trash" s={14} /></button></div>
-          <div className="row wrap" style={{ gap: 6 }}>{confirmed.map((p) => <button key={p.id} className={'chip' + (r.placeIds.includes(p.id) ? ' on' : '')} style={{ fontSize: 12, padding: '5px 10px' }} onClick={() => set(i, { placeIds: r.placeIds.includes(p.id) ? r.placeIds.filter((x) => x !== p.id) : [...r.placeIds, p.id] })}>{p.name}</button>)}{!confirmed.length && <span className="xs mut">Confirme lugares para montar roteiros.</span>}</div>
-        </div>))}
-      {rows.length > 0 && <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={save}>Salvar roteiros</button>}
+    <div className="card row" style={{ gap: 10 }}>
+      <div className="sp"><b>Roteiros do mapa</b><div className="sm mut">{s.routes.length ? `${s.routes.length} roteiro${s.routes.length === 1 ? '' : 's'}` : 'Nenhum roteiro ainda'} · criar e editar fica na área Roteiros do painel.</div></div>
+      <Link className="btn ln sm" to="/painel/roteiros">Abrir Roteiros</Link>
     </div>
   )
 }

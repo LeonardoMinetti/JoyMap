@@ -42,7 +42,7 @@ export const SiteFooter = () => (
 
 // Menu lateral do painel do criador (F)
 const SIDE = [['visao', 'Visão geral', 'home', '/painel'], ['buscas', 'Buscas', 'search', '/painel/buscas'], ['lugares', 'Lugares', 'pin', '/painel/lugares'],
-  ['divulgar', 'Divulgar', 'share', '/painel/divulgar'], ['listas', 'Listas à venda', 'store', '/painel/listas'], ['estudio', 'Estúdio de estilo', 'palette', '/estudio'], ['conta', 'Minha conta', 'gear', '/painel/conta']]
+  ['divulgar', 'Divulgar', 'share', '/painel/divulgar'], ['roteiros', 'Roteiros', 'route', '/painel/roteiros'], ['estudio', 'Estúdio de estilo', 'palette', '/estudio'], ['conta', 'Minha conta', 'gear', '/painel/conta']]
 const TABS = ['visao', 'buscas', 'lugares', 'divulgar']
 export function Side({ active }) {
   const { me, reload } = useMe()
