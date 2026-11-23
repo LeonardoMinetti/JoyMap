@@ -14,7 +14,7 @@ import { extract } from '../server/extract.js'
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i < 0 ? d : (process.argv[i + 1]?.startsWith('--') || process.argv[i + 1] == null ? true : process.argv[i + 1]) }
 const usuario = String(arg('usuario', '')).replace(/^@/, '')
-const limite = Math.min(30, Math.max(1, Number(arg('limite', 20))))
+const limite = Math.min(100, Math.max(1, Number(arg('limite', 20)))) // perfis que misturam assuntos pedem amostra maior (ex.: 60 a 100)
 const ator = String(arg('ator', 'apify/instagram-post-scraper'))
 const modelo = String(arg('entrada', '{"username":["{{usuario}}"],"resultsLimit":{{limite}}}'))
 const app = String(arg('app', 'http://localhost:4300'))
@@ -77,13 +77,23 @@ console.log(`\nResumo (${n} posts)
   sem lugar identificado         : ${com(({ e }) => !e.name)}
   custo estimado                 : US$ ${((n / 1000) * preco).toFixed(3)} (preço da listagem: US$ ${preco}/1.000 resultados; confira o uso real no painel do Apify)`)
 
+// quem o perfil mais marca (ajuda a separar lugares de gastronomia de marcas e outros assuntos)
+const marcas = {}
+linhas.forEach(({ e }) => (e.handles || []).forEach((h) => { marcas[h] = (marcas[h] || 0) + 1 }))
+const top = Object.entries(marcas).sort((x, y) => y[1] - x[1]).slice(0, 15)
+if (top.length) console.log('\nPerfis mais marcados nas legendas (confira quais são restaurantes e quais são outras marcas):\n  ' + top.map(([h, c]) => `@${h} (${c})`).join('  '))
+console.log('\nAtenção: a categoria do extrator assume "restaurante" quando não identifica outra; num perfil que mistura assuntos, use a coluna "nome extraído" e a revisão no app, não a categoria.')
+
 if (enviar) {
   // modo desenvolvimento: entra como o criador de teste e usa o mesmo fluxo do "colar posts"
   const login = await fetch(`${app}/api/auth/demo`, { method: 'POST' })
   if (!login.ok) { console.error('\nNão consegui entrar no app local (ele precisa estar rodando em modo desenvolvimento).'); process.exit(1) }
   const cookie = (login.headers.getSetCookie?.() || []).map((c) => c.split(';')[0]).join('; ')
-  const r = await fetch(`${app}/api/creator/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie }, body: JSON.stringify({ posts: posts.slice(0, 30).map((p) => ({ url: p.url, caption: p.caption, date: p.date })) }) })
-  console.log(`\nEnviado ao app: ${r.status} ${await r.text()}\nAguardando a geocodificação (até 40 s)…`)
+  for (let i = 0; i < posts.length; i += 30) { // o app aceita até 30 posts por envio
+    const r = await fetch(`${app}/api/creator/posts`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: cookie }, body: JSON.stringify({ posts: posts.slice(i, i + 30).map((p) => ({ url: p.url, caption: p.caption, date: p.date })) }) })
+    console.log(`\nLote ${i / 30 + 1} enviado ao app: ${r.status} ${await r.text()}`)
+  }
+  console.log('Aguardando a geocodificação (até 40 s)…')
   let ps = []
   for (let i = 0; i < 10; i++) { await new Promise((s) => setTimeout(s, 4000)); ps = (await (await fetch(`${app}/api/creator/places`, { headers: { Cookie: cookie } })).json()).places; if (!ps.some((x) => x.geoStatus === 'pending' || x.geo_status === 'pending')) break }
   console.log('\nLugares no app:')
