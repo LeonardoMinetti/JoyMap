@@ -34,7 +34,7 @@ export function Applications() {
         <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Perfil</th><th>Seguidores</th><th>Critério</th><th>Verificação</th><th>Status</th><th /></tr></thead><tbody>
           {d.creators.map((c) => <Row key={c.id} c={c} S={S} C={C} decide={decide} />)}
           {!d.creators.length && <tr><td colSpan="6" className="mut">Nenhuma candidatura ainda.</td></tr>}</tbody></table></div>
-        <Note>Confira o perfil no Instagram, informe o número de seguidores e confirme o titular antes de aprovar. Critérios além de seguidores: perfil ativo, conteúdo de gastronomia e sem sinais de perfil falso. A decisão fica registrada com data e responsável.</Note></>}
+        <Note>Confira o perfil no Instagram, informe o número de seguidores e confirme o titular antes de aprovar. Critérios além de seguidores: perfil ativo, conteúdo de indicação de lugares (gastronomia, viagem, passeios, esportes) e sem sinais de perfil falso. A decisão fica registrada com data e responsável.</Note></>}
     </Shell>
   )
 }

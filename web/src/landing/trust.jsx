@@ -44,22 +44,22 @@ export function Trust() {
 // Seção 10 · Monetização (visão futura): cartas de roteiros, sobrepostas como um baralho
 const GUIDES = [
   { t: 'Izakayas da Liberdade', d: 'Roteiro a pé pelos melhores izakayas do bairro, com o que pedir em cada parada.', bg: 'var(--acc)', fg: 'var(--ink)', photos: ['sushi', 'sushi2', 'ramen'], more: 7, r: -5 },
-  { t: 'Cafeterias especiais de São Paulo', d: 'Uma seleção de cafeterias para quem gosta de café de verdade, organizada por região.', bg: 'var(--ink)', fg: '#fff', photos: ['latte', 'espresso', 'croissant'], more: 6, r: 2.5 },
-  { t: 'Jantares para encontros', d: 'Guia de restaurantes para encontros românticos, do primeiro encontro ao aniversário.', bg: '#E4E4E4', fg: 'var(--ink)', photos: ['vinho', 'massa', 'vieira'], more: 5, r: -2 },
-  { t: 'Um bairro, um roteiro', d: 'Roteiro gastronômico por determinado bairro, em blocos para fazer a pé.', bg: '#A5DFCA', fg: 'var(--ink)', photos: ['pizza', 'burger', 'tacos'], more: 8, r: 4 },
+  { t: 'Fim de semana na serra', d: 'Onde ficar, o que ver e onde comer em dois dias de estrada, organizado por dia.', bg: 'var(--ink)', fg: '#fff', icons: ['mountain', 'tent', 'automobile'], more: 6, r: 2.5 },
+  { t: 'Trilhas e passeios perto de SP', d: 'Trilhas, mirantes e passeios ao ar livre, com o ponto de partida e a duração de cada um.', bg: '#E4E4E4', fg: 'var(--ink)', icons: ['bicycle', 'compass', 'beach-with-umbrella'], more: 5, r: -2 },
+  { t: 'Um bairro, um roteiro', d: 'Roteiro por determinado bairro, em blocos para fazer a pé.', bg: '#A5DFCA', fg: 'var(--ink)', photos: ['pizza', 'burger', 'tacos'], more: 8, r: 4 },
 ]
 export function Monetize() {
   return (
     <section className="sec" aria-labelledby="mon" style={{ background: '#fff', overflow: 'hidden' }}>
       <div className="w col" style={{ gap: 36 }}>
         <div className="sec-h"><span className="tag wn" style={{ alignSelf: 'flex-start' }}>Em desenvolvimento</span><h2 id="mon" className="d h-sec">Suas recomendações também podem virar um negócio.</h2>
-          <p className="lead">Transforme seu repertório gastronômico em roteiros exclusivos, guias digitais e seleções que sua audiência poderá adquirir diretamente de você.</p></div>
+          <p className="lead">Transforme seu repertório de lugares em roteiros exclusivos, guias digitais e seleções que sua audiência poderá adquirir diretamente de você.</p></div>
         <Scene className="gd" threshold={0.3}>
           {GUIDES.map((g, i) => (
             <article key={g.t} className="gd-c" style={{ '--i': i, '--r': `${g.r}deg`, background: g.bg, color: g.fg }}>
               <span className="gd-ex">Exemplo</span>
               <div className="gd-top"><h3>{g.t}</h3><Icon n="next" s={22} c="currentColor" /></div>
-              <div className="gd-av" aria-hidden="true">{g.photos.map((k) => <img key={k} src={withBase(`/photos/${k}.jpg`)} alt="" loading="lazy" decoding="async" />)}<b>+{g.more}</b></div>
+              <div className="gd-av" aria-hidden="true">{g.photos ? g.photos.map((k) => <img key={k} src={withBase(`/photos/${k}.jpg`)} alt="" loading="lazy" decoding="async" />) : g.icons.map((k) => <span key={k} className="gd-em"><Icon s={32} sym={em(k)} /></span>)}<b>+{g.more}</b></div>
               <hr />
               <p>{g.d}</p>
             </article>))}

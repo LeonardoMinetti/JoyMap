@@ -9,7 +9,7 @@ const em = (n) => ({ lib: `lib:fluent3d:${n}` })
 const hl = { background: 'linear-gradient(transparent 60%, var(--hl, var(--acc)) 60%)', padding: '0 4px' }
 const TERM = 'ramen na Liberdade'
 
-export const NORES = [['Restaurantes japoneses na Liberdade', 87], ['Brunch em Pinheiros', 64], ['Restaurantes italianos românticos', 48], ['Cafés pet friendly', 32], ['Hambúrguer na Zona Norte', 24]]
+export const NORES = [['Restaurantes japoneses na Liberdade', 87], ['Brunch em Pinheiros', 64], ['Restaurantes italianos românticos', 48], ['Cafés pet friendly', 32], ['Trilhas perto de São Paulo', 24]]
 export const REL = {
   cat: [['Japonês', 100], ['Cafés', 82], ['Italiano', 61], ['Hambúrguer', 44], ['Doces', 30]],
   hood: [['Liberdade', 100], ['Pinheiros', 86], ['Vila Madalena', 64], ['Itaim Bibi', 47], ['Moema', 33]],

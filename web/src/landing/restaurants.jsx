@@ -51,7 +51,7 @@ function Hero() {
         <div className="col hero2-tx">
           <span className="tag hero2-eb">Para restaurantes</span>
           <h1 className="d rs-h1">Os criadores já indicam <span className="rs-nl">o seu restaurante.</span></h1>
-          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>O wagli reúne, em mapas de criadores gastronômicos, as indicações do seu lugar. Reivindique o seu restaurante, corrija as informações e acompanhe quem indica você.</p>
+          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>O wagli reúne, em mapas de criadores, as indicações do seu lugar. Reivindique o seu restaurante, corrija as informações e acompanhe quem indica você.</p>
           <div className="row wrap" style={{ gap: 12 }}>
             <Link className="btn dk btn-lg" to={CLAIM}>Reivindicar meu restaurante</Link>
             <Link className="btn ln btn-lg" to="/@demo">Ver um mapa de exemplo</Link>

@@ -1,6 +1,6 @@
 // Perguntas frequentes (respostas conforme as regras e o estágio reais do produto).
 export const FAQ = [
-  ['Preciso cadastrar manualmente todos os restaurantes?', 'Não. Quando a conexão oficial estiver disponível, o wagli identifica os lugares mencionados nas publicações que você autorizar e os organiza no mapa. Você revisa, corrige e aprova. Enquanto a conexão não está ativa, é possível começar colando as publicações ou adicionando lugares.'],
+  ['Preciso cadastrar manualmente todos os lugares?', 'Não. Quando a conexão oficial estiver disponível, o wagli identifica os lugares mencionados nas publicações que você autorizar e os organiza no mapa. Você revisa, corrige e aprova. Enquanto a conexão não está ativa, é possível começar colando as publicações ou adicionando lugares.'],
   ['Como funciona a conexão com Instagram e TikTok?', 'Pelas integrações oficiais de cada plataforma, com a sua autorização. Elas ainda dependem de aprovação das plataformas e não estão ativas. Por isso, a demonstração da conexão na página é ilustrativa.'],
   ['Preciso compartilhar minha senha?', 'Não. A conexão usa a autorização oficial de cada plataforma. O wagli nunca pede a senha das suas redes sociais.'],
   ['Posso corrigir ou remover uma recomendação?', 'Sim. Nada vai ao ar sem a sua aprovação. Você pode editar nome, endereço e categoria, juntar duplicados e ocultar ou remover qualquer lugar.'],

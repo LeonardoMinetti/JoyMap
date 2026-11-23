@@ -1,6 +1,6 @@
 import React from 'react'
 
-// Ilustrações de comida desenhadas à mão (traço de tinta + aquarela chapada + sombra cinza deslocada) e formas geométricas.
+// Ilustrações de comida, viagem e ar livre desenhadas à mão (traço de tinta + aquarela chapada + sombra cinza deslocada) e formas geométricas.
 // Elementos decorativos flutuantes: não são lidos por leitores de tela e não recebem toque.
 const INK = '#171713', SH = '#c9c9c1'
 const sh = (d, extra = {}) => <path d={d} fill={SH} opacity=".75" transform="translate(3 4)" {...extra} />
@@ -63,6 +63,56 @@ const ART = {
     <path d="M14 34a34 34 0 0 0 68 0z" fill="#FF5C6A" />
     <g fill={INK}>{[[30, 46, 20], [48, 56, 0], [66, 46, -20], [40, 42, 10], [58, 41, -10]].map(([x, y, r], i) => <ellipse key={i} cx={x} cy={y} rx="2" ry="3.4" transform={`rotate(${r} ${x} ${y})`} />)}</g>
   </>,
+  car: <>
+    <path d="M0 87h100" stroke={INK} strokeWidth="1.8" strokeDasharray="10 8" className="dd-road" opacity=".55" />
+    {sh('M6 64q0-9 9-11l10-15q3-4 8-4h28q6 0 9 4l9 13q9 3 9 13v4H6z')}
+    <path d="M6 64q0-9 9-11l10-15q3-4 8-4h28q6 0 9 4l9 13q9 3 9 13v4H6z" fill="#FF4B2B" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M30 52l7-12h14v12z" fill="#CFE8FF" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" /><path d="M56 52V40h7l9 12z" fill="#CFE8FF" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+    <circle cx="91" cy="62" r="3.2" fill="#FFC400" stroke={INK} strokeWidth="1.2" /><path d="M6 64h6" stroke={INK} strokeWidth="1.4" />
+    {[28, 74].map((x) => <g key={x} className="dd-wheel"><circle cx={x} cy="72" r="11" fill={INK} /><circle cx={x} cy="72" r="4.5" fill="#fff" /><path d={`M${x} 63v18M${x - 9} 72h18`} stroke="#fff" strokeWidth="1.6" /></g>)}
+  </>,
+  plane: <>
+    <path d="M6 82q18-4 26 4t24-2" fill="none" stroke={INK} strokeWidth="1.6" strokeDasharray="3 6" strokeLinecap="round" opacity=".6" />
+    {sh('M8 46L92 12L68 86L50 60z')}
+    <path d="M8 46L92 12L50 60z" fill="#fff" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M92 12L68 86L50 60z" fill="#CFE8FF" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M50 60L47 80L58 70" fill="#F7A81B" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+  </>,
+  backpack: <>
+    {sh('M24 28h52a0 0 0 0 1 0 0v50a8 8 0 0 1-8 8H32a8 8 0 0 1-8-8z')}
+    <path d="M40 28q0-14 10-14t10 14" fill="none" stroke={INK} strokeWidth="6" strokeLinecap="round" /><path d="M40 28q0-14 10-14t10 14" fill="none" stroke="#FFC400" strokeWidth="3" strokeLinecap="round" />
+    <rect x="22" y="26" width="56" height="62" rx="22" fill="#2D7FF9" stroke={INK} strokeWidth="1.6" />
+    <path d="M26 44q24 14 48 0" fill="none" stroke={INK} strokeWidth="1.4" />
+    <rect x="32" y="56" width="36" height="26" rx="10" fill="#FFC400" stroke={INK} strokeWidth="1.5" /><path d="M38 66h24" stroke={INK} strokeWidth="1.6" strokeLinecap="round" /><circle cx="63" cy="66" r="2" fill={INK} />
+    <path d="M22 46q-9 12 0 28M78 46q9 12 0 28" fill="none" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
+  </>,
+  suitcase: <>
+    {sh('M16 36h68a8 8 0 0 1 8 8v36a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8V44a8 8 0 0 1 8-8z')}
+    <path d="M38 36v-9q0-5 5-5h14q5 0 5 5v9" fill="none" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
+    <rect x="10" y="34" width="80" height="50" rx="9" fill="#FF5C8A" stroke={INK} strokeWidth="1.6" />
+    <path d="M32 34v50M68 34v50" stroke="#fff" strokeWidth="3.4" opacity=".55" />
+    <rect x="43" y="54" width="14" height="9" rx="2.5" fill="#FFC400" stroke={INK} strokeWidth="1.3" />
+    <circle cx="20" cy="46" r="5.5" fill="#fff" stroke={INK} strokeWidth="1.2" /><path d="M20 42.5l1 2.3 2.5.3-1.9 1.7.5 2.4-2.1-1.3-2.1 1.3.5-2.4-1.9-1.7 2.5-.3z" fill="#FF4B2B" />
+    <circle cx="26" cy="90" r="4.5" fill={INK} /><circle cx="74" cy="90" r="4.5" fill={INK} />
+  </>,
+  mountain: <>
+    {sh('M2 86L34 30l22 32l12-16l30 40z')}
+    <circle cx="76" cy="24" r="11" fill="#FFC400" stroke={INK} strokeWidth="1.5" />
+    <path d="M2 84L34 30l22 32l12-16l30 38z" fill="#36C5A0" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M26 44l8-14l9 14l-5-3l-4 5l-4-5z" fill="#fff" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+    <path d="M56 62l12-16l8 10" fill="none" stroke={INK} strokeWidth="1.2" strokeLinecap="round" opacity=".6" />
+  </>,
+  bike: <>
+    <path d="M0 90h100" stroke={INK} strokeWidth="1.6" strokeDasharray="10 8" className="dd-road" opacity=".4" />
+    {[24, 76].map((x) => <g key={x} className="dd-wheel"><circle cx={x} cy="66" r="19" fill="none" stroke={INK} strokeWidth="3.4" /><circle cx={x} cy="66" r="3" fill={INK} /><path d={`M${x} 47v38M${x - 19} 66h38M${x - 13} 53l26 26M${x + 13} 53l-26 26`} stroke={INK} strokeWidth="1" opacity=".6" /></g>)}
+    <path d="M24 66L42 40h24L50 66zM66 40l10 26M42 40l-3-6M66 40l-2-8" fill="none" stroke="#8B5CF6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M34 33h12M60 30h12" stroke={INK} strokeWidth="3.4" strokeLinecap="round" />
+  </>,
+  ball: <>
+    <circle cx="54" cy="56" r="38" fill={SH} opacity=".7" />
+    <circle cx="50" cy="52" r="38" fill="#D6F04A" stroke={INK} strokeWidth="1.6" />
+    <path d="M16 30q20 22 2 48M84 30q-20 22-2 48" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
+  </>,
   chili: <>
     {sh('M30 22q-6-10 6-12q4 18 30 40q14 12 12 30q-30-4-46-30q-8-14-2-28z')}
     <path d="M28 20q-6-10 6-12q4 18 30 40q14 12 12 30q-30-4-46-30q-8-14-2-28z" fill="#E8412B" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
@@ -103,15 +153,15 @@ export function Doodle({ k, c, size = 110, className = '', style }) {
 
 // Conjuntos de elementos por seção: [peça, cor (só formas), lado, topo %, deslocamento lateral px, tamanho px, giro°, duração s, atraso s]
 const SETS = {
-  hero: [['ramen', 0, 'r', 12, -34, 150, 8, 9, 0], ['pizza', 0, 'l', 78, -34, 120, -12, 10, 1.2], ['circle', 1, 'l', 10, 6, 34, 0, 8, .6], ['squig', 0, 'r', 70, 40, 90, -6, 7, 2], ['plus', 2, 'r', 46, 8, 26, 14, 9, .3]],
-  a: [['donut', 0, 'r', 6, -34, 120, 14, 9, 0], ['tri', 2, 'l', 62, -10, 52, -14, 8, 1], ['circle', 4, 'r', 80, 30, 30, 0, 7, .5]],
-  b: [['sushi', 0, 'l', 4, -40, 130, -8, 10, .4], ['half', 3, 'r', 70, -16, 74, 20, 9, 1.4], ['plus', 1, 'l', 84, 24, 28, 12, 8, 0]],
-  c: [['coffee', 0, 'r', 2, -36, 120, 8, 9, .8], ['chili', 0, 'l', 72, -30, 100, -18, 10, 0], ['ring', 0, 'r', 76, 26, 44, 0, 8, 1.1]],
-  d: [['taco', 0, 'l', 2, -40, 130, -10, 10, .2], ['quarter', 5, 'r', 74, -18, 70, 0, 9, 1], ['square', 4, 'r', 8, 20, 34, 0, 8, .7]],
-  e: [['melon', 0, 'r', 4, -34, 120, 10, 9, 0], ['squig', 1, 'l', 80, 10, 90, 4, 8, 1.3], ['circle', 2, 'l', 12, 28, 26, 0, 7, .4]],
-  q: [['pizza', 0, 'r', 16, -20, 130, 12, 10, .4], ['donut', 0, 'l', 62, -40, 110, -10, 9, 0], ['circle', 1, 'r', 66, 40, 30, 0, 7, .6], ['squig', 2, 'l', 14, 30, 80, -6, 8, 1.2]],
-  g: [['ramen', 0, 'l', 8, -10, 150, -8, 9, 0], ['sushi', 0, 'r', 14, -4, 120, 10, 10, .8], ['donut', 0, 'r', 66, 60, 90, -12, 9, .3], ['pizza', 0, 'l', 62, 50, 100, 14, 10, 1.1], ['circle', 4, 'l', 40, 8, 30, 0, 7, .5], ['plus', 1, 'r', 42, 6, 28, 12, 8, 0]],
-  f: [['pizza', 0, 'l', 6, -34, 110, 12, 10, .5], ['donut', 0, 'r', 72, -30, 100, -10, 9, 0], ['tri', 3, 'r', 10, 30, 40, 18, 8, 1]],
+  hero: [['ramen', 0, 'r', 12, -34, 150, 8, 9, 0], ['pizza', 0, 'l', 78, -34, 120, -12, 10, 1.2], ['circle', 1, 'l', 10, 6, 34, 0, 8, .6], ['plane', 0, 'r', 70, 40, 110, -6, 8, 2], ['plus', 2, 'r', 46, 8, 26, 14, 9, .3]],
+  a: [['donut', 0, 'r', 6, -34, 120, 14, 9, 0], ['backpack', 0, 'l', 62, -10, 96, -12, 8, 1], ['bike', 0, 'r', 80, 24, 110, 0, 8, .5]],
+  b: [['sushi', 0, 'l', 4, -40, 130, -8, 10, .4], ['car', 0, 'r', 70, -24, 130, 0, 9, 1.4], ['plus', 1, 'l', 84, 24, 28, 12, 8, 0]],
+  c: [['coffee', 0, 'r', 2, -36, 120, 8, 9, .8], ['suitcase', 0, 'l', 72, -30, 104, -14, 10, 0], ['ring', 0, 'r', 76, 26, 44, 0, 8, 1.1]],
+  d: [['taco', 0, 'l', 2, -40, 130, -10, 10, .2], ['mountain', 0, 'r', 74, -24, 120, 0, 9, 1], ['ball', 0, 'r', 8, 24, 64, 0, 8, .7]],
+  e: [['melon', 0, 'r', 4, -34, 120, 10, 9, 0], ['bike', 0, 'l', 80, 4, 120, 0, 8, 1.3], ['circle', 2, 'l', 12, 28, 26, 0, 7, .4]],
+  q: [['pizza', 0, 'r', 16, -20, 130, 12, 10, .4], ['donut', 0, 'l', 62, -40, 110, -10, 9, 0], ['circle', 1, 'r', 66, 40, 30, 0, 7, .6], ['ball', 0, 'l', 14, 30, 70, -6, 8, 1.2]],
+  g: [['ramen', 0, 'l', 8, -10, 150, -8, 9, 0], ['sushi', 0, 'r', 14, -4, 120, 10, 10, .8], ['suitcase', 0, 'r', 66, 60, 100, -12, 9, .3], ['car', 0, 'l', 62, 40, 130, 0, 10, 1.1], ['circle', 4, 'l', 40, 8, 30, 0, 7, .5], ['plus', 1, 'r', 42, 6, 28, 12, 8, 0]],
+  f: [['pizza', 0, 'l', 6, -34, 110, 12, 10, .5], ['backpack', 0, 'r', 72, -30, 100, -10, 9, 0], ['tri', 3, 'r', 10, 30, 40, 18, 8, 1]],
 }
 export function Floaters({ set }) {
   const items = SETS[set] || []

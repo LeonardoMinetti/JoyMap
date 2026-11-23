@@ -112,14 +112,15 @@ export function Hero() {
     <div className="hero2">
       <div className="w split hero2-in">
         <div className="col hero2-tx">
-          <span className="tag hero2-eb">Feito para criadores gastronômicos</span>
+          <span className="tag hero2-eb">Feito para criadores</span>
           <h1 className="d h-hero">Suas indicações <span className="h-nl">merecem um mapa.</span></h1>
-          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>Transforme suas indicações gastronômicas em um mapa com a sua identidade e descubra o que sua audiência quer ver a seguir.</p>
+          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>Transforme suas indicações de lugares em um mapa com a sua identidade e descubra o que sua audiência quer ver a seguir.</p>
           <div className="row wrap" style={{ gap: 12 }}>
             <Link className="btn dk btn-lg" to="/candidatura">Quero meu mapa</Link>
             <Link className="btn ln btn-lg" to="/@demo">Explorar um mapa</Link>
           </div>
           <p className="xs hero2-mc">30 dias grátis após aprovação e lançamento.</p>
+          <ul className="hero2-kinds" aria-label="Para quem indica">{['Restaurantes e cafés', 'Viagens', 'Passeios', 'Esportes e clubes'].map((k) => <li key={k}>{k}</li>)}</ul>
         </div>
         <HeroStage />
       </div>
