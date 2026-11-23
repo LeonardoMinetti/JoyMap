@@ -10,6 +10,9 @@ import { findGroups, hasCoords, issueOf } from '../lib/places.js'
 
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
+import { STATIC } from '../lib/base.js'
+import { demoExport } from '../lib/demoCreator.js'
+const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
 const useStats = (days = 30) => { const [s, setS] = useState(null); useEffect(() => { setS(null); api(`/creator/stats?days=${days}`).then(setS).catch(() => setS({ error: true })) }, [days]); return s }
 const usePlacesList = () => { const [p, setP] = useState(null); const load = () => api('/creator/places').then((d) => setP(d.places)); useEffect(() => { load() }, []); return [p, load] }
 const sampleTag = (n) => (n < 30 ? <span className="tag wn" title="Poucas visitas: os números ainda variam muito">Amostra pequena</span> : null)
@@ -302,7 +305,7 @@ export function Account() {
       <h1 className="d s44">Minha conta</h1>
       <div className="g2"><Field label="Nome" id="n"><div className="row"><div className="in sp"><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength="60" /></div><button className="btn" disabled={!name.trim() || name === c.displayName} onClick={save}>Salvar</button></div></Field><Field label="E-mail" id="m"><div className="in" style={{ background: 'var(--soft)' }}><input id="m" value={me.user.email} readOnly /></div></Field></div>
       <div className="card row"><div className="sp"><b>{c.settings.paused ? 'Mapa pausado' : 'Pausar o mapa'}</b><div className="sm mut">Tira o mapa do ar sem apagar nada. Seguidores veem "Mapa indisponível".{c.settings.adminPaused && ' (Pausado pela equipe: fale com a gente para esclarecer.)'}</div></div><button className="btn ln sm" disabled={c.settings.adminPaused} onClick={async () => { await api('/creator/pause', { method: 'POST', body: { paused: !c.settings.paused } }); await reload(); toast(c.settings.paused ? 'Mapa de volta ao ar' : 'Mapa pausado') }}>{paused ? (c.settings.adminPaused ? 'Pausado' : 'Retomar') : 'Pausar'}</button></div>
-      <div className="card row"><div className="sp"><b>Exportar meus dados</b><div className="sm mut">Lugares, categorias, estilo e métricas agregadas em JSON e CSV.</div></div><div className="row"><a className="btn sec sm" href="/api/creator/export" download>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download>CSV</a></div></div>
+      <div className="card row"><div className="sp"><b>Exportar meus dados</b><div className="sm mut">Lugares, categorias, estilo e métricas agregadas em JSON e CSV.</div></div><div className="row"><a className="btn sec sm" href="/api/creator/export" download onClick={dlDemo()}>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download onClick={dlDemo('csv')}>CSV</a></div></div>
       <div className="card col" style={{ borderColor: 'var(--bad)', gap: 10 }}><b className="acc">Zona de risco</b><div className="row"><div className="sp"><b className="sm">Excluir conta e mapa</b><div className="sm mut">Remove o mapa e as fontes derivadas. Cópias técnicas somem no prazo da Política. Não dá para desfazer.</div></div><button className="btn bd2 sm" onClick={del}>Excluir</button></div></div>
       <Note>Dúvidas sobre dados pessoais? Escreva para [e-mail de privacidade].</Note>
     </PanelPage>

@@ -12,6 +12,7 @@ import * as Ad from './pages/Admin.jsx'
 import { Voo } from './pages/Voo.jsx'
 import Public from './pub/Public.jsx'
 import { STATIC } from './lib/base.js'
+import { isCreatorPath, demoReset, demoLeave } from './lib/demoCreator.js'
 
 const STATIC_OK = new Set(['/', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
@@ -40,11 +41,28 @@ function Routes() {
   const pub = path.match(/^\/@([a-z0-9_-]+)(\/.*)?$/i)
   if (pub) return <Public slug={pub[1].toLowerCase()} />
   if (me === undefined) return <Loading />
-  if (STATIC && !STATIC_OK.has(path)) return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
+  if (STATIC && !STATIC_OK.has(path) && !isCreatorPath(path) && path !== '/entrar') return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
   const ed = path.match(/^\/revisar\/(\d+)$/)
   if (ed) return <Build.EditPlace id={ed[1]} />
   const el = ROUTES[path]
   if (!el) return <Redirect to="/" />
   return SITE.has(path) ? <div key={path} className="rt">{el}</div> : el
 }
-export default function App() { return <MeProvider><Routes /><Toaster /></MeProvider> }
+// Versão estática: avisa que o painel é uma demonstração e deixa recomeçar ou sair
+function DemoBar() {
+  const { me } = useMe()
+  const { path } = useLocation()
+  if (!STATIC || !me?.user || path.startsWith('/@')) return null
+  const go = (fn) => () => { fn(); location.assign(import.meta.env.BASE_URL) }
+  return (
+    <>
+    <div aria-hidden style={{ height: 70 }} />
+    <div role="status" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
+      <span><b>Demonstração.</b> Dados fictícios, salvos só nesta aba.</span>
+      <button className="btn sm" style={{ background: '#fff', color: '#171717' }} onClick={go(() => { demoReset(); demoLeave() })}>Recomeçar</button>
+      <button className="btn sm" style={{ background: '#3a3a3a', color: '#fff' }} onClick={go(demoLeave)}>Sair</button>
+    </div>
+    </>
+  )
+}
+export default function App() { return <MeProvider><Routes /><DemoBar /><Toaster /></MeProvider> }

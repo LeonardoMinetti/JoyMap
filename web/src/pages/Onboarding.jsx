@@ -1,3 +1,4 @@
+import { STATIC } from '../lib/base.js'
 import React, { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, Redirect, navigate } from '../lib/router.jsx'
@@ -137,6 +138,17 @@ export function Login() {
         {sent.devLink && <Note>Modo desenvolvimento: este ambiente não envia e-mails. <a href={sent.devLink} style={{ color: 'inherit', fontWeight: 700 }}>Abrir o link de acesso</a></Note>}
       </div>
       <div className="ft">{sent.devLink && <a className="btn blk" href={sent.devLink}>Abrir o link (modo desenvolvimento)</a>}<button className="btn ln blk" disabled={wait > 0} onClick={() => send()}>{wait > 0 ? `Reenviar link (${wait}s)` : 'Reenviar link'}</button></div>
+    </Stage>
+  )
+  if (STATIC) return (
+    <Stage>
+      <Hd back="/" title="Entrar" />
+      <div className="bd" style={{ justifyContent: 'center' }}>
+        <Logo />
+        <h1 className="d s44">Painel de demonstração</h1>
+        <p className="mut">Entre como uma criadora fictícia já aprovada, com lugares de exemplo. Dá para editar o mapa, o Estúdio e conferir as métricas. As mudanças ficam só nesta aba e nada é enviado.</p>
+        <button type="button" className="btn blk" onClick={igLogin}>Entrar na demonstração</button>
+      </div>
     </Stage>
   )
   return (
