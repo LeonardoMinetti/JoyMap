@@ -388,8 +388,8 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .main{gap:32px}
 .main .pg-h{gap:16px;align-items:flex-end}.main .pg-h h1{margin:0}.main .pg-h p{margin:8px 0 0}
 .main .g2,.main .g3,.main .g4{gap:20px}
-.main .blk{display:flex;flex-direction:column;gap:16px;min-width:0}
-.main .blk.sec{gap:20px}.main .sec{margin-top:16px}
+.main .blk:not(.btn){display:flex;flex-direction:column;gap:16px;min-width:0}
+.main .blk.sec:not(.btn){gap:20px}.main .sec{margin-top:16px}
 .main .sec-h h2{margin:0}.main .sec-h p{margin:6px 0 0}
 .main .card{padding:24px}.main .card.col{gap:16px}.main .card.row{gap:16px}
 .main .kpi{background:#fff;box-shadow:0 6px 20px rgba(23,23,19,.07);padding:24px;display:flex;flex-direction:column;gap:6px}
@@ -399,3 +399,28 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .mtabs a{position:relative}.mtabs .nd{position:absolute;top:8px;left:calc(50% + 8px);margin:0;box-shadow:0 0 0 2px #fff}
 @media (max-width:900px){.main{gap:24px}.main .g2,.main .g3,.main .g4{gap:16px}.main .card{padding:20px}.main .kpi{padding:18px}.main .sec{margin-top:8px}}
 .main .plc{padding:12px}.main .plc.card{gap:8px}
+
+/* fluxos de montagem no desktop: painel com menu lateral (ou página larga antes do onboarding) */
+.flow-head{display:flex;flex-direction:column;gap:12px}
+.flow-back{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font:600 13px var(--body);color:var(--mut)}.flow-back:hover{color:var(--ink)}
+.flow2{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.flow2>aside{position:sticky;top:24px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.flow1{display:block}
+.rv-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.steps{margin:0;padding-left:18px;display:grid;gap:8px;font-size:13px;color:var(--ink2)}
+.app.ob{display:block}.app.ob .main{max-width:1120px;margin:0 auto;padding-top:24px}
+.ob-top{display:flex;align-items:center;justify-content:space-between}
+@media (max-width:1100px){.rv-grid{grid-template-columns:1fr}}
+@media (max-width:900px){.flow2{grid-template-columns:minmax(0,1fr)}.flow2>aside{position:static}}
+
+/* telas de entrada e onboarding no desktop: página larga, sem moldura de celular */
+@media (min-width:901px){
+  .stage{background:var(--cream);padding:56px 24px;align-items:flex-start}
+  .phone{max-width:760px;border-radius:28px;min-height:0;overflow:visible;box-shadow:0 8px 28px rgba(23,23,19,.08)}
+  .phone.fixed{height:auto;min-height:0;overflow:visible}.phone.fixed .bd{overflow:visible}
+  .phone .hd{padding:24px 36px;font-size:22px;border-radius:28px 28px 0 0}
+  .phone .bd{padding:36px;gap:20px}
+  .phone .ft{position:static;flex-direction:row;justify-content:flex-end;align-items:center;flex-wrap:wrap;padding:22px 36px 30px;border-radius:0 0 28px 28px}
+  .phone .ft .btn.blk{width:auto;min-width:240px}
+  .phone .ft .btn.blk:only-child{margin-left:auto}
+}
