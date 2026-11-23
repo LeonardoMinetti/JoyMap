@@ -41,12 +41,9 @@ export const SiteFooter = () => (
 )
 
 // Menu lateral do painel do criador (F)
-const SIDE = [['visao', 'Visão geral', 'home', '/painel'], ['buscas', 'Buscas', 'search', '/painel/buscas'], ['lugares', 'Lugares', 'pin', '/painel/lugares'], ['audiencia', 'Audiência', 'user', '/painel/audiencia'],
-  ['atualizar', 'Atualizar mapa', 'spark', '/painel/atualizar'], ['divulgar', 'Divulgar', 'share', '/painel/divulgar'], ['listas', 'Listas à venda', 'store', '/painel/listas'],
-  ['estudio', 'Estúdio de estilo', 'palette', '/estudio'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'],
-  ['plano', 'Plano e cobrança', 'card', '/painel/plano'], ['conta', 'Minha conta', 'gear', '/painel/conta']]
-const TABS = ['visao', 'buscas', 'lugares', 'audiencia']
-const IC = ['#FF6A4D', '#7FB0FF', '#4FD8B0', '#B79CFF', '#FF8FB1', '#FFC400']
+const SIDE = [['visao', 'Visão geral', 'home', '/painel'], ['buscas', 'Buscas', 'search', '/painel/buscas'], ['lugares', 'Lugares', 'pin', '/painel/lugares'],
+  ['divulgar', 'Divulgar', 'share', '/painel/divulgar'], ['listas', 'Listas à venda', 'store', '/painel/listas'], ['estudio', 'Estúdio de estilo', 'palette', '/estudio'], ['conta', 'Minha conta', 'gear', '/painel/conta']]
+const TABS = ['visao', 'buscas', 'lugares', 'divulgar']
 export function Side({ active }) {
   const { me, reload } = useMe()
   const [more, setMore] = React.useState(false)
@@ -59,7 +56,7 @@ export function Side({ active }) {
       <div className="side">
         <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
         <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(c?.displayName)}</div><div><div className="b sm">@{c?.handle}</div><div className="xs mut">{c?.plan?.trialEnds ? 'Teste grátis' : 'Sem plano ativo'}</div></div></div>
-        {items.map(({ k, l, i, to }, n) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic" style={{ '--c': IC[n % IC.length] }}><Icon n={i} s={16} c="#171713" /></span>{l}</Link>)}
+        {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}</Link>)}
         {me?.user?.role === 'admin' && <Link className="it" to="/admin"><Icon n="shield" s={18} c="#404040" />Administração</Link>}
         <button className="it" style={{ background: 'none', border: 0, textAlign: 'left', marginTop: 'auto' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button>
       </div>

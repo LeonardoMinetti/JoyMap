@@ -23,7 +23,7 @@ const ROUTES = {
   '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
   '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
-  '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Pn.Audience />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
+  '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Redirect to="/painel" />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
   '/painel/listas': <Pn.Lists />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': ST(<St.StudioTemplates />), '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': ST(<St.StudioSymbols />),
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': ST(<St.StudioLayout />), '/estudio/links': ST(<St.StudioLinks />), '/estudio/endereco': ST(<St.StudioAddress />),
@@ -56,8 +56,8 @@ function DemoBar() {
   const go = (fn) => () => { fn(); location.assign(import.meta.env.BASE_URL) }
   return (
     <>
-    <div aria-hidden style={{ height: 70 }} />
-    <div role="status" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
+    <div aria-hidden className="demobar-sp" />
+    <div role="status" className="demobar" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
       <span><b>Demonstração.</b> Dados fictícios, salvos só nesta aba.</span>
       <button className="btn sm" style={{ background: '#fff', color: '#171717' }} onClick={go(() => { demoReset(); demoLeave() })}>Recomeçar</button>
       <button className="btn sm" style={{ background: '#3a3a3a', color: '#fff' }} onClick={go(demoLeave)}>Sair</button>

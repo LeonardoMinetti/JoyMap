@@ -8,6 +8,14 @@ import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, TONES, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
 
+const ACCOUNT_TABS = [['conta', 'Perfil', '/painel/conta'], ['contas', 'Contas conectadas', '/painel/contas'], ['privacidade', 'Privacidade', '/painel/privacidade'], ['plano', 'Plano e cobrança', '/painel/plano']]
+const AccountPage = ({ tab, children }) => (
+  <PanelPage active="conta">
+    <h1 className="d s44">Minha conta</h1>
+    <nav className="sub-tabs" aria-label="Minha conta">{ACCOUNT_TABS.map(([k, l, to]) => <Link key={k} to={to} className={k === tab ? 'on' : ''} aria-current={k === tab ? 'page' : undefined}>{l}</Link>)}</nav>
+    {children}
+  </PanelPage>
+)
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
@@ -23,6 +31,8 @@ export function Overview() {
   const { me, reload } = useMe()
   const [days, setDays] = useState(30)
   const s = useStats(days)
+  const [places] = usePlacesList()
+  const todo = places ? places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length : 0
   const c = me.creator
   const series = useMemo(() => {
     if (!s || s.error) return []
@@ -35,16 +45,17 @@ export function Overview() {
     <PanelPage active="visao">
       {me.notices.map((n) => <div key={n.id} className="note row"><Icon n="alert" s={18} c="#93370d" /><span className="sp">{n.text}</span><button className="btn sm ln" onClick={async () => { await api('/creator/notices/seen', { method: 'POST' }); reload() }}>Entendi</button></div>)}
       {!c.published && <div className="note row"><span className="sp"><b>Seu mapa ainda não está no ar.</b> Revise os lugares e publique para os seguidores verem.</span><Link className="btn sm" to="/revisar">Revisar e publicar</Link></div>}
-      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row">{s && !s.error && sampleTag(s.sessions)}<button className={'chip' + (days === 30 ? ' on' : '')} onClick={() => setDays(30)}>30 dias</button><button className={'chip' + (days === 7 ? ' on' : '')} onClick={() => setDays(7)}>7 dias</button></div>} />
+      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row">{s && !s.error && sampleTag(s.sessions)}<button className={'chip' + (days === 30 ? ' on' : '')} onClick={() => setDays(30)}>30 dias</button><button className={'chip' + (days === 7 ? ' on' : '')} onClick={() => setDays(7)}>7 dias</button><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{todo ? ` (${todo})` : ''}</Link></div>} />
       {!s ? <Loading /> : s.error ? <p className="err">Não foi possível carregar.</p> : <>
         <div className="g4"><div className="kpi"><b>{num(s.sessions)}</b><span>sessões</span></div><div className="kpi"><b>{num(s.placeOpens)}</b><span>lugares abertos</span></div><div className="kpi"><b>{num(s.routeClicks)}</b><span>cliques em rota</span></div><div className="kpi"><b>{num(s.postOpens)}</b><span>voltas aos seus posts</span></div></div>
         <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
           <div className="card col"><b>Sessões por dia</b>{s.sessions ? <><div className="bars">{series.map((d) => <i key={d.d} className={d.d === peak.d && d.n ? 'hi' : ''} title={`${fmtDM(d.d)}: ${d.n}`} style={{ height: `${Math.max(2, (d.n / max) * 100)}%` }} />)}</div><span className="xs mut">{peak.n ? `Pico em ${fmtDM(peak.d)}: ${peak.n} sessões.` : ''}</span></> : <p className="sm mut">Ainda sem visitas. Publique o mapa e coloque o link na bio.</p>}</div>
-          <div className="card col" style={{ background: 'var(--suns)', borderColor: 'transparent' }}><span className="eb">Oportunidade de conteúdo</span>
+          <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
             {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><Link className="btn sm" to="/painel/buscas" style={{ alignSelf: 'flex-start' }}>Ver buscas</Link></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>
         </div>
         <div className="g2"><div className="card row">{s.featured ? <><Photo /><div className="sp"><span className="eb">Indicação em destaque</span><div className="b">{s.featured.name}</div><div className="xs mut">{s.featured.routes} cliques em rota</div></div></> : <span className="sm mut">A indicação em destaque aparece quando houver cliques em rota.</span>}</div>
-          <div className="card soft"><span className="xs mut">{s.note}</span></div></div></>}
+          <div className="card soft"><span className="xs mut">{s.note}</span></div></div>
+        <AudienceBlock s={s} /></>}
     </PanelPage>
   )
 }
@@ -90,26 +101,23 @@ export function PlacesPage() {
   )
 }
 
-// F4 · audiência
+// Audiência (bloco da Visão geral)
 const WD = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
-export function Audience() {
-  useTitle('Audiência')
-  const s = useStats(30)
-  if (!s) return <PanelPage active="audiencia"><Loading /></PanelPage>
+function AudienceBlock({ s }) {
   const a = s.audience
   const wd = [1, 2, 3, 4, 5, 6, 0].map((i) => a.weekdays[i])
   const mx = Math.max(1, ...wd)
   return (
-    <PanelPage active="audiencia">
-      <Head title="Audiência" sub="De onde vêm as visitas ao seu mapa (região aproximada)" right={sampleTag(s.sessions)} />
+    <section className="col" style={{ gap: 16 }} aria-label="Audiência">
+      <div><h2 className="d s32">Audiência</h2><p className="sm mut">De onde vêm as visitas ao seu mapa (região aproximada)</p></div>
       <div className="g2">
         <div className="card col"><b>Cidades</b><p className="sm mut">Ainda não mostramos a cidade das visitas: isso exigiria localizar visitantes pelo IP, e hoje não guardamos IP. Quando houver uma base de localização aproximada, ela aparece aqui.</p></div>
         <div className="card col"><b>Quando acessam</b>{a.sample ? <><div className="bars" style={{ height: 130 }}>{wd.map((n, i) => <i key={i} className={n === Math.max(...wd) && n ? 'hi' : ''} style={{ height: `${Math.max(3, (n / mx) * 100)}%` }} title={`${WD[i]}: ${n}`} />)}</div><div className="row jb xs mut">{WD.map((d) => <span key={d}>{d}</span>)}</div></> : <p className="sm mut">Ainda sem visitas.</p>}</div>
       </div>
-      <div className="card soft col" style={{ gap: 6 }}><b className="sm">Como protegemos seus seguidores</b><span className="sm mut">Mostramos só agregados, com amostra mínima de 5 sessões. Você nunca vê uma lista de pessoas nem a jornada de alguém.</span></div>
       <div className="g3"><div className="kpi"><b>{a.enough ? `${a.mobilePct}%` : '—'}</b><span>no celular</span></div><div className="kpi"><b>{a.enough ? `${a.returningPct}%` : '—'}</b><span>voltam em outra visita</span></div><div className="kpi"><b>{a.enough ? a.origins.length : '—'}</b><span>origens de tráfego</span></div></div>
       {a.enough ? <div className="card col"><b>Origem do tráfego</b>{a.origins.map((o) => <div key={o.ref} className="row"><span className="sm" style={{ width: 130, textTransform: 'capitalize' }}>{o.ref}</span><div className="bar sp"><i style={{ width: `${o.pct}%` }} /></div><b className="sm">{o.pct}%</b></div>)}</div> : <p className="xs mut">Percentuais aparecem a partir de 5 sessões ({a.sample} até agora).</p>}
-    </PanelPage>
+      <div className="card soft col" style={{ gap: 6 }}><b className="sm">Como protegemos seus seguidores</b><span className="sm mut">Mostramos só agregados, com amostra mínima de 5 sessões. Você nunca vê uma lista de pessoas nem a jornada de alguém.</span></div>
+    </section>
   )
 }
 
@@ -118,14 +126,15 @@ export function UpdateMap() {
   useTitle('Atualizar mapa')
   const { me, reload } = useMe()
   const [places, load] = usePlacesList()
-  if (!places) return <PanelPage active="atualizar"><Loading /></PanelPage>
+  if (!places) return <PanelPage active="visao"><Loading /></PanelPage>
   const c = me.creator
   const pending = places.filter((p) => p.status === 'pending')
   const unresolved = places.filter((p) => p.status === 'unresolved')
   const auto = c.settings.autoConfirmHigh
   const patch = async (id, body) => { await api(`/creator/places/${id}`, { method: 'PATCH', body }); load() }
   return (
-    <PanelPage active="atualizar">
+    <PanelPage active="visao">
+      <Link className="sm mut" to="/painel">← Visão geral</Link>
       <Head title="Atualizar mapa" sub={`${pending.length + unresolved.length} posts para resolver`} right={<div className="row"><Link className="btn sm" to="/colar-posts?voltar=/painel/atualizar">Colar novos posts</Link><button className="btn ln sm" onClick={async () => { await api('/creator/settings', { method: 'PUT', body: { autoConfirmHigh: !auto } }); reload() }}>Atualização automática: {auto ? 'confirmar confiança alta' : 'pedir aprovação'}</button></div>} />
       {c.accounts.instagram !== 'connected' && <Note>A detecção automática de posts novos depende da conexão oficial com o Instagram, que ainda não está ativa. Por enquanto, cole o link e a legenda dos novos posts.</Note>}
       {pending.map((p) => (
@@ -234,16 +243,15 @@ export function Accounts() {
   const revoke = async (n) => { if (confirm('Revogar o acesso? Paramos de ler novos posts.')) { await api('/creator/accounts', { method: 'PUT', body: { network: n, state: 'revoked' } }); reload() } }
   const ig = c.accounts.instagram === 'connected', tk = c.accounts.tiktok === 'connected'
   return (
-    <PanelPage active="contas">
-      <h1 className="d s44">Contas conectadas</h1>
+    <AccountPage tab="contas">
       <div className="card col" style={{ gap: 12 }}><div className="row"><Icon n="insta" s={26} /><div className="sp"><b>Instagram · @{c.handle}</b><div className="sm mut">{ig ? 'Conta profissional · conectada' : 'Conta profissional · ainda não conectada'}</div></div>{ig ? <span className="tag ok">Ativa</span> : <button className="btn sm" onClick={() => connect('instagram')}>Conectar</button>}</div>
         <div className="sep" /><div className="row wrap" style={{ gap: 8 }}><span className="tag">Ler posts e legendas</span><span className="tag">Ler perfil básico</span></div>
         <div className="row jb wrap"><span className="xs mut">{ig ? 'Acesso renovado automaticamente. Expira se você não abrir o painel por 60 dias.' : 'Sem conexão, você adiciona os posts colando o link e a legenda.'}</span>{ig && <button className="btn bd2 sm" onClick={() => revoke('instagram')}>Revogar acesso</button>}</div></div>
       <div className="card col" style={{ gap: 12 }}><div className="row"><Icon n="tiktok" s={26} /><div className="sp"><b>TikTok · {c.tiktok ? `@${c.tiktok}` : 'sem @ informado'}</b><div className="sm mut">Opcional · {tk ? 'conectado' : 'não conectado'}</div></div>{tk ? <button className="btn bd2 sm" onClick={() => revoke('tiktok')}>Revogar acesso</button> : <button className="btn sm" onClick={() => connect('tiktok')}>Conectar</button>}</div></div>
-      {msg && <Note style={{ background: 'var(--accs)', color: 'var(--accd)' }}>A conexão oficial com o {msg === 'instagram' ? 'Instagram' : 'TikTok'} depende da aprovação do nosso app pela plataforma e ainda não está ativa.</Note>}
+      {msg && <Note>A conexão oficial com o {msg === 'instagram' ? 'Instagram' : 'TikTok'} depende da aprovação do nosso app pela plataforma e ainda não está ativa.</Note>}
       <Note>Ao revogar, paramos de ler novos posts. O mapa continua publicado com o que já está nele, até você pausar ou excluir.</Note>
       <div className="card soft col" style={{ gap: 6 }}><b className="sm">O que nunca acessamos</b><span className="sm mut">Mensagens diretas, Stories, seguidores, curtidas e comentários.</span></div>
-    </PanelPage>
+    </AccountPage>
   )
 }
 
@@ -259,13 +267,12 @@ export function Privacy() {
   const rows = [['hosting', 'Hospedar e exibir o meu mapa', 'Necessário para o serviço'], ['network', 'Aparecer no mapa geral', 'Seu mapa entra na descoberta em rede. Você pode sair quando quiser.'], ['aggregatesForRestaurants', 'Dados agregados para restaurantes', 'Contagens de indicações e interesse, sem dados de pessoas.'], ['marketing', 'Divulgação e cases', 'Usar o seu mapa como exemplo.']]
   const set = async (k, v) => { const next = { ...cons, [k]: v }; setCons(next); const r = await api('/creator/consents', { method: 'PUT', body: next }); setCons(r.consents); loadLog() }
   return (
-    <PanelPage active="privacidade">
-      <h1 className="d s44">Privacidade e consentimentos</h1>
+    <AccountPage tab="privacidade">
       <div className="card col" style={{ gap: 14 }}>{rows.map(([k, t, d], i) => <React.Fragment key={k}>{i > 0 && <div className="sep" />}<div className="row"><div className="sp"><b>{t}</b><div className="sm mut">{d}</div></div><Switch on={k === 'hosting' ? true : !!cons[k]} disabled={k === 'hosting'} onChange={(v) => set(k, v)} label={t} /></div></React.Fragment>)}</div>
       <span className="eb">Histórico de escolhas</span>
       <div className="card" style={{ padding: 8 }}><table className="tbl"><tbody>{log.map((l, i) => <tr key={i}><td>{fmtDate(l.ts.slice(0, 10)).slice(0, 5)} · {l.key === 'terms' ? 'Aceitou os Termos e a Política' : `${l.value ? 'Ativou' : 'Desativou'} "${CONSENT[l.key]}"`}</td><td className="mut">v. dos termos {l.terms_version}</td></tr>)}{!log.length && <tr><td className="mut">Nenhuma escolha registrada ainda.</td></tr>}</tbody></table></div>
       <Note>Mudanças relevantes de finalidade só valem com uma nova autorização sua.</Note>
-    </PanelPage>
+    </AccountPage>
   )
 }
 
@@ -276,15 +283,14 @@ export function Billing() {
   const p = me.creator.plan
   const annual = p.billing === 'annual'
   return (
-    <PanelPage active="plano">
-      <h1 className="d s44">Plano e cobrança</h1>
+    <AccountPage tab="plano">
       <div className="g2">
-        <div className="card col" style={{ background: 'var(--accs)', borderColor: 'transparent' }}><span className="eb">Plano atual</span><b className="d s32">Criador · {annual ? 'anual' : 'mensal'}</b><span className="sm">R$ [preço] por {annual ? 'ano' : 'mês'}. {p.trialEnds ? `Teste grátis termina em ${fmtDate(p.trialEnds)}.` : 'O teste grátis começa no onboarding.'}</span><div className="row"><button className="btn sm" onClick={async () => { await api('/creator/billing', { method: 'PUT', body: { billing: annual ? 'monthly' : 'annual' } }); reload() }}>Mudar para {annual ? 'mensal' : 'anual'}</button><button className="btn sm ln" onClick={() => toast('Hoje há um único plano pago: Criador.')}>Mudar plano</button></div></div>
+        <div className="card col soft"><span className="eb">Plano atual</span><b className="d s32">Criador · {annual ? 'anual' : 'mensal'}</b><span className="sm">R$ [preço] por {annual ? 'ano' : 'mês'}. {p.trialEnds ? `Teste grátis termina em ${fmtDate(p.trialEnds)}.` : 'O teste grátis começa no onboarding.'}</span><div className="row"><button className="btn sm" onClick={async () => { await api('/creator/billing', { method: 'PUT', body: { billing: annual ? 'monthly' : 'annual' } }); reload() }}>Mudar para {annual ? 'mensal' : 'anual'}</button><button className="btn sm ln" onClick={() => toast('Hoje há um único plano pago: Criador.')}>Mudar plano</button></div></div>
         <div className="card col"><span className="eb">Forma de pagamento</span><div className="row"><Icon n="card" s={22} /><b className="sm">Nenhuma cadastrada</b></div><button className="btn sec sm" style={{ alignSelf: 'flex-start' }} disabled>Trocar (em breve)</button></div></div>
       <span className="eb">Faturas</span>
       <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th /></tr></thead><tbody><tr><td colSpan="5" className="mut">Nenhuma fatura: a cobrança ainda não está ativa.</td></tr></tbody></table></div>
       <Note>Aviso 7 dias antes de qualquer cobrança ou do fim do teste. Reembolsos seguem a lei e a oferta contratada.</Note>
-    </PanelPage>
+    </AccountPage>
   )
 }
 
@@ -301,13 +307,12 @@ export function Account() {
     await api('/creator/account', { method: 'DELETE', body: { confirm: 'EXCLUIR' } }); await reload(); navigate('/')
   }
   return (
-    <PanelPage active="conta">
-      <h1 className="d s44">Minha conta</h1>
+    <AccountPage tab="conta">
       <div className="g2"><Field label="Nome" id="n"><div className="row"><div className="in sp"><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength="60" /></div><button className="btn" disabled={!name.trim() || name === c.displayName} onClick={save}>Salvar</button></div></Field><Field label="E-mail" id="m"><div className="in" style={{ background: 'var(--soft)' }}><input id="m" value={me.user.email} readOnly /></div></Field></div>
       <div className="card row"><div className="sp"><b>{c.settings.paused ? 'Mapa pausado' : 'Pausar o mapa'}</b><div className="sm mut">Tira o mapa do ar sem apagar nada. Seguidores veem "Mapa indisponível".{c.settings.adminPaused && ' (Pausado pela equipe: fale com a gente para esclarecer.)'}</div></div><button className="btn ln sm" disabled={c.settings.adminPaused} onClick={async () => { await api('/creator/pause', { method: 'POST', body: { paused: !c.settings.paused } }); await reload(); toast(c.settings.paused ? 'Mapa de volta ao ar' : 'Mapa pausado') }}>{paused ? (c.settings.adminPaused ? 'Pausado' : 'Retomar') : 'Pausar'}</button></div>
       <div className="card row"><div className="sp"><b>Exportar meus dados</b><div className="sm mut">Lugares, categorias, estilo e métricas agregadas em JSON e CSV.</div></div><div className="row"><a className="btn sec sm" href="/api/creator/export" download onClick={dlDemo()}>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download onClick={dlDemo('csv')}>CSV</a></div></div>
       <div className="card col" style={{ borderColor: 'var(--bad)', gap: 10 }}><b className="acc">Zona de risco</b><div className="row"><div className="sp"><b className="sm">Excluir conta e mapa</b><div className="sm mut">Remove o mapa e as fontes derivadas. Cópias técnicas somem no prazo da Política. Não dá para desfazer.</div></div><button className="btn bd2 sm" onClick={del}>Excluir</button></div></div>
       <Note>Dúvidas sobre dados pessoais? Escreva para [e-mail de privacidade].</Note>
-    </PanelPage>
+    </AccountPage>
   )
 }
