@@ -37,6 +37,18 @@ export const DEFAULT_THEME = {
   categories: CATEGORIES.map((c) => ({ ...c })),
 }
 
+// Contraste (WCAG): a cor do texto nunca é escolhida pelo criador, sai do fundo (escuro sobre claro, branco sobre escuro).
+const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }
+const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255) }
+export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
+export const textOn = (bg) => {
+  const best = contrast('#ffffff', bg) >= contrast('#171717', bg) ? '#ffffff' : '#171717'
+  if (contrast(best, bg) >= 4.5) return best
+  return contrast('#ffffff', bg) >= contrast('#000000', bg) ? '#ffffff' : '#000000' // tons médios: só preto ou branco puros chegam a 4,5:1
+}
+// a cor principal não pode quase sumir no fundo (botões e destaques ficariam invisíveis)
+export const accentProblem = (t) => (contrast(t.accent, t.bg) < 1.25 ? 'cor_principal_igual_ao_fundo' : null)
+
 const pick = (list, v, fb) => (list.includes(v) ? v : fb)
 const num = (v, lo, hi, fb) => { const n = Number(v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : fb }
 
@@ -61,7 +73,7 @@ function sanitizeLayout(input, legacy) {
 export function sanitizeTheme(input = {}) {
   const t = { ...DEFAULT_THEME, ...(input || {}) }
   const out = {
-    accent: HEX.test(t.accent) ? t.accent : DEFAULT_THEME.accent, bg: HEX.test(t.bg) ? t.bg : DEFAULT_THEME.bg, fg: HEX.test(t.fg) ? t.fg : DEFAULT_THEME.fg,
+    accent: HEX.test(t.accent) ? t.accent : DEFAULT_THEME.accent, bg: HEX.test(t.bg) ? t.bg : DEFAULT_THEME.bg, fg: DEFAULT_THEME.fg,
     font: pick(FONTS, t.font, 'sans'), radius: Math.max(0, Math.min(32, parseInt(t.radius, 10) || 0)), contrastAuto: t.contrastAuto !== false,
     tone: pick(TONES, TONE_LEGACY[t.tone] || t.tone, 'light'), shape: pick(SHAPES, t.shape, 'drop'), pinSize: 55, pinBorder: t.pinBorder !== false,
     cluster: t.cluster !== false, selected: pick(SELECTED, t.selected, 'outline'), mapLabels: t.mapLabels !== false, labelDensity: num(t.labelDensity, 0, 100, 40),
@@ -74,6 +86,7 @@ export function sanitizeTheme(input = {}) {
   const given = new Map((Array.isArray(t.categories) ? t.categories : []).map((c) => [String(c?.id), c || {}]))
   const okIcon = (i) => ICONS.includes(i) || /^custom:\d{1,9}$/.test(String(i)) || /^lib:(fluent3d|noto|lucide):[a-z0-9-]{1,48}$/.test(String(i))
   out.categories = CATEGORIES.map((d) => { const g = given.get(d.id) || {}; return { ...d, color: HEX.test(g.color) ? g.color : d.color, icon: okIcon(g.icon) ? g.icon : d.icon } })
+  out.fg = textOn(out.bg) // texto sempre legível sobre o fundo escolhido
   return out
 }
 

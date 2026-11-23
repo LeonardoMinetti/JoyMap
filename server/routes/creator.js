@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { randomBytes } from 'node:crypto'
 import { extract, tiktokId, dateFromTiktokId } from '../extract.js'
 import { enqueueGeocode, searchPlaces } from '../geocode.js'
-import { sanitizeTheme, sanitizeSvg } from '../theme.js'
+import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 
@@ -173,6 +173,8 @@ export default function creatorRoutes(app, x) {
   // ---------- estúdio ----------
   cr.put('/theme', async (c) => {
     const theme = sanitizeTheme(await c.req.json().catch(() => ({})))
+    const problem = accentProblem(theme)
+    if (problem) return c.json({ error: problem }, 400)
     db.prepare('UPDATE creators SET theme=? WHERE id=?').run(JSON.stringify(theme), me(c).id)
     return c.json({ theme: x.view(fresh(c)).theme })
   })

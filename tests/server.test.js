@@ -315,3 +315,14 @@ test('links do lugar: só Google Maps e perfil do Instagram', async () => {
   assert.equal(cleanInstagramUrl('https://tiktok.com/@x'), undefined)
   assert.match(googleSearchUrl({ name: 'Bar X', address: 'Rua A, 1' }), /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=Bar%20X%20Rua%20A%2C%201$/)
 })
+
+test('tema: a cor do texto sai do fundo e sempre passa no contraste; cor principal não some no fundo', async () => {
+  const { contrast, accentProblem } = await import('../server/theme.js')
+  for (const bg of ['#ffffff', '#777777', '#808080', '#a0a0a0', '#343843', '#171717', '#ffc400', '#2d7ff9']) {
+    const t = sanitizeTheme({ bg, fg: bg }) // tentativa de texto igual ao fundo é ignorada
+    assert.ok(contrast(t.fg, t.bg) >= 4.5, `${bg} → ${t.fg}`)
+  }
+  assert.equal(sanitizeTheme({ bg: '#171717' }).fg, '#ffffff')
+  assert.equal(accentProblem({ accent: '#fefefe', bg: '#ffffff' }), 'cor_principal_igual_ao_fundo')
+  assert.equal(accentProblem({ accent: '#ffc400', bg: '#ffffff' }), null)
+})

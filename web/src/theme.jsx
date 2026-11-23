@@ -42,14 +42,18 @@ export const TEMPLATES = [
 ]
 export function applyTemplate(theme, tpl) {
   const p = PALETTES[tpl.pal]
-  return { ...theme, ...tpl.t, categories: theme.categories.map((c) => ({ ...c, color: p ? p[c.id] || c.color : tpl.t.accent })) }
+  return { ...theme, ...tpl.t, fg: onColor(tpl.t.bg || theme.bg), categories: theme.categories.map((c) => ({ ...c, color: p ? p[c.id] || c.color : tpl.t.accent })) }
 }
 
 // ---------- contraste (WCAG) ----------
 const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }
 export const lum = (hex) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255) }
 export const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
-export const onColor = (bg) => (contrast('#ffffff', bg) >= contrast('#171717', bg) ? '#ffffff' : '#171717')
+export const onColor = (bg) => {
+  const best = contrast('#ffffff', bg) >= contrast('#171717', bg) ? '#ffffff' : '#171717'
+  if (contrast(best, bg) >= 4.5) return best
+  return contrast('#ffffff', bg) >= contrast('#000000', bg) ? '#ffffff' : '#000000' // tons médios: só preto ou branco puros chegam a 4,5:1
+}
 export const onAccent = (theme) => (theme.contrastAuto ? onColor(theme.accent) : '#ffffff')
 
 export const catOf = (theme, id) => theme.categories.find((c) => c.id === id) || { id, name: 'Outros', color: theme.accent, icon: 'rest' }

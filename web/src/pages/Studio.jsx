@@ -32,10 +32,13 @@ function StudioProvider({ children }) {
   const [coverVer, setCoverVer] = useState(0)
   const loadPlaces = useCallback(() => { api('/creator/places').then((d) => setPlaces(d.places)); api('/creator/routes').then((d) => setRoutes(d.routes)) }, [])
   useEffect(() => { loadPlaces() }, [loadPlaces])
-  const setTheme = (patch) => setT((t) => ({ ...t, ...(typeof patch === 'function' ? patch(t) : patch) }))
+  // a cor do texto sempre sai do fundo: o criador não a escolhe, então nunca fica ilegível
+  const setTheme = (patch) => setT((t) => { const n = { ...t, ...(typeof patch === 'function' ? patch(t) : patch) }; return { ...n, fg: onColor(n.bg) } })
   const dirty = JSON.stringify(theme) !== snap
+  const blocked = contrast(theme.accent, theme.bg) < 1.25
   const publish = async () => {
-    const r = await api('/creator/theme', { method: 'PUT', body: theme })
+    let r
+    try { r = await api('/creator/theme', { method: 'PUT', body: theme }) } catch { toast('A cor principal está igual ao fundo. Escolha outra para publicar.'); return }
     setT(r.theme); setSnap(JSON.stringify(r.theme))
     await reload(); toast('Alterações publicadas')
   }
@@ -45,7 +48,7 @@ function StudioProvider({ children }) {
     creator: { handle: c.handle, tiktok: c.tiktok, slug: c.slug, displayName: c.displayName, theme, links: [], cover: theme.layout.cover && c.hasCover, coverUrl: '/api/creator/cover', symbols: c.symbols },
     places: real.length ? real : SAMPLE, routes: routes.filter((r) => r.placeIds.length).map((r) => ({ ...r, placeIds: r.placeIds })),
   }), [theme, places, routes, c])
-  return <Ctx.Provider value={{ c, theme, setTheme, dirty, publish, undo, places: places || [], real, data, usingSample: !real.length, loadPlaces, coverVer, bumpCover: () => setCoverVer((v) => v + 1), routes, setRoutes, reload }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ c, theme, setTheme, dirty, blocked, publish, undo, places: places || [], real, data, usingSample: !real.length, loadPlaces, coverVer, bumpCover: () => setCoverVer((v) => v + 1), routes, setRoutes, reload }}>{children}</Ctx.Provider>
 }
 export function StudioRoute({ children }) { return <Guard need="approved" finished><StudioProvider>{children}</StudioProvider></Guard> }
 
@@ -115,7 +118,7 @@ function StudioHead({ active }) {
         <div className="stm-act">
           <span className={'stm-st' + (s.dirty ? ' dirty' : '')} role="status"><i />{s.dirty ? 'Alterações não publicadas' : 'Tudo publicado'}</span>
           {s.dirty && <button type="button" className="link xs" onClick={s.undo}>Desfazer</button>}
-          <button type="button" className="btn sm" disabled={!s.dirty} onClick={s.publish}>Publicar</button>
+          <button type="button" className="btn sm" disabled={!s.dirty || s.blocked} title={s.blocked ? 'A cor principal está igual ao fundo' : undefined} onClick={s.publish}>Publicar</button>
         </div>
       </div>
       <nav className="stm-tabs" ref={ref} aria-label="Seções do estúdio">
@@ -141,6 +144,7 @@ function Shell({ active, layout = 'side', previewWidth = 460, title, children, f
     </div></div>
   )
 }
+const BG_PRESETS = [['#ffffff', 'Branco'], ['#faf7f2', 'Creme'], ['#fff8e1', 'Manteiga'], ['#fff5fb', 'Rosé'], ['#f4f8ff', 'Gelo'], ['#f1f1f1', 'Cinza claro'], ['#343843', 'Noite'], ['#171717', 'Preto']]
 const Lb = ({ children }) => <span className="lb">{children}</span>
 const Slider = ({ value, onChange, label }) => <input type="range" min="0" max="100" value={value} aria-label={label} onChange={(e) => onChange(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--acc)' }} />
 const ColorBox = ({ value, onChange, label, wide }) => <label className={wide ? 'in' : 'swatch'} style={wide ? { cursor: 'pointer' } : { background: value, position: 'relative', display: 'block' }} aria-label={label}>{wide && <><i style={{ width: 22, height: 22, borderRadius: 6, background: value, border: '1px solid var(--line)' }} /><span>{value.toUpperCase()}</span></>}<input type="color" className="sr" value={value} onChange={(e) => onChange(e.target.value)} /></label>
@@ -189,19 +193,20 @@ export function StudioColors() {
   const { theme: T, setTheme } = useStudio()
   const ratio = contrast(onAccent(T), T.accent)
   const textRatio = contrast(T.fg, T.bg)
-  const bad = ratio < 4.5 || textRatio < 4.5
+  const blocked = contrast(T.accent, T.bg) < 1.25
   return (
     <Shell active="cores" title="Cores e tema">
       <h1 className="d s32">Cores e tema</h1>
       <Sec title="Cor principal" hint="Botões, destaques e o cartão dos roteiros">
         <div className="row wrap" style={{ gap: 10 }}>{ACCENTS.map((a) => <button key={a} aria-label={`Cor ${a}`} aria-pressed={T.accent.toLowerCase() === a} className={'swatch big' + (T.accent.toLowerCase() === a ? ' on' : '')} style={{ background: a }} onClick={() => setTheme({ accent: a })}>{T.accent.toLowerCase() === a && <Icon n="check" s={18} c={onColor(a)} />}</button>)}<label className="chip" style={{ position: 'relative' }}>Outra cor<input type="color" className="sr" value={T.accent} onChange={(e) => setTheme({ accent: e.target.value })} aria-label="Outra cor" /></label></div>
       </Sec>
-      <Sec title="Fundo e texto" hint="Veja como fica um cartão com as suas escolhas">
-        <div className="g2"><div><Lb>Fundo</Lb><ColorBox wide value={T.bg} onChange={(v) => setTheme({ bg: v })} label="Cor de fundo" /></div><div><Lb>Texto</Lb><ColorBox wide value={T.fg} onChange={(v) => setTheme({ fg: v })} label="Cor do texto" /></div></div>
+      <Sec title="Fundo" hint="O texto se ajusta sozinho (escuro ou branco) para ficar sempre legível">
+        <div className="row wrap" style={{ gap: 10 }}>{BG_PRESETS.map(([c, l]) => <button key={c} type="button" aria-label={`Fundo ${l}`} aria-pressed={T.bg.toLowerCase() === c} title={l} className={'swatch big' + (T.bg.toLowerCase() === c ? ' on' : '')} style={{ background: c, boxShadow: T.bg.toLowerCase() === c ? undefined : 'inset 0 0 0 1px rgba(0,0,0,.12)' }} onClick={() => setTheme({ bg: c })}>{T.bg.toLowerCase() === c && <Icon n="check" s={18} c={onColor(c)} />}</button>)}<label className="chip" style={{ position: 'relative' }}>Outra cor<input type="color" className="sr" value={T.bg} onChange={(e) => setTheme({ bg: e.target.value })} aria-label="Outra cor de fundo" /></label></div>
         <div className="row" style={{ background: T.bg, color: T.fg, borderRadius: T.radius, padding: 14, gap: 12, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.08)', fontFamily: (FONTS[T.font] || FONTS.sans).css }}>
           <div className="sp"><b style={{ fontSize: 16 }}>Cafeteria Exemplo</b><div style={{ fontSize: 12, opacity: .7 }}>Pinheiros · aberto até as 18h</div></div>
           <span style={{ background: T.accent, color: onAccent(T), borderRadius: Math.min(T.radius, 22), padding: '8px 14px', fontWeight: 700, fontSize: 13 }}>Abrir rota</span></div>
-        <div className="row wrap" style={{ gap: 6 }}><span className={'tag ' + (ratio >= 4.5 ? 'ok' : 'bd2')}>Botão {ratio.toFixed(1)}:1</span><span className={'tag ' + (textRatio >= 4.5 ? 'ok' : 'bd2')}>Texto {textRatio.toFixed(1)}:1</span><span className="xs mut">O mínimo recomendado é 4,5:1.</span></div>
+        <div className="row wrap" style={{ gap: 6 }}><span className="tag ok">Texto {textRatio.toFixed(1)}:1</span><span className={'tag ' + (ratio >= 4.5 ? 'ok' : 'bd2')}>Botão {ratio.toFixed(1)}:1</span><span className="xs mut">Texto automático: {T.fg === '#ffffff' ? 'branco' : 'escuro'}. O mínimo recomendado é 4,5:1.</span></div>
+        {blocked && <Note style={{ background: 'var(--bads)', color: 'var(--bad)' }}>A cor principal está quase igual ao fundo: botões e destaques ficariam invisíveis. Escolha outra cor principal ou outro fundo para poder publicar.</Note>}
       </Sec>
       <Sec title="Fonte dos títulos">
         <div className="g2" style={{ gap: 10 }}>{Object.entries(FONTS).map(([k, f]) => <button key={k} className={'card col' + (T.font === k ? ' sel' : '')} style={{ padding: 14, textAlign: 'left', gap: 2, fontFamily: f.css, textTransform: f.upper ? 'uppercase' : 'none', fontWeight: 700 }} aria-pressed={T.font === k} onClick={() => setTheme({ font: k })}><span style={{ fontSize: 30, lineHeight: 1 }}>Aa</span><span style={{ fontSize: f.size }}>{f.label}</span></button>)}</div>
@@ -210,7 +215,7 @@ export function StudioColors() {
         <div className="row" style={{ gap: 10 }}>{Object.entries(RADIUS_MODES).map(([k, m]) => <button key={k} className={'card col' + (radiusMode(T.radius) === k ? ' sel' : '')} style={{ padding: 12, alignItems: 'center', gap: 8, flex: 1 }} aria-pressed={radiusMode(T.radius) === k} onClick={() => setTheme({ radius: m.r })}><span style={{ width: 52, height: 36, background: 'var(--ink)', borderRadius: m.r }} /><span className="xs">{m.label}</span></button>)}</div>
       </Sec>
       <Sec><div className="row"><div className="sp"><b className="sm">Contraste automático</b><div className="xs mut">Ajusta o texto dos botões para ficar legível sobre a cor principal</div></div><Switch on={T.contrastAuto} onChange={(v) => setTheme({ contrastAuto: v })} label="Contraste automático" /></div>
-        {bad && <Note style={{ background: 'var(--bads)', color: 'var(--bad)' }}>Atenção: {ratio < 4.5 ? `o texto sobre a cor principal tem contraste ${ratio.toFixed(1)}:1.${T.contrastAuto ? '' : ' Ligue o contraste automático.'}` : ''}{textRatio < 4.5 ? ` O texto sobre o fundo está em ${textRatio.toFixed(1)}:1: escolha cores mais distantes.` : ''}</Note>}</Sec>
+        {ratio < 4.5 && <Note style={{ background: 'var(--bads)', color: 'var(--bad)' }}>Atenção: o texto sobre a cor principal tem contraste {ratio.toFixed(1)}:1.{T.contrastAuto ? '' : ' Ligue o contraste automático.'}</Note>}</Sec>
     </Shell>
   )
 }
