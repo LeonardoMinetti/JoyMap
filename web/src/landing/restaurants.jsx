@@ -18,7 +18,7 @@ const BENEFITS = [
   ['magnifying-glass-tilted-left', 'Veja quem indica você', 'Descubra quais criadores incluíram o seu restaurante no mapa, e quando. Sem precisar vasculhar feeds.', null],
   ['round-pushpin', 'Corrija o que aparece', 'Endereço, nome e categoria errados queimam a indicação. Com o lugar verificado, você corrige os dados exibidos nos mapas.', null],
   ['bar-chart', 'Entenda o efeito', 'Contagens agregadas de aberturas do seu lugar e pedidos de rota, sempre sem identificar pessoas e só quando o criador autoriza.', 'Em desenvolvimento'],
-  ['handshake', 'Parceria sempre sinalizada', 'Indicação paga leva a marca "Publi" para o seguidor. Dinheiro não compra posição no mapa de ninguém.', null],
+  ['party-popper', 'Avise o público da sua oferta', 'Coloque uma bandeira no seu lugar com um desconto ou evento da semana. Quem abre o mapa de um criador que indicou você vê, mesmo sem acompanhar o seu Instagram.', 'Em desenvolvimento'],
 ]
 const STEPS = [
   ['Encontre o seu lugar', 'Busque o restaurante pelo nome entre os lugares já indicados nos mapas dos criadores.'],
@@ -30,6 +30,7 @@ const TRUST = [
   'Você vê contagens agregadas. Nunca uma lista de pessoas nem a jornada de alguém.',
   'Os dados de visitas só chegam a você se o criador decidir compartilhar, em uma escolha separada e revogável.',
   'Indicações pagas aparecem sempre com a marca de publi.',
+  'Ofertas e eventos do restaurante aparecem sempre identificados como do restaurante, separados da indicação do criador, e não mudam a ordem nem a posição no mapa.',
   'O painel nunca mostra nada ao seguidor sem aviso: ele é só seu.',
 ]
 const FAQ_REST = [
@@ -38,6 +39,7 @@ const FAQ_REST = [
   ['Posso remover ou alterar uma indicação feita por um criador?', 'Não. Reivindicar não dá poder sobre o que os criadores publicam. Você corrige os dados do lugar, como endereço e nome, e pode falar com a equipe se algo estiver errado.'],
   ['Como vocês confirmam que sou o responsável?', 'Por três caminhos: Perfil de Empresa do Google (em breve), e-mail do domínio do restaurante ou verificação manual com documento. A equipe confere antes de liberar o painel.'],
   ['Vocês leem comentários ou avaliações de clientes?', 'Hoje não coletamos comentários de nenhuma plataforma. A conexão com avaliações do Google depende da sua autorização e ainda não está disponível.'],
+  ['Posso divulgar um desconto ou um evento?', 'É o que estamos desenhando: uma bandeira no seu lugar, com a oferta ou o evento da semana, que aparece para quem abre o mapa de um criador que indicou você. Ela vai aparecer sempre como oferta do restaurante, separada da indicação do criador. Ainda não está disponível e as condições não foram definidas.'],
   ['Vou ver quem visitou o meu restaurante?', 'Não. Mostramos apenas contagens agregadas, com amostra mínima, e só quando o criador permite compartilhar. Nunca identificamos pessoas.'],
 ]
 
@@ -81,7 +83,7 @@ function Problem() {
           <div className="rs-box off"><span className="fvm-lb off">Sem wagli</span>
             <ul className="fvm-ul off">{['Você descobre a indicação pelo movimento, não pelo criador.', 'Endereço ou nome errado circula nos posts sem correção.', 'Não dá para saber quais criadores falam do seu lugar.', 'Parceria e indicação espontânea se misturam.'].map((t) => <li key={t}><i aria-hidden="true">✕</i>{t}</li>)}</ul></div>
           <div className="rs-box on"><span className="fvm-lb on">Com wagli</span>
-            <ul className="fvm-ul on">{['Você vê quais criadores indicaram o seu lugar.', 'Os dados exibidos nos mapas ficam corretos, porque você os corrige.', 'Contagens agregadas mostram o interesse pelo lugar, quando o criador autoriza.', 'Parceria paga aparece sempre marcada como publi.'].map((t) => <li key={t}><i aria-hidden="true">✓</i>{t}</li>)}</ul></div>
+            <ul className="fvm-ul on">{['Você vê quais criadores indicaram o seu lugar.', 'Os dados exibidos nos mapas ficam corretos, porque você os corrige.', 'Contagens agregadas mostram o interesse pelo lugar, quando o criador autoriza.', 'Você avisa o público sobre uma oferta ou evento, direto no mapa que ele já usa.'].map((t) => <li key={t}><i aria-hidden="true">✓</i>{t}</li>)}</ul></div>
         </div>
       </div>
     </section>
@@ -113,6 +115,7 @@ function PanelMock() {
         <div className="rs-kpis"><div><b>3</b><span>criadores indicaram</span></div><div><b>5</b><span>indicações</span></div><div><b>1</b><span>com publi declarada</span></div></div>
         <div className="rs-list"><b className="sm">Indicações recebidas</b>
           {[[a.name, '12/11', false], [b.name, '04/11', true], ['Mapa de exemplo', '27/10', false]].map(([n, d, ad]) => <div key={n} className="rs-row"><i style={{ background: ad ? 'var(--acc)' : '#171713' }} /><span className="sp">{n} · {d}</span>{ad && <span className="tag wn">Publi</span>}</div>)}</div>
+        <div className="rs-flag"><span className="tag wn">Bandeira da semana</span><b className="sm">Sobremesa em dobro às quintas</b><span className="xs">Aparece no seu lugar nos mapas dos criadores que indicaram você. Exemplo ilustrativo.</span></div>
         <div className="rs-lock"><Icon n="lock" s={16} /><span><b>Aberturas e pedidos de rota</b> <em>em desenvolvimento</em></span></div>
       </div>
     </Browser>
