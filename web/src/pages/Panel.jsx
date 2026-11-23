@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
@@ -214,7 +213,7 @@ export function UpdateMap() {
 }
 
 // F6 · divulgar: o link do mapa e o código para incorporar
-// Endereço do mapa, domínio próprio e QR code (antes ficavam no Estúdio)
+// Endereço do mapa e domínio próprio (antes ficavam no Estúdio)
 function AddressCard() {
   const { me, reload } = useMe()
   const cr = me.creator
@@ -223,30 +222,16 @@ function AddressCard() {
   const [avail, setAvail] = useState(null)
   const [dom, setDom] = useState(cr.domain.name || '')
   const [domInfo, setDomInfo] = useState(null)
-  const [qrStyle, setQrStyle] = useState('map')
-  const [qr, setQr] = useState('')
   const url = `${location.origin}/@${cr.slug}`
   useEffect(() => {
     if (slug === cr.slug) return setAvail(null)
     const h = setTimeout(() => api(`/creator/slug-available?slug=${encodeURIComponent(slug)}`).then((d) => setAvail(d)).catch(() => {}), 400)
     return () => clearTimeout(h)
   }, [slug])
-  const color = qrStyle === 'black' ? '#000000' : T.accent
-  useEffect(() => { QRCode.toDataURL(url, { margin: 1, width: 192, color: { dark: color } }).then(setQr).catch(() => {}) }, [url, color])
   const saveSlug = async () => { try { await api('/creator/slug', { method: 'PUT', body: { slug } }); await reload(); toast('Endereço salvo') } catch (x) { toast(x.message === 'slug_em_uso' ? 'Este endereço já está em uso.' : 'Use 3 a 30 letras, números, - ou _.') } }
   const saveDom = async () => { try { const d = await api('/creator/domain', { method: 'PUT', body: { domain: dom } }); setDomInfo(d); await reload() } catch (x) { toast(x.message === 'dominio_em_uso' ? 'Este domínio já está em uso.' : 'Domínio inválido. Exemplo: mapa.seusite.com.br') } }
   const check = async () => { const d = await api('/creator/domain/check', { method: 'POST' }); setDomInfo({ ...domInfo, ...d }); await reload(); toast(d.status === 'active' ? 'Domínio ativo' : 'O DNS ainda não aponta para nós') }
   const target = domInfo?.target || new URL(location.origin).hostname
-  const download = async (kind) => {
-    if (kind === 'svg') {
-      const svg = await QRCode.toString(url, { type: 'svg', margin: 1, color: { dark: color } })
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })); a.download = `qr-${cr.slug}.svg`; a.click(); return
-    }
-    const cv = document.createElement('canvas')
-    await QRCode.toCanvas(cv, url, { margin: 2, width: 1024, errorCorrectionLevel: 'H', color: { dark: color } })
-    if (qrStyle === 'logo') { const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(512, 512, 120, 0, 7); g.fill(); g.fillStyle = T.accent; g.beginPath(); g.arc(512, 512, 96, 0, 7); g.fill(); g.fillStyle = onAccent(T); g.font = '700 110px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(cr.displayName.slice(0, 1).toUpperCase(), 512, 520) }
-    const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = `qr-${cr.slug}.png`; a.click()
-  }
   return (
     <div className="blk">
       {STATIC && <Note>Na demonstração o endereço do mapa e o domínio ficam fixos.</Note>}
@@ -256,8 +241,6 @@ function AddressCard() {
         <div className="row"><div className="in sp"><input value={dom} disabled={STATIC} onChange={(e) => setDom(e.target.value)} placeholder="mapa.dudacome.com.br" aria-label="Domínio próprio" /></div><button className="btn" disabled={STATIC} onClick={saveDom}>{cr.domain.name ? 'Atualizar' : 'Salvar'}</button></div>
         {cr.domain.name && <><div className="g2"><div className="card soft col" style={{ gap: 4 }}><span className="eb">Tipo</span><b className="sm">CNAME</b></div><div className="card soft col" style={{ gap: 4 }}><span className="eb">Valor</span><b className="sm">{target}</b></div></div>
           <div className="row"><span className={'tag ' + (cr.domain.status === 'active' ? 'ok' : 'wn')}>{cr.domain.status === 'active' ? 'Ativo' : 'Aguardando DNS'}</span><span className="xs mut sp">Pode levar algumas horas para o DNS propagar. O certificado HTTPS do domínio é configurado no servidor.</span><button className="btn sec sm" onClick={check}>Verificar agora</button></div></>}</div>
-      <div className="card row" style={{ gap: 16 }}><div className="sq" style={{ width: 96, height: 96, background: '#fff', border: '1px solid var(--line)', display: 'grid', placeItems: 'center' }}>{qr && <img src={qr} alt="QR code do mapa" width="88" height="88" />}</div>
-        <div className="sp col" style={{ gap: 6 }}><b>QR code</b><div className="row wrap">{[['map', 'Cor do mapa'], ['black', 'Preto'], ['logo', 'Com logo']].map(([k, l]) => <button key={k} className={'chip' + (qrStyle === k ? ' on' : '')} onClick={() => setQrStyle(k)}>{l}</button>)}</div><div className="row"><button className="btn sec sm" onClick={() => download('png')}>Baixar PNG</button><button className="btn sec sm" onClick={() => download('svg')}>Baixar SVG</button></div>{qrStyle === 'logo' && <span className="xs mut">O logo entra só no PNG.</span>}</div></div>
     </div>
   )
 }

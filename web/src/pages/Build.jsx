@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import QRCode from 'qrcode'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
@@ -414,11 +413,8 @@ export function Published() {
   useTitle('Mapa publicado')
   const { me } = useMe()
   const [places] = usePlaces()
-  const [qr, setQr] = useState('')
   const c = me?.creator
   const url = c ? publicUrl(c) : ''
-  useEffect(() => { if (url) QRCode.toDataURL(url, { margin: 1, width: 240 }).then(setQr).catch(() => {}) }, [url])
-  const [showQr, setShowQr] = useState(false)
   if (!places) return <Guard need="approved"><Loading /></Guard>
   const copy = () => navigator.clipboard?.writeText(url).then(() => toast('Link copiado')).catch(() => toast(url))
   const share = () => (navigator.share ? navigator.share({ title: c.displayName, url }).catch(() => {}) : copy())
@@ -429,13 +425,12 @@ export function Published() {
       <FlowGrid aside={<>
         <div className="card col"><b>Compartilhe</b>
           <div className="card soft row" style={{ padding: 14 }}><Icon n="link" s={18} /><b className="sm sp trunc">{location.host}/@{c.slug}</b><button className="tag ax" style={{ border: 0, cursor: 'pointer' }} onClick={copy}>Copiar</button></div>
-          <div className="row"><button className="btn ln sp" onClick={() => setShowQr(true)}><Icon n="qr" s={16} />QR code</button><button className="btn ln sp" onClick={share}><Icon n="share" s={16} />Compartilhar</button></div></div>
+          <button className="btn ln blk" onClick={share}><Icon n="share" s={16} />Compartilhar</button></div>
         <Note>Próximo passo: troque o link da sua bio. Isso só você consegue fazer no app da rede social.</Note>
         <div className="card col"><Link className="btn blk" to="/painel">Ir para o painel</Link>{c.published && <a className="btn ln blk" href={url} target="_blank" rel="noopener noreferrer">Abrir o mapa</a>}</div>
       </>}>
         <div className="card" style={{ padding: 0, overflow: 'hidden', height: 420 }}>{onMap.length ? <MapCanvas places={onMap} theme={c.theme} symbols={c.symbols} interactive={false} style={{ height: 420 }} /> : <FakeMap h={420} tone="mint" pal="candy" shape="circle" n={12} lab={false} />}</div>
       </FlowGrid>
-      {showQr && <div className="sheetwrap" onClick={() => setShowQr(false)}><div className="sheet" onClick={(e) => e.stopPropagation()} style={{ alignItems: 'center' }}><div className="row jb" style={{ width: '100%' }}><h2 className="d s26">QR code</h2><button aria-label="Fechar" style={{ background: 'none', border: 0 }} onClick={() => setShowQr(false)}><Icon n="close" s={22} /></button></div>{qr && <img src={qr} alt="QR code do mapa" width="200" height="200" />}<span className="xs mut c">Aponte a câmera para abrir o mapa.</span></div></div>}
     </FlowShell>
   )
 }
