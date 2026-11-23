@@ -74,6 +74,10 @@ export function Plans() {
   )
 }
 
+// mesma paleta dos cartões de roteiros: amarelo, preto, cinza, menta, lilás e rosa
+const EX_COL = [['var(--acc)', 'var(--ink)'], ['var(--ink)', '#fff'], ['#E4E4E4', 'var(--ink)'], ['#A5DFCA', 'var(--ink)'], ['#C9B0E9', 'var(--ink)'], ['#FF8FB1', 'var(--ink)']]
+const EX_TONE = { light: 'claro', bright: 'vivo', liberty: 'clássico', fiord: 'azul-noite', dark: 'escuro' }
+const EX_SHAPE = { drop: 'em gota', circle: 'redondos', square: 'quadrados', hex: 'hexagonais' }
 const EXAMPLES = [
   { n: 'Duda Come SP', h: '@dudacomesp', k: 24, tone: 'bright', pal: 'candy', shape: 'circle', pins: 9, cat: 'Doces', av: {} },
   { n: 'Noite Boa', h: '@noiteboa', k: 18, tone: 'dark', pal: 'cool', shape: 'square', pins: 10, cat: 'Bares', av: { background: '#262626', color: '#fff' } },
@@ -87,17 +91,23 @@ export function Examples() {
   const [f, setF] = useState('Todos')
   const list = EXAMPLES.filter((e) => f === 'Todos' || e.cat === f)
   return (
-    <div className="page">
+    <div className="page lp">
       <Top active={1} />
       <div className="w col" style={{ paddingTop: 48, paddingBottom: 56, gap: 28 }}>
         <div className="col" style={{ gap: 10 }}><h1 className="d s56">Mapas de criadores</h1><p className="mut" style={{ maxWidth: 560 }}>Cada criador escolhe o próprio visual. Exemplos fictícios para mostrar a variedade de estilos.</p></div>
         <div className="row wrap">{['Todos', 'Restaurantes', 'Cafés', 'Bares', 'Doces', 'Viagem'].map((c) => <button key={c} className={'chip' + (f === c ? ' on' : '')} onClick={() => setF(c)}>{c}</button>)}</div>
         <div className="g3" style={{ gap: 24 }}>
-          {list.map((e) => (
-            <div key={e.n} className="card col" style={{ padding: 12 }}>
-              <div style={{ borderRadius: 14, overflow: 'hidden' }}><MotionMap h={240} tone={e.tone} pal={e.pal} acc={e.acc} shape={e.shape} n={Math.min(14, e.pins)} /></div>
-              <div className="row"><div className="av" style={e.av}>{e.n[0]}</div><div className="sp"><div className="b">{e.n}</div><div className="xs mut">{e.h} · exemplo</div></div><span className="tag">{e.k} lugares</span></div>
-            </div>))}
+          {list.map((e, i) => {
+            const c = EX_COL[i % EX_COL.length]
+            return (
+              <article key={e.n} className="ex-c" style={{ background: c[0], color: c[1] }}>
+                <span className="gd-ex">Exemplo · {e.cat}</span>
+                <div className="ex-top"><h3>{e.n}</h3><span className="ex-n">{e.k} lugares</span></div>
+                <div className="ex-map"><MotionMap h={200} tone={e.tone} pal={e.pal} acc={e.acc} shape={e.shape} n={Math.min(14, e.pins)} /></div>
+                <hr />
+                <p>{e.h} · mapa de demonstração com visual {EX_TONE[e.tone]} e pins {EX_SHAPE[e.shape]}.</p>
+              </article>)
+          })}
           {!list.length && <p className="mut">Sem exemplos nesta categoria.</p>}
         </div>
         <div className="hero row jb wrap" style={{ padding: '32px 40px' }}><div><h2 className="d s32">O seu pode ser diferente de todos</h2><p className="mut sm">Veja o Estúdio de estilo em ação.</p></div><Link className="btn" to="/candidatura">Quero meu mapa</Link></div>
@@ -112,7 +122,7 @@ const TERMS = ['Aceitação e escopo', 'Conta e acesso', 'Conteúdo e publicaç�
 export function Terms() {
   useTitle('Termos e privacidade')
   return (
-    <div className="page">
+    <div className="page lp">
       <Top active={-1} />
       <div className="w split" style={{ paddingTop: 40, paddingBottom: 48, alignItems: 'flex-start' }}>
         <div className="col" style={{ width: 260, gap: 4, position: 'sticky', top: 90 }}><span className="eb" style={{ marginBottom: 6 }}>Nesta página</span>
@@ -120,7 +130,7 @@ export function Terms() {
         <div className="col" style={{ flex: 1, gap: 18, maxWidth: 700 }}>
           <div className="row"><span className="tag">Versão 0.1</span><span className="tag">Atualizado em [data]</span></div>
           <h1 className="d s56">Termos de uso e privacidade</h1>
-          <div className="g3"><div className="card soft col" style={{ gap: 4 }}><b>Seu conteúdo é seu</b><span className="sm mut">Licença só para hospedar e exibir o mapa.</span></div><div className="card soft col" style={{ gap: 4 }}><b>Sem senha</b><span className="sm mut">Acesso por autorização oficial da plataforma.</span></div><div className="card soft col" style={{ gap: 4 }}><b>Você decide</b><span className="sm mut">Usos extras são opcionais e revogáveis.</span></div></div>
+          <div className="g3 tm3"><div className="card soft col" style={{ gap: 4 }}><b>Seu conteúdo é seu</b><span className="sm mut">Licença só para hospedar e exibir o mapa.</span></div><div className="card soft col" style={{ gap: 4 }}><b>Sem senha</b><span className="sm mut">Acesso por autorização oficial da plataforma.</span></div><div className="card soft col" style={{ gap: 4 }}><b>Você decide</b><span className="sm mut">Usos extras são opcionais e revogáveis.</span></div></div>
           {TERMS.map((t, i) => (
             <div key={t} id={`s${i + 1}`} className="col" style={{ gap: 10, scrollMarginTop: 90 }}>
               <h2 className="d s26">{String(i + 1).padStart(2, '0')} · {t}</h2>

@@ -10,10 +10,13 @@ import MapCanvas from '../MapCanvas.jsx'
 import MapSheet from '../pub/MapSheet.jsx'
 import { pubVars } from '../pub/shared.jsx'
 import { LIBS } from '../iconcat.js'
+import { demoPlaces } from '../demoData.js'
+import { Phone, Native } from '../landing/device.jsx'
 import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, radiusMode, symOf } from '../theme.jsx'
 
-const SAMPLE = [['Café Exemplo', 'cafe'], ['Forno Aurora', 'bread'], ['Casa Maré', 'fish'], ['Bar Modelo', 'bar'], ['Burger Teste', 'burger'], ['Doce Ensaio', 'cake'], ['Brasa Demo', 'rest']]
-  .map(([name, category], i) => ({ id: -(i + 1), name, category, neighborhood: ['Pinheiros', 'Moema', 'Centro'][i % 3], lat: -23.55, lon: -46.64, geoQuality: 'address_exact', postedOn: '2026-09-12', ad: false }))
+// Lugares de exemplo com foto (as mesmas fotos livres usadas na demonstração), só até o criador confirmar os dele
+const SAMPLE_CATS = ['rest', 'cafe', 'bread', 'fish', 'bar', 'burger', 'cake']
+const SAMPLE = demoPlaces().slice(0, 9).map((p, i) => ({ ...p, id: -(i + 1), category: SAMPLE_CATS.includes(p.category) ? p.category : 'rest', postedOn: '2026-09-12', ad: false }))
 
 const Ctx = createContext(null)
 const useStudio = () => useContext(Ctx)
@@ -64,6 +67,42 @@ export function PhonePreview({ fake, themeOverride, width = 300, height = 620, i
   )
 }
 
+// Prévia principal do Estúdio: iPhone com a tela real que o seguidor vê. Cada aba do Estúdio abre a tela em que a edição aparece.
+const VIEWS = [['map', 'Mapa', 'Pins, cores, símbolos e o estilo do mapa.'], ['place', 'Lugar', 'O pin selecionado e o cartão do lugar.'], ['list', 'Lista', 'A ordem da página, a capa e a lista de lugares.'], ['profile', 'Perfil', 'Bio, redes e os links que ficam ao lado do mapa.']]
+const VIEW_FOR = { modelos: 'map', cores: 'map', categorias: 'map', simbolos: 'map', mapa: 'map', pins: 'place', layout: 'list', links: 'profile' }
+function StudioPhone({ active, fake }) {
+  const s = useStudio()
+  const theme = s.data.creator.theme
+  const [pick, setPick] = useState(null) // escolha manual do visitante; some ao trocar de aba do Estúdio
+  useEffect(() => { setPick(null) }, [active])
+  const view = pick || VIEW_FOR[active] || 'map'
+  const places = s.data.places
+  const f = useMemo(() => ({ cats: [], setCats: () => {}, q: '', clear: () => {} }), [])
+  // pulso suave quando uma edição muda a prévia
+  const [flash, setFlash] = useState(false)
+  const sig = JSON.stringify(theme) + JSON.stringify(s.links)
+  const first = useRef(true)
+  useEffect(() => { if (first.current) { first.current = false; return } setFlash(true); const t = setTimeout(() => setFlash(false), 800); return () => clearTimeout(t) }, [sig])
+  const cap = VIEWS.find((v) => v[0] === view)[2]
+  return (
+    <div className="stp">
+      <div className="stp-seg" role="tablist" aria-label="Tela da prévia">
+        {VIEWS.map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={view === k} className={view === k ? 'on' : ''} onClick={() => setPick(k)}>{l}</button>)}
+      </div>
+      <div className={'stp-ph' + (flash ? ' flash' : '')}>
+        <Phone h={600} label="Prévia do seu mapa público, como o seguidor vê no celular">
+          <Native h={600} theme={theme}>
+            <div className="pub preview" style={{ ...pubVars(theme), height: '100%' }}>
+              <MapSheet key={view} data={s.data} shown={places} f={f} selectedId={view === 'place' ? places[0]?.id : null} openPanel={view === 'profile' ? 'perfil' : null} preview fake={fake || s.usingSample} snap={view === 'list' ? 'full' : view === 'place' ? 'half' : 'low'} />
+            </div>
+          </Native>
+        </Phone>
+      </div>
+      <p className="stp-cap"><b>{VIEWS.find((v) => v[0] === view)[1]}</b> · {cap}</p>
+    </div>
+  )
+}
+
 const NAV = [['modelos', 'Modelos', 'layers', '/estudio/modelos'], ['cores', 'Cores e tema', 'palette', '/estudio/cores'], ['categorias', 'Categorias', 'grid', '/estudio/categorias'], ['simbolos', 'Símbolos', 'spark', '/estudio/simbolos'],
   ['mapa', 'Estilo do mapa', 'pin', '/estudio/mapa'], ['pins', 'Pins', 'flag', '/estudio/pins'], ['layout', 'Layout', 'menu', '/estudio/layout'], ['links', 'Links da bio', 'link', '/estudio/links'], ['endereco', 'Endereço', 'globe', '/estudio/endereco']]
 // O Estúdio vive dentro do painel original: mesma barra lateral, cabeçalho com o estado de publicação e abas das seções.
@@ -99,7 +138,7 @@ function Shell({ active, layout = 'side', previewWidth = 460, title, children, f
         <StudioHead active={active} />
         <div className={'stbody' + (layout === 'full' ? ' full' : '')}>
           <div className="ctl">{children}</div>
-          {layout !== 'full' && <div className="prev"><div><PhonePreview fake={fake} />{s.usingSample && <div className="xs mut c" style={{ marginTop: 10, maxWidth: 300 }}>Prévia com lugares de exemplo. Confirme lugares para ver os seus.</div>}</div></div>}
+          {layout !== 'full' && <div className="prev"><div><StudioPhone active={active} fake={fake} />{s.usingSample && <div className="xs mut c" style={{ marginTop: 10, maxWidth: 300 }}>Prévia com lugares de exemplo. Confirme lugares para ver os seus.</div>}</div></div>}
         </div>
       </div>
     </div></div>
