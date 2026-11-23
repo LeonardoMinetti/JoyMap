@@ -71,27 +71,87 @@ export function Monetize() {
 }
 
 // Seção 11 · Planos e condições de entrada
+// Valores do plano de negócio: hipóteses a validar no período de testes. Nenhuma cobrança está ativa.
+const SOON = 'Em desenvolvimento'
+const PLANS = [
+  { k: 'free', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
+    items: [['Posts recentes no mapa'], ['Visual básico'], ['Visitas totais no painel'], ['Exportar seus dados'], ['Marca wagli na página e territórios patrocinados escolhidos pela wagli', SOON]] },
+  { k: 'creator', name: 'Criador', price: ['R$ 29', 'R$ 290'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer controle e marca própria.', trial: true, main: true,
+    items: [['Mapa completo, com todo o histórico'], ['Estúdio de estilo completo'], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota'], ['Sem a marca wagli na página'], ['Você aprova cada território patrocinado', SOON], ['Roteiros pagos, com taxa de 8% por venda', SOON]] },
+  { k: 'pro', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vive de publi e vende roteiros.', trial: true,
+    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Domínio próprio'], ['Fechar publi direto com restaurantes', SOON], ['Pin em destaque, sempre com a marca de publi', SOON], ['Relatório de publi para marcas', SOON], ['Roteiros pagos, com taxa de 5% por venda', SOON]] },
+]
+const Y = 'Sim', N = 'Não'
+const COMPARE = [
+  ['Preço', 'R$ 0', 'R$ 29 por mês ou R$ 290 por ano', 'R$ 79 por mês ou R$ 790 por ano'],
+  ['Para quem', 'Engajar o público, sem vender nada', 'Controle e marca própria', 'Quem vive de publi e vende roteiros'],
+  ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico'],
+  ['Marca wagli na página', Y, N, N],
+  ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo'],
+  ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior'],
+  ['Territórios patrocinados', 'A wagli escolhe quais aparecem', 'Só os que você aprovar', 'Só os que você aprovar', true],
+  ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', true],
+  ['Relatório de publi para marcas', N, N, Y, true],
+  ['Fechar publi direto com restaurantes', N, N, Y, true],
+  ['Pin em destaque para restaurante com publi', N, N, Y, true],
+  ['Domínio próprio', N, N, Y],
+  ['Taxa sobre roteiros pagos', 'Não disponível', '8%', '5%', true],
+  ['Exportar dados (JSON e CSV)', Y, Y, Y],
+]
+function Compare({ open, setOpen }) {
+  return (
+    <div className="pn-cmp">
+      <button type="button" className="pn-cmp-btn" id="comparar-planos" aria-expanded={open} aria-controls="pn-cmp-body" onClick={() => setOpen(!open)}>
+        <span><b>Comparar os planos em detalhe</b><small>{open ? 'Ocultar a tabela comparativa' : 'Veja item por item o que cada plano inclui'}</small></span>
+        <i aria-hidden="true" className={open ? 'on' : ''}><Icon n="down" s={20} c="currentColor" /></i>
+      </button>
+      <div id="pn-cmp-body" role="region" aria-labelledby="comparar-planos" className={'pn-cmp-p' + (open ? ' open' : '')}><div>
+        <div className="pn-scroll" tabIndex={open ? 0 : -1}>
+          <table className="pn-tbl">
+            <caption className="sr">Comparativo dos planos Grátis, Criador e Pro</caption>
+            <thead><tr><th scope="col">Item</th><th scope="col">Grátis</th><th scope="col" className="pn-hl">Criador</th><th scope="col">Pro</th></tr></thead>
+            <tbody>{COMPARE.map(([l, a, b, c, soon]) => (
+              <tr key={l}><th scope="row">{l}{soon && <span className="tag wn pn-soon">{SOON}</span>}</th>{[a, b, c].map((v, i) => <td key={i} className={i === 1 ? 'pn-hl' : ''}>{v === Y ? <><Icon n="check" s={16} c="#067647" /><span className="sr">Sim</span></> : v === N ? <span className="pn-no" aria-label="Não">—</span> : v}</td>)}</tr>))}</tbody>
+          </table>
+        </div>
+      </div></div>
+    </div>
+  )
+}
 export function PlansBlock({ min, compact }) {
   const [annual, setAnnual] = useState(false)
+  const [open, setOpen] = useState(false)
+  // o link #comparar-planos abre a tabela
+  React.useEffect(() => {
+    const f = () => { if (location.hash === '#comparar-planos') { setOpen(true); setTimeout(() => document.getElementById('comparar-planos')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120) } }
+    f(); window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f)
+  }, [])
+  const i = annual ? 1 : 0
   return (
     <section id="planos" className="sec" aria-labelledby="planos-h" style={{ background: 'var(--cream)' }}>
       <div className="w col" style={{ gap: 32 }}>
-        <div className="sec-h c"><span className="eb">Planos e condições de entrada</span><h2 id="planos-h" className="d h-sec">Comece pelo seu <span style={hl}>mapa.</span></h2></div>
-        <div className="pl">
-          <div className="pl-main">
-            <span className="tag" style={{ background: 'var(--acc)', alignSelf: 'flex-start' }}>Para criadores aprovados</span>
-            <b className="d" style={{ fontSize: 'clamp(40px,5vw,64px)' }}>30 dias grátis</b>
-            <p>após o lançamento, para todos os criadores aprovados. Depois, você escolhe a periodicidade da assinatura.</p>
-            <div className="pl-per" role="group" aria-label="Periodicidade da assinatura"><button type="button" aria-pressed={!annual} className={'chip' + (!annual ? ' on' : '')} onClick={() => setAnnual(false)}>Mensal</button><button type="button" aria-pressed={annual} className={'chip' + (annual ? ' on' : '')} onClick={() => setAnnual(true)}>Anual</button></div>
-            <p className="sm" style={{ opacity: 0.8 }}>{annual ? 'Assinatura anual: uma cobrança por ano.' : 'Assinatura mensal: uma cobrança por mês.'} Os valores ainda não foram definidos e nenhuma cobrança está ativa.</p>
-          </div>
-          <div className="pl-side">
-            <div className="pl-i"><b>Entrada mediante análise de perfil</b><span>Há um número mínimo de seguidores{min != null ? ` (hoje: ${num(min)})` : ''}, ainda em definição.</span></div>
-            <div className="pl-i"><b>Plano Agência, sob consulta</b><span>Para empresas e redes que administram vários criadores. Em definição.</span></div>
-            <Link className="btn dk btn-lg" to="/candidatura">Quero meu mapa</Link>
-            <span className="xs mut">Acesso antecipado: sem cobrança nesta etapa.</span>
-            <Link className="link sm" to="/perguntas">Ver as perguntas frequentes</Link>
-          </div>
+        <div className="sec-h c"><span className="eb">Planos e condições de entrada</span><h2 id="planos-h" className="d h-sec">Comece pelo seu <span style={hl}>mapa.</span></h2>
+          <p className="lead">Um plano grátis para engajar o público e dois pagos para quem quer controle, marca própria e renda. Você paga pouco e a wagli ganha quando você ganha.</p></div>
+        <div className="row" style={{ justifyContent: 'center' }}>
+          <div className="pl-per pn-per" role="group" aria-label="Periodicidade da assinatura"><button type="button" aria-pressed={!annual} className={'chip' + (!annual ? ' on' : '')} onClick={() => setAnnual(false)}>Mensal</button><button type="button" aria-pressed={annual} className={'chip' + (annual ? ' on' : '')} onClick={() => setAnnual(true)}>Anual · 2 meses grátis</button></div>
+        </div>
+        <div className="pn">
+          {PLANS.map((p) => (
+            <article key={p.k} className={'pn-c' + (p.main ? ' pn-main' : '')}>
+              {p.main && <span className="tag pn-badge">Plano principal</span>}
+              <b className="d s26">{p.name}</b>
+              <p className="pn-who">{p.who}</p>
+              <div className="pn-price"><b className="d">{p.price[i]}</b><span>{Array.isArray(p.per) ? p.per[i] : p.per}</span></div>
+              {p.note && annual ? <span className="xs pn-note">{p.note}</span> : <span className="xs pn-note">{p.trial ? '30 dias grátis após aprovação e lançamento' : 'Sem prazo e sem cartão'}</span>}
+              <ul className="pn-ul">{p.items.map(([t, soon]) => <li key={t}><i aria-hidden="true"><Icon n="check" s={12} c="#171713" /></i><span>{t}{soon && <em className="pn-soon-i">{soon}</em>}</span></li>)}</ul>
+              <Link className={'btn btn-lg ' + (p.main ? 'dk' : 'ln')} to="/candidatura">Quero meu mapa</Link>
+            </article>))}
+        </div>
+        <Compare open={open} setOpen={setOpen} />
+        <div className="pn-foot">
+          <p className="xs mut">Valores previstos, ainda em validação durante o período de testes: nenhuma cobrança está ativa. Itens marcados como "{SOON}" ainda não estão disponíveis.</p>
+          <p className="xs mut">Entrada mediante análise de perfil{min != null ? `, com mínimo de ${num(min)} seguidores (hoje)` : ''}, ainda em definição. Plano Agência, para quem administra vários criadores (R$ 19 por mapa por mês, mínimo de 10 mapas), sob consulta.</p>
+          <Link className="link sm" to="/perguntas">Ver as perguntas frequentes</Link>
         </div>
       </div>
     </section>
