@@ -80,7 +80,7 @@ const PLANS = [
   { k: 'creator', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
     items: [['Mapa completo, com todo o histórico'], ['Atualização automática do mapa, a partir dos seus posts', SOON], ['Estúdio de estilo completo'], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota'], ['Marca wagli na página'], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', SOON]] },
   { k: 'pro', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
-    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Sem a marca wagli na página'], ['Domínio próprio'], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', SOON], ['Fechar publi direto com restaurantes', SOON, true], ['Pin em destaque, sempre com a marca de publi', SOON, true], ['Relatório de publi para marcas', SOON, true]] },
+    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Sem a marca wagli na página'], ['Domínio próprio'], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', SOON], ['Produtos nos seus roteiros, com link e sempre com a marca de publi', SOON], ['Fechar publi direto com restaurantes', SOON, true], ['Pin em destaque, sempre com a marca de publi', SOON, true], ['Relatório de publi para marcas', SOON, true]] },
 ].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
 const Y = 'Sim', N = 'Não'
 const COMPARE = [
@@ -97,6 +97,7 @@ const COMPARE = [
   ['Pin em destaque para restaurante com publi', N, N, Y, true, true],
   ['Domínio próprio', N, N, Y],
   ['Roteiros que podem ser vendidos', 'Só roteiros gratuitos', 'Sim, com taxa de 8% por venda', 'Sim, com taxa de 5% por venda', true],
+  ['Produtos nos roteiros, com link e marca de publi', N, N, Y, true],
   ['Exportar dados (JSON e CSV)', Y, Y, Y],
 ].filter((r) => !r[5])
 function Compare({ open, setOpen }) {
