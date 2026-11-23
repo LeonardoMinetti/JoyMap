@@ -59,7 +59,7 @@ async function S() {
 }
 const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(mem)) } catch { /* ok */ } }
 const out = (v) => { save(); return v }
-const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, googleUrl: p.googleUrl || null, instagramUrl: p.instagramUrl || null, photo: undefined })
+const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, couponCode: p.couponCode || null, couponNote: p.couponNote || null, googleUrl: p.googleUrl || null, instagramUrl: p.instagramUrl || null, photo: undefined })
 
 // ---------- estatísticas ilustrativas ----------
 function stats(s, days) {
@@ -166,6 +166,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     if (gUrl === undefined) throw err('google_invalido')
     if (iUrl === undefined) throw err('instagram_invalido')
     x.googleUrl = gUrl; x.instagramUrl = iUrl
+    if ('couponCode' in body) x.couponCode = String(body.couponCode || '').trim().slice(0, 30) || null
+    if ('couponNote' in body) x.couponNote = String(body.couponNote || '').trim().slice(0, 140) || null
     Object.assign(x, { name, status }, 'address' in body ? { address: String(body.address || '').slice(0, 200) || null } : {}, 'category' in body ? { category: body.category } : {}, 'note' in body ? { note: String(body.note || '').slice(0, 200) } : {}, 'ad' in body ? { ad: !!body.ad } : {}, 'postUrl' in body ? { postUrl: String(body.postUrl || '').slice(0, 300) || null } : {})
     return out({ place: x })
   }

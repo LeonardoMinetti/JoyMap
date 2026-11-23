@@ -208,7 +208,7 @@ export function EditPlace({ id }) {
   const [photo, setPhoto] = useState(null)
   const pick = useRef(null)
   const p = places?.find((x) => x.id === Number(id))
-  useEffect(() => { if (p && !f) { setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad, googleUrl: p.googleUrl || '', instagramUrl: p.instagramUrl || '' }); setPhoto(p.photo || null) } }, [p, f])
+  useEffect(() => { if (p && !f) { setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad, googleUrl: p.googleUrl || '', instagramUrl: p.instagramUrl || '', couponNote: p.couponNote || '', couponCode: p.couponCode || '' }); setPhoto(p.photo || null) } }, [p, f])
   if (!places || !f) return places ? <FlowShell><FlowHead back="/painel/lugares" backLabel="Lugares" title="Editar lugar" /><p className="mut">Lugar não encontrado.</p></FlowShell> : <Guard need="approved"><Loading /></Guard>
   const theme = me.creator.theme
   const save = async () => {
@@ -253,8 +253,12 @@ export function EditPlace({ id }) {
         <div className="card col">
           <b>Sua indicação</b>
           <Field label="Sua nota (opcional)" id="n3"><div className="in"><input id="n3" value={f.note} onChange={set('note')} placeholder="Peça o pão de queijo…" maxLength="200" /></div></Field>
-          <div className="sep" />
-          <div className="row"><div className="sp"><b className="sm">Publicidade</b><div className="xs mut">O mapa mostra o aviso "Publi" ao seguidor.</div></div><Switch on={f.ad} onChange={(v) => setF({ ...f, ad: v })} label="Publicidade" /></div>
+        </div>
+        <div className="card col">
+          <div><b>Cupom ou desconto</b><div className="xs mut">Se o lugar oferece algo a quem vem pela sua indicação, conte aqui. Aparece na página do lugar.</div></div>
+          <Field label="O que o seguidor ganha" id="c1"><div className="in"><input id="c1" value={f.couponNote} onChange={set('couponNote')} placeholder="Ex.: 10% de desconto dizendo que veio pelo meu mapa" maxLength="140" /></div></Field>
+          <Field label="Código do cupom (opcional)" id="c2"><div className="in"><Icon n="star" s={16} c="#757575" /><input id="c2" value={f.couponCode} onChange={set('couponCode')} placeholder="Ex.: MAPA10" maxLength="30" autoCapitalize="characters" /></div></Field>
+          <span className="xs mut">Combine o benefício com o estabelecimento antes de divulgar. Deixe em branco se não houver.</span>
         </div>
       </FlowGrid>
     </FlowShell>
@@ -400,7 +404,6 @@ export function Publish() {
           <Row ok>Endereço: {location.host}/@{c.slug}</Row>
           {noCoords > 0 && <Row ok={false}>{noCoords} lugares ainda sem coordenadas (não aparecerão no mapa)</Row>}
         </div>
-        <div className="card soft col"><b className="sm">Identificação de publicidade</b><span className="sm mut">Se um lugar foi parceria, marque na ficha. O mapa mostra o aviso "Publi" ao seguidor.</span></div>
       </FlowGrid>
     </FlowShell>
   )

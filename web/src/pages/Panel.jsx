@@ -126,7 +126,7 @@ export function PlacesPage() {
   if (!places) return <PanelPage active="lugares"><Loading /></PanelPage>
   const live = places.filter((p) => p.status === 'pending' || p.status === 'confirmed')
   const perf = new Map((s?.topPlaces || []).map((p) => [p.id, p]))
-  const FIL = [['all', 'Todos', () => true], ['pending', 'Pendentes', (p) => p.status === 'pending'], ['ad', 'Publi', (p) => p.ad], ['nocoord', 'Sem localização', (p) => !hasCoords(p)], ['semfoto', 'Sem foto', (p) => !p.photo]]
+  const FIL = [['all', 'Todos', () => true], ['pending', 'Pendentes', (p) => p.status === 'pending'], ['nocoord', 'Sem localização', (p) => !hasCoords(p)], ['semfoto', 'Sem foto', (p) => !p.photo]]
   const test = FIL.find((x) => x[0] === f)[2]
   let list = live.filter((p) => test(p) && (!cat || p.category === cat) && (!q || `${p.name} ${p.neighborhood || ''} ${p.address || ''}`.toLowerCase().includes(q.toLowerCase())))
   list = [...list].sort((a, b) => sort === 'name' ? (a.name || '').localeCompare(b.name || '') : sort === 'opens' ? (perf.get(b.id)?.opens || 0) - (perf.get(a.id)?.opens || 0) : b.id - a.id)
@@ -150,7 +150,7 @@ export function PlacesPage() {
             <div className="plc-ph"><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 16, display: 'grid', placeItems: 'center' }} label="Sem foto" /><span className={`tag ${st[0]}`}>{st[1]}</span></div>
             <b className="sm trunc">{p.name || 'Sem nome'}</b>
             <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: cc.color, flex: 'none' }} /><span className="xs mut trunc">{cc.name}{p.neighborhood ? ` · ${p.neighborhood}` : ''}</span></div>
-            <div className="row jb xs mut"><span>{pf?.opens || 0} aberturas · {pf?.routes || 0} rotas</span>{p.googleUrl && <Icon n="ext" s={12} />}{p.instagramUrl && <Icon n="insta" s={12} />}</div>
+            <div className="row jb xs mut"><span>{pf?.opens || 0} aberturas · {pf?.routes || 0} rotas</span>{(p.couponNote || p.couponCode) && <span className="tag ok">Cupom</span>}{p.googleUrl && <Icon n="ext" s={12} />}{p.instagramUrl && <Icon n="insta" s={12} />}</div>
             {p.status === 'pending' && <button className="btn sm blk" onClick={(e) => confirm1(e, p)}>Confirmar</button>}
           </div>) })}
           {!list.length && <p className="mut sm" style={{ gridColumn: '1/-1' }}>Nenhum lugar nesta lista.</p>}</div>

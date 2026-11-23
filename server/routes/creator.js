@@ -138,12 +138,14 @@ export default function creatorRoutes(app, x) {
     const iUrl = 'instagramUrl' in b ? cleanInstagramUrl(b.instagramUrl) : p.instagram_url
     if (gUrl === undefined) return c.json({ error: 'google_invalido' }, 400)
     if (iUrl === undefined) return c.json({ error: 'instagram_invalido' }, 400)
+    const cCode = 'couponCode' in b ? String(b.couponCode || '').trim().slice(0, 30) || null : p.coupon_code
+    const cNote = 'couponNote' in b ? String(b.couponNote || '').trim().slice(0, 140) || null : p.coupon_note
     const postUrl = 'postUrl' in b ? String(b.postUrl || '').slice(0, 300) || null : p.post_url
     const tid = 'postUrl' in b ? tiktokId(postUrl) : p.post_id
     // corrigir o nome já resolve a dúvida sobre ele
     const nameSrc = 'name' in b && name !== p.name ? 'manual' : p.name_src
-    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=?, google_url=?, instagram_url=? WHERE id=?')
-      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, gUrl, iUrl, id)
+    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=?, google_url=?, instagram_url=?, coupon_code=?, coupon_note=? WHERE id=?')
+      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, gUrl, iUrl, cCode, cNote, id)
     if (address && address !== p.address && cfg.geocode) {
       db.prepare("UPDATE places SET geo_status='pending', lat=NULL, lon=NULL, reviewed=0 WHERE id=?").run(id)
       enqueueGeocode(db, id, cfg.fetchImpl)
@@ -336,7 +338,7 @@ export default function creatorRoutes(app, x) {
     const row = fresh(c)
     const places = db.prepare("SELECT * FROM places WHERE creator_id=? AND status!='removed'").all(row.id).map(x.placeOut)
     if (c.req.query('format') === 'csv') {
-      const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'googleUrl', 'instagramUrl', 'postUrl', 'postedOn', 'ad', 'status']
+      const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'googleUrl', 'instagramUrl', 'couponCode', 'couponNote', 'postUrl', 'postedOn', 'ad', 'status']
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
       const csv = [cols.join(','), ...places.map((p) => cols.map((k) => esc(p[k])).join(','))].join('\n')
       return c.body(csv, 200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="meus-lugares.csv"' })
