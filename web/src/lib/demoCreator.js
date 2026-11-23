@@ -116,7 +116,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const ok = act.filter((x) => x.status === 'pending' || x.status === 'confirmed')
     return { posts: act.length, places: ok.length, withAddress: ok.filter((x) => x.address).length, located: ok.filter((x) => x.geoStatus === 'found').length, pending: 0, done: act.length > 0 }
   }
-  if (p === '/creator/places' && method === 'GET') return { places: s.places.filter((x) => x.status !== 'removed').slice().reverse() }
+  if (p === '/creator/places' && method === 'GET') return { places: s.places.filter((x) => x.status !== 'removed').slice().reverse().map((x) => ({ ...x, photo: s.photo[x.id] })) }
   if (p === '/creator/search-place') return { results: [], error: 'busca_indisponivel' } // sem servidor, a busca de endereços não existe nesta demonstração
   if (p === '/creator/posts') {
     const posts = Array.isArray(body.posts) ? body.posts : []

@@ -359,3 +359,4 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .app .main .hero{background:var(--soft)}
 .has-demobar .main{padding-bottom:110px}
 @media (max-width:900px){.demobar{z-index:35!important;bottom:68px!important;padding:6px 8px 6px 14px!important;font-size:12px!important}.has-demobar .main{padding-bottom:170px}}
+@media (max-width:900px){.main .g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}.main .g2>*{min-width:0}}

@@ -7,6 +7,8 @@ import { PanelPage, Note, Switch, Field, Loading, useTitle } from '../lib/ui.jsx
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, TONES, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
+import { PlacePhoto, pubVars } from '../pub/shared.jsx'
+import MapCanvas from '../MapCanvas.jsx'
 
 const ACCOUNT_TABS = [['conta', 'Perfil', '/painel/conta'], ['contas', 'Contas conectadas', '/painel/contas'], ['privacidade', 'Privacidade', '/painel/privacidade'], ['plano', 'Plano e cobrança', '/painel/plano']]
 const AccountPage = ({ tab, children }) => (
@@ -266,36 +268,113 @@ export function Promote() {
 }
 
 // F7 · roteiros (grátis no mapa; a venda ainda não está aberta)
+// arrastar para reordenar (com botões de subir e descer para teclado e celular)
+function useReorder(list, set) {
+  const from = useRef(null)
+  const move = (a, b) => { if (b < 0 || b >= list.length || a === b) return; const n = [...list]; const [x] = n.splice(a, 1); n.splice(b, 0, x); set(n) }
+  const props = (i) => ({ onDragOver: (e) => e.preventDefault(), onDrop: (e) => { e.preventDefault(); if (from.current != null) move(from.current, i); from.current = null } })
+  const handle = (i) => <span draggable role="button" tabIndex={0} aria-label="Arrastar para reordenar (ou use as setas)" style={{ cursor: 'grab', display: 'inline-flex' }} onDragStart={(e) => { from.current = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)) }} onKeyDown={(e) => { if (e.key === 'ArrowUp') { e.preventDefault(); move(i, i - 1) } if (e.key === 'ArrowDown') { e.preventDefault(); move(i, i + 1) } }}><Icon n="drag" s={18} c="#a3a3a3" /></span>
+  return { props, handle, move }
+}
+let KEYN = 0
+const withKey = (r) => ({ ...r, _k: r._k || `k${++KEYN}` })
+
+// o mesmo cartão que o seguidor vê na aba Roteiros do mapa
+function RoutePreview({ route, places, theme }) {
+  const rp = route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean)
+  return (
+    <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
+      <div className="ms-route" style={{ cursor: 'default', marginTop: 0 }}>
+        <b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
+        <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
+      </div>
+    </div>
+  )
+}
+
 export function Roteiros() {
   useTitle('Roteiros')
+  const { me } = useMe()
+  const theme = me.creator.theme
   const [places] = usePlacesList()
   const [rows, setRows] = useState(null)
-  const [saved, setSaved] = useState(true)
+  const [orig, setOrig] = useState('[]')
+  const [sel, setSel] = useState(0)
+  const [q, setQ] = useState('')
+  const [cat, setCat] = useState('')
   const [on, setOn] = useState(null)
-  useEffect(() => { api('/creator/routes').then((d) => setRows(d.routes)); api('/creator/interest').then((d) => setOn(d.listas)) }, [])
+  const load = () => api('/creator/routes').then((d) => { const r = d.routes.map(withKey); setRows(r); setOrig(JSON.stringify(r)) })
+  useEffect(() => { load(); api('/creator/interest').then((d) => setOn(d.listas)) }, [])
+  const rowsSort = useReorder(rows || [], (n) => { const cur = rows[sel]; setRows(n); setSel(n.indexOf(cur)) })
+  const r = rows?.[sel]
+  const placeSort = useReorder(r?.placeIds || [], (ids) => setRows(rows.map((x, j) => (j === sel ? { ...x, placeIds: ids } : x))))
   if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
   const confirmed = places.filter((p) => p.status === 'confirmed')
-  const edit = (next) => { setRows(next); setSaved(false) }
-  const set = (i, patch) => edit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)))
-  const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows } }); const d = await api('/creator/routes'); setRows(d.routes); setSaved(true); toast('Roteiros salvos (já valem no mapa publicado)') }
+  const byId = new Map(places.map((p) => [p.id, p]))
+  const dirty = JSON.stringify(rows) !== orig
+  const set = (patch) => setRows(rows.map((x, j) => (j === sel ? { ...x, ...patch } : x)))
+  const add = () => { setRows([...rows, withKey({ name: '', note: '', placeIds: [] })]); setSel(rows.length) }
+  const remove = () => { if (r.placeIds.length && !confirm(`Remover o roteiro "${r.name || 'sem nome'}"?`)) return; setRows(rows.filter((_, j) => j !== sel)); setSel(Math.max(0, sel - 1)) }
+  const toggle = (id) => set({ placeIds: r.placeIds.includes(id) ? r.placeIds.filter((x) => x !== id) : [...r.placeIds, id] })
+  const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows.filter((x) => x.name.trim()) } }); await load(); setSel(0); toast('Roteiros salvos (já valem no mapa publicado)') }
+  const cats = theme.categories.filter((c) => confirmed.some((p) => p.category === c.id))
+  const pool = confirmed.filter((p) => (!cat || p.category === cat) && (!q || `${p.name} ${p.neighborhood || ''}`.toLowerCase().includes(q.toLowerCase())))
+  const pts = r ? r.placeIds.map((id) => byId.get(id)).filter((p) => p && hasCoords(p)) : []
   return (
     <PanelPage active="roteiros">
-      <Head title="Roteiros" sub="Coleções de lugares na ordem em que você indica, como “Domingo de café”" right={<div className="row"><button className="btn ln sm" disabled={rows.length >= 12} onClick={() => edit([...rows, { name: '', note: '', placeIds: [] }])}><Icon n="plus" s={14} />Novo roteiro</button><button className="btn sm" disabled={saved} onClick={save}>{saved ? 'Salvo' : 'Salvar roteiros'}</button></div>} />
-      {!rows.length && <div className="card col" style={{ gap: 6 }}><b>Nenhum roteiro ainda</b><span className="sm mut">Reúna dois ou mais lugares do seu mapa em um roteiro: um passeio por bairro, uma noite, um fim de semana. Seus seguidores abrem o roteiro e seguem lugar por lugar.</span></div>}
-      {rows.map((r, i) => (
-        <div key={r.id || `n${i}`} className="card col" style={{ gap: 12 }}>
-          <div className="row"><input className="in sp" style={{ minHeight: 44 }} aria-label="Nome do roteiro" placeholder="Nome do roteiro" value={r.name} maxLength="40" onChange={(e) => set(i, { name: e.target.value })} /><input className="in sp" style={{ minHeight: 44 }} aria-label="Observação" placeholder="Ex.: 3 h de passeio" value={r.note || ''} maxLength="60" onChange={(e) => set(i, { note: e.target.value })} /><button className="btn ln sm" aria-label="Remover roteiro" onClick={() => edit(rows.filter((_, j) => j !== i))}><Icon n="trash" s={14} /></button></div>
-          <div><span className="xs mut">Lugares do roteiro ({r.placeIds.length})</span>
-            <div className="row wrap" style={{ gap: 6, marginTop: 6 }}>{confirmed.map((p) => <button key={p.id} className={'chip' + (r.placeIds.includes(p.id) ? ' on' : '')} style={{ fontSize: 12, padding: '5px 10px' }} onClick={() => set(i, { placeIds: r.placeIds.includes(p.id) ? r.placeIds.filter((x) => x !== p.id) : [...r.placeIds, p.id] })}>{p.name}</button>)}{!confirmed.length && <span className="sm mut">Confirme lugares no mapa para montar roteiros.</span>}</div></div>
-          <div className="sep" />
-          <div className="row wrap jb"><div className="row" role="group" aria-label="Como oferecer este roteiro"><button className="chip on" aria-pressed="true">Grátis no mapa</button><button className="chip" disabled title="A venda de roteiros ainda não está aberta">Vender · em breve</button></div><span className="xs mut">{r.id ? 'Aparece no mapa publicado' : 'Salve para publicar no mapa'}</span></div>
-        </div>))}
+      <Head title="Roteiros" sub="Monte percursos com os lugares do seu mapa, na ordem em que você indicaria" right={<div className="row">{dirty && <button className="btn ln sm" onClick={() => { const o = JSON.parse(orig); setRows(o); setSel(0) }}>Desfazer</button>}<button className="btn sm" disabled={!dirty} onClick={save}>{dirty ? 'Salvar roteiros' : 'Tudo salvo'}</button></div>} />
+      <div className="g2" style={{ gridTemplateColumns: 'minmax(260px,340px) 1fr', alignItems: 'start' }}>
+        <div className="col" style={{ gap: 10, minWidth: 0 }}>
+          {rows.map((x, i) => { const rp = x.placeIds.map((id) => byId.get(id)).filter(Boolean); return (
+            <div key={x._k} {...rowsSort.props(i)} className={'card col rt-it' + (i === sel ? ' sel' : '')} style={{ gap: 8, cursor: 'pointer', padding: 14 }} role="button" tabIndex={0} aria-pressed={i === sel} onClick={() => setSel(i)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setSel(i))}>
+              <div className="row">{rowsSort.handle(i)}<div className="sp"><b>{x.name || 'Roteiro sem nome'}</b><div className="xs mut">{x.placeIds.length} lugar{x.placeIds.length === 1 ? '' : 'es'}{x.note ? ` · ${x.note}` : ''}</div></div></div>
+              <div className="row" style={{ gap: 0, paddingLeft: 26 }}>{rp.slice(0, 5).map((p, k) => <span key={p.id} style={{ marginLeft: k ? -10 : 0, border: '3px solid #fff', borderRadius: '50%', overflow: 'hidden', display: 'inline-flex' }}><PlacePhoto place={p} theme={theme} size={36} style={{ borderRadius: '50%' }} /></span>)}{rp.length > 5 && <span className="xs mut" style={{ marginLeft: 8 }}>+{rp.length - 5}</span>}{!rp.length && <span className="xs mut">Sem lugares ainda</span>}</div>
+            </div>) })}
+          <button className="btn ln blk" disabled={rows.length >= 12} onClick={add}><Icon n="plus" s={16} />Novo roteiro</button>
+          {!rows.length && <p className="sm mut">Reúna lugares do seu mapa em um roteiro: um passeio por bairro, uma noite, um fim de semana. Seus seguidores abrem o roteiro e seguem lugar por lugar.</p>}
+        </div>
+        {r ? (
+          <div className="col" style={{ gap: 16, minWidth: 0 }} key={r._k}>
+            <div className="card col" style={{ gap: 12 }}>
+              <span className="eb">Como aparece no seu mapa</span>
+              <RoutePreview route={r} places={places} theme={theme} />
+              <div className="g2"><Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field><Field label="Observação" id="ro"><div className="in"><input id="ro" value={r.note || ''} maxLength="60" placeholder="Ex.: 3 h de passeio" onChange={(e) => set({ note: e.target.value })} /></div></Field></div>
+            </div>
+            <div className="card col" style={{ gap: 10 }}>
+              <div className="row jb"><b>Percurso <span className="mut sm">({r.placeIds.length})</span></b><span className="xs mut">Arraste para mudar a ordem</span></div>
+              {pts.length > 0 && <div style={{ borderRadius: 16, overflow: 'hidden', pointerEvents: 'none' }}><MapCanvas places={pts} theme={{ ...theme, cluster: false, mapLabels: false }} symbols={me.creator.symbols} interactive={false} style={{ height: 170 }} /></div>}
+              {r.placeIds.map((id, i) => { const p = byId.get(id); if (!p) return null; return (
+                <div key={id} {...placeSort.props(i)} className="row card soft" style={{ padding: 8, gap: 10 }}>
+                  {placeSort.handle(i)}<b className="sm" style={{ width: 20, textAlign: 'center' }}>{i + 1}</b><PlacePhoto place={p} theme={theme} size={44} style={{ borderRadius: 12 }} />
+                  <div className="sp"><b className="sm">{p.name}</b><div className="xs mut">{catOf(theme, p.category).name}{p.neighborhood ? ` · ${p.neighborhood}` : ''}</div></div>
+                  <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => placeSort.move(i, i - 1)}><Icon n="up" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.placeIds.length - 1} onClick={() => placeSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
+                  <button className="btn ln sm" aria-label={`Tirar ${p.name} do roteiro`} onClick={() => toggle(id)}><Icon n="close" s={14} /></button>
+                </div>) })}
+              {!r.placeIds.length && <p className="sm mut">Escolha os lugares abaixo. A ordem em que entram é a ordem do percurso.</p>}
+            </div>
+            <div className="card col" style={{ gap: 10 }}>
+              <b>Adicionar lugares</b>
+              <div className="in" style={{ minHeight: 40 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou bairro" aria-label="Buscar lugar" /></div>
+              <div className="row wrap"><button className={'chip' + (!cat ? ' on' : '')} onClick={() => setCat('')}>Todos</button>{cats.map((c) => <button key={c.id} className={'chip' + (cat === c.id ? ' on' : '')} onClick={() => setCat(cat === c.id ? '' : c.id)}>{c.name}</button>)}</div>
+              <div className="g4" style={{ gap: 10 }}>{pool.map((p) => { const inn = r.placeIds.includes(p.id); return (
+                <button key={p.id} type="button" className={'card col' + (inn ? ' sel' : '')} style={{ padding: 8, gap: 6, textAlign: 'left', position: 'relative' }} aria-pressed={inn} onClick={() => toggle(p.id)}>
+                  <PlacePhoto place={p} theme={theme} aspect="4/3" style={{ borderRadius: 12, width: '100%' }} />
+                  <b className="xs">{p.name}</b><span className="xs mut">{p.neighborhood || catOf(theme, p.category).name}</span>
+                  <span style={{ position: 'absolute', top: 14, right: 14, width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center', background: inn ? 'var(--ink)' : 'rgba(255,255,255,.9)', color: inn ? '#fff' : 'var(--ink)' }}><Icon n={inn ? 'check' : 'plus'} s={14} c={inn ? '#fff' : '#171713'} /></span>
+                </button>) })}{!pool.length && <p className="sm mut" style={{ gridColumn: '1/-1' }}>{confirmed.length ? 'Nenhum lugar encontrado.' : 'Confirme lugares no mapa para montar roteiros.'}</p>}</div>
+            </div>
+            <div className="card row jb wrap">
+              <div className="row" role="group" aria-label="Como oferecer este roteiro"><button className="chip on" aria-pressed="true">Grátis no mapa</button><button className="chip" disabled title="A venda de roteiros ainda não está aberta">Vender · em breve</button></div>
+              <button className="btn bd2 sm" onClick={remove}><Icon n="trash" s={14} />Remover roteiro</button>
+            </div>
+          </div>
+        ) : <div className="card col" style={{ gap: 6 }}><b>Nenhum roteiro selecionado</b><span className="sm mut">Crie um roteiro para começar.</span></div>}
+      </div>
       <div className="card soft col" style={{ gap: 8 }}>
         <div className="row"><b>Vender roteiros</b><span className="tag wn">Em breve</span></div>
         <span className="sm mut">Você escolhe: cada roteiro pode continuar grátis no seu mapa ou, quando a venda abrir, ser oferecido pago para quem quiser ir além. Nada muda para os que ficarem grátis. Preço e comissão ainda não estão definidos, então hoje nenhum roteiro é cobrado.</span>
         <div className="row jb wrap"><span className="sm">Quer participar do teste? Avisamos quando abrir para o seu perfil.</span><button className="btn sm" disabled={on !== false} onClick={async () => { await api('/creator/interest', { method: 'POST', body: { kind: 'listas' } }); setOn(true); toast('Você está na lista') }}>{on ? 'Você está na lista' : 'Entrar na lista'}</button></div>
       </div>
-      <Note>Os roteiros salvos aparecem na aba Roteiros do seu mapa.</Note>
     </PanelPage>
   )
 }
