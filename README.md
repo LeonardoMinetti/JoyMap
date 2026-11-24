@@ -1,75 +1,181 @@
-# wagli — MVP
+# wagli
 
-Plataforma para criadores montarem um mapa dos lugares que indicam, com **personalização visual alta**, para usar na bio.
-O front implementa as **68 telas do protótipo** (fluxos e UI), ligadas a um backend real. Onde uma tela depende de credencial,
-contrato ou dado que ainda não existe, ela aparece igual ao protótipo, mas **diz a verdade** (veja "O que ainda não é real").
+**wagli** é uma plataforma para quem indica lugares (criadores de conteúdo) transformarem essas indicações num **mapa público, com a sua identidade**, para usar na bio. Quem segue explora o mapa e salva lugares. Restaurantes veem quem os indica.
 
-## Mapa de telas → rotas
+- **Demonstração (sem servidor, dados fictícios):** https://leonardominetti.github.io/wagli-demo/
+- **Página de vendas para restaurantes:** https://leonardominetti.github.io/wagli-demo/para-restaurantes
+- Código: Vite + React (`web/`), servidor Hono + SQLite (`server/`), testes `node --test` (`tests/`).
 
-| Grupo | Telas | Rotas |
-|---|---|---|
-| A · Site | A1 Início, A2 Planos, A3 Exemplos, A4 Termos, A5 FAQ, A6 Indisponível | `/`, `/planos`, `/exemplos`, `/termos`, `/perguntas`, `/indisponivel` |
-| B · Entrada | B1 Candidatura, B2 Aprovado, B3 Espera, B4 Entrar, B5 Link enviado, B6 Instagram, B7 TikTok, B8 Consentimentos, B9 Plano, B10 Pagamento, B11 Boas-vindas | `/candidatura`, `/candidatura/{enviada,status,aprovado}`, `/entrar`, `/conectar/{instagram,tiktok}`, `/consentimentos`, `/plano`, `/pagamento`, `/boas-vindas` |
-| C · Montagem | C1 Montando, C2 Prévia, C3 Revisar, C4 Editar, C5 Adicionar, C6 Sem lugar, C7 Unidades, C8 Publicar, C9 Publicado (+ `colar-posts`) | `/montando`, `/previa`, `/revisar`, `/revisar/:id`, `/adicionar`, `/sem-lugar`, `/unidades`, `/publicar`, `/publicado`, `/colar-posts` |
-| D · Estúdio | D1–D10 | `/estudio`, `/estudio/{modelos,cores,categorias,simbolos,mapa,pins,layout,links,endereco}` |
-| E · Mapa público | E1–E12 (celular e computador) | `/@slug`, `/@slug/{mapa,lista,lugar/:id,roteiros,salvos,incorporar}`; filtros, vídeo, compartilhar e denúncia são painéis |
-| F · Painel | F1–F11 | `/painel`, `/painel/{buscas,lugares,audiencia,atualizar,divulgar,listas,contas,privacidade,plano,conta}` |
-| G/H · Rede e restaurantes | G1–G2, H1–H3 | `/rede`, `/rede/lugar`, `/restaurantes`, `/restaurante`, `/restaurante/percepcao` |
-| I · Admin | I1–I4 | `/admin`, `/admin/{mapas,moderacao,metricas}` |
+> **Estado do projeto:** MVP/protótipo funcional. O servidor existe e é testado, mas ainda **não está hospedado**. A demonstração publicada roda só no navegador. Pagamento, conexão oficial com Instagram/TikTok e login com Google estão descritos abaixo como "ainda não reais".
 
-## O que funciona (testado)
-- **Fluxo completo**: candidatura pública → análise (admin informa seguidores e confirma o titular) → aprovação → login por link mágico → onboarding → montagem → revisão → publicação.
-- **Montagem a partir de posts**: o criador cola link + legenda; extração por regras (lugar, endereço, categoria, publi), localização no OpenStreetMap (Nominatim, 1 req/s, rejeita município errado), busca de lugar por nome, mesclar duplicatas, unidades de rede, posts sem lugar. Progresso de C1 é calculado dos dados reais.
-- **Estúdio** com prévia ao vivo (é a própria página pública num celular): cores, fonte, cantos, contraste (WCAG), tom do mapa, rótulos, ponto inicial, formato/tamanho/borda do pin, agrupamento, pin selecionado, categorias com símbolo e cor, **envio de SVG próprio** (só `path`, até 50 KB, revisado pela equipe), layout por blocos (arrastar/ligar), capa, roteiros, links, modelos, endereço, **domínio próprio com verificação de CNAME**, QR em PNG/SVG.
-- **Mapa público**: filtros, busca, "perto de mim" (localização só no aparelho), salvos (no aparelho), roteiros, ficha, vídeo (player oficial TikTok), compartilhar, denúncia, mapa incorporável, versão de computador.
-- **Painel**: métricas agregadas (amostra mínima de 5 sessões para percentuais), buscas sem resultado como oportunidade, pedidos de indicação, imagens para stories em PNG (geradas no navegador), consentimentos com histórico, exportação JSON/CSV, pausar e excluir conta.
-- **Rede e restaurantes**: só entra quem consentiu; reivindicação aprovada pela equipe; painel com contagens agregadas.
-- **Admin**: fila de candidaturas (critério ajustável), revisão de mapas, moderação com ações (ocultar lugar, pausar mapa, avisar criador), revisão de símbolos e reivindicações, métricas do funil.
+---
 
-## O que ainda não é real (a tela existe, a função depende de algo externo)
-- **Conectar Instagram/TikTok**: exige app aprovado pela plataforma. Os botões tentam conectar e, sem credenciais, avisam e deixam seguir; a entrada de posts é manual (colar).
-- **Pagamento**: nenhum dado de cartão é pedido nem guardado; o teste de 30 dias começa sem cobrança. Preços aparecem como `[preço]`.
-- **Percepção de confiança (H3)**: não coletamos comentários, então o estado é "dados insuficientes".
-- **Cidades da audiência (F4)**: exigiria localizar por IP, que não guardamos.
-- **E-mail em produção** (Resend, não testado), **login com Instagram**, **verificação por Google Business**, **imagem de compartilhamento** (só título/descrição), **fotos de lugares** (espaço reservado), **salvos sincronizados**.
-- Base de mapa: tiles vetoriais gratuitos do OpenFreeMap (dados OpenStreetMap) usando os estilos nativos Positron, Bright, Liberty, Fiord e Dark, sem chave. O OpenFreeMap deve ter uso/doação revisados antes de tráfego real; textos legais são placeholders para revisão jurídica.
+## 1. Quem usa: três tipos de conta
 
-## Rodar
+| Tipo | Quem é | O que tem | Planos |
+|---|---|---|---|
+| **Criador** | Quem indica lugares e quer um mapa próprio | Mapa público, painel, Estúdio de estilo, roteiros, métricas | Grátis, Criador, Pro |
+| **Explorador** | Quem segue mapas e só quer guardar lugares | Espaço com 3 abas: **Salvos**, **Criadores**, **Conta** (sem painel) | Grátis (único) |
+| **Restaurante** | Dono ou responsável por um lugar | Painel próprio: indicações recebidas, percepção de confiança, reivindicar lugar, conta | Ainda sem planos definidos |
+
+Além deles existe o **administrador** (equipe wagli), que não aparece como botão em nenhum lugar do site: só entra pelo endereço `/admin` ou ao entrar com o e-mail definido em `ADMIN_EMAIL`.
+
+**Entrada:** `/entrar` pergunta o tipo de conta e leva ao login correspondente. Cada tipo tem *Entrar* e *Criar conta*, por **link no e-mail (sem senha)**. Google e Instagram (criadores) estão prontos na tela e ligam quando o servidor tiver as credenciais. "Quero meu mapa" abre direto a criação de conta de criador.
+
+---
+
+## 2. Dinâmicas (como o produto funciona)
+
+### 2.1 Criador
+1. **Pede o mapa** (criar conta): informa @ do Instagram, e-mail, TikTok (opcional) e aceita os Termos.
+2. **A equipe analisa**: confere seguidores e se a pessoa é a titular do perfil. Pode aprovar, pôr na lista de espera ou recusar.
+3. **Aprovado**, entra pelo link no e-mail e faz o onboarding: conectar contas, escolhas de privacidade e plano.
+4. **Monta o mapa** a partir das indicações: cola link e legenda dos posts (ou adiciona lugares). O sistema extrai nome, endereço, categoria e se é publicidade, localiza no mapa e pede revisão do que tem baixa confiança.
+5. **Personaliza** no Estúdio de estilo (cores, fonte, cantos, tom do mapa, pins, categorias, símbolos), vendo a prévia ao vivo.
+6. **Publica** em `/@slug` e divulga (link na bio, QR, imagens para stories). Acompanha métricas no painel.
+7. **Roteiros**: monta trilhas de paradas com texto. Podem ser **vendidos** (com produtos e pré-visualização gratuita) ou **patrocinados** por uma marca.
+
+### 2.2 Explorador
+Abre o mapa de um criador, filtra (categoria, bairro, cidade, "abertos agora", perto de mim), vê Novidades, fichas e roteiros e **salva lugares** com o coração. Sem conta, os salvos ficam no aparelho; com conta, ficam no servidor e aparecem em **Meus salvos** de todos os mapas. O criador **não sabe quem salvou**. Há também o recurso "Já fui", que dá XP à abelha do usuário (seção 5).
+
+### 2.3 Restaurante
+Cria conta, **reivindica um lugar** (busca nos mapas dos criadores e informa um contato), a equipe confere que a pessoa é responsável e libera o painel. O painel mostra **quais criadores indicaram** o lugar (só os que consentiram em compartilhar dados agregados), quantas indicações têm publicidade declarada e a **percepção de confiança**. Reivindicar dá o direito de corrigir os dados do lugar e ver contagens agregadas, **nunca poder sobre o que os criadores publicam**.
+
+### 2.4 Administração (equipe)
+Fila de candidaturas (com critério de seguidores ajustável), revisão de mapas (lugares com baixa confiança), moderação (denúncias, símbolos enviados, reivindicações de restaurantes), **Rede** (mapa geral dos criadores que aceitaram participar) e métricas do negócio. O layout segue o do painel do criador, no desktop e no celular.
+
+---
+
+## 3. Modelo de negócio
+
+> Os preços ainda estão **em validação**. Na página de planos aparecem como "previstos" e **nenhuma cobrança está ativa**: nenhum dado de cartão é pedido nem guardado, e o teste de 30 dias começa sem pagamento.
+
+**Receita prevista**
+1. **Assinatura do criador** (Criador e Pro), mensal ou anual.
+2. **Comissão sobre roteiros vendidos**: **8%** no plano Criador e **5%** no Pro.
+3. **Roteiros patrocinados** (Pro): marcas pagam para aparecer num roteiro, com logo e identificação clara de parceria.
+4. **Restaurantes**: página de vendas própria e painel próprio; modelo de planos ainda a definir.
+
+**Planos do criador**
+
+| | **Grátis** | **Criador** | **Pro** |
+|---|---|---|---|
+| Lugares no mapa | até **20** | ilimitado | ilimitado |
+| Aparência | tema **Solar** com cor principal preta (Estúdio bloqueado) | Estúdio completo | Estúdio completo |
+| Roteiros | não | sim | sim |
+| Vender roteiros e produtos | não | sim, comissão 8% | sim, comissão 5% |
+| Roteiro patrocinado | não | não | sim |
+| Painel de métricas (buscas, cliques, público) | só visitas totais | completo | completo |
+| Categorias próprias | não | não | sim (até 15 no total) |
+| Domínio próprio | não | não | sim |
+| Remover a marca wagli do mapa | não | não | sim |
+| Atualização automática e histórico completo | não | sim | sim |
+
+**Explorador** é gratuito. **Restaurante** ainda não tem planos.
+
+---
+
+## 4. Regras de negócio
+
+**Acesso e análise**
+- Critério de entrada do criador: mínimo de seguidores (`MIN_FOLLOWERS`, padrão 10.000, ajustável no admin). O número é informado pela equipe, **que também confirma o titular do perfil** antes de aprovar. Aprovar exige critério atendido e titular confirmado.
+- O pedido registra o aceite dos Termos e da Política de Privacidade, com data e versão.
+- Login sempre por link de uso único, válido por **15 minutos**. A volta pós-login só aceita páginas do próprio site (um mapa ou os salvos).
+- O administrador é quem entra com `ADMIN_EMAIL`.
+
+**Planos (aplicados no servidor, não só na tela)**
+- Cada ação confere o plano; sem permissão, a API responde 403 `{ error: 'plano', need }` e a tela diz "disponível a partir do plano X". A fonte única é `server/plans.js`.
+- Quem passa do limite de lugares (ex.: ao descer de plano) **mantém o que tem, mas não adiciona novos**; no Grátis, para adicionar outro é preciso excluir um.
+- No Grátis o tema é forçado (Solar, cor `#171717`).
+
+**Roteiros, produtos e patrocínio** (`server/offers.js`)
+- Preço do roteiro: de **R$ 5 a R$ 500**. Sem pagamento ativo, o preço fica oculto e nada é bloqueado.
+- Quando vendido, qualquer seguidor vê as **2 primeiras paradas** gratuitamente; o resto fica travado até a compra.
+- **Produto** exige título, link (http/https) e **foto** (data URI png/jpeg/webp até 120k caracteres ou foto do próprio mapa). Máximo de 6 produtos.
+- **Patrocínio** exige nome da marca e **logo em SVG vazado**, validado (rejeita script, imagem embutida, `foreignObject`, eventos `on*`, links externos e `url()`).
+- Texto do roteiro: até 240 caracteres.
+
+**Lugares e mapa**
+- Localização pelo OpenStreetMap (Nominatim, 1 req/s), rejeitando município errado. Lugares com baixa confiança ou sem lugar entram na revisão.
+- Horários: 7 dias (domingo primeiro), fuso America/Sao_Paulo, com virada de madrugada. "Abertos agora" só considera lugares com horário informado.
+- O mapa público é sempre enquadrado em todos os lugares. Publicidade declarada é identificada como "publi".
+
+**Privacidade (LGPD)**
+- Métricas agregadas, sem IP e sem identificar pessoas; percentuais só com **amostra mínima de 5 sessões**. "Perto de mim" usa a localização só no aparelho.
+- Consentimentos do criador (aparecer na rede, dados agregados para restaurantes, divulgação) são **opcionais e revogáveis**, com histórico. Só hospedar o mapa é obrigatório.
+- O criador **não vê quem salvou** um lugar. O explorador só vê os próprios salvos.
+
+**Rede e restaurantes**
+- Só entra na Rede (mapa geral) quem consentiu. O restaurante só vê dados agregados de criadores que consentiram.
+- A reivindicação é aprovada pela equipe. **Percepção de confiança**: hoje não coletamos comentários, então o estado é "dados insuficientes"; mínimo de 10 comentários analisados para qualquer alerta, e publicidade declarada nunca conta como problema.
+
+**Moderação**
+- Denúncias agrupadas por lugar/mapa, com prazo de resposta (premissa interna de 5 dias) e ações: corrigir dado, ocultar lugar, pausar mapa, avisar criador, arquivar.
+
+---
+
+## 5. Gamificação (abelha)
+
+24 abelhas (4 níveis × 6 personalidades). Níveis: **Primeiro voo** (0–99 XP), **Exploradora** (100–299), **Polinizadora** (300–699), **Guardiã** (700+). Hoje só há uma forma de ganhar XP: marcar **"Já fui"** em um lugar (+10 XP, até 10 por dia, declarado pelo usuário). A personalidade é só expressão e não muda o nível.
+
+---
+
+## 6. Demonstração publicada (GitHub Pages)
+
+Roda 100% no navegador, com dados fictícios; o que se altera fica só na aba. O acesso por e-mail na demonstração é restrito ao e-mail do dono. Endereços úteis (base `https://leonardominetti.github.io/wagli-demo`):
+
+| Endereço | O que mostra |
+|---|---|
+| `/`, `/planos`, `/perguntas`, `/exemplos`, `/termos` | Site |
+| `/para-restaurantes` | Página de vendas para restaurantes |
+| `/@demo` | Mapa público de exemplo (desktop e celular) |
+| `/entrar` | Escolha do tipo de conta (e `?como=criador|explorador|restaurante`, `&criar=1`) |
+| `/painel-teste-usuario` | Painel do criador |
+| `/painel-teste-explorador` | Salvos, Criadores e Conta |
+| `/painel-teste-restaurante` | Painel do restaurante |
+| `/painel-teste-admin` | Administração |
+
+---
+
+## 7. O que ainda não é real
+
+- **Hospedagem do servidor** e banco em produção (o SQLite precisa de disco persistente ou de um banco gerenciado).
+- **Cadastro real por e-mail em produção** (Resend, não testado) e **login com Google** (a tela e o contrato existem; falta a rota `/api/auth/google` e `GOOGLE_CLIENT_ID`).
+- **Conexão com Instagram/TikTok**: exige app aprovado pela plataforma; hoje a entrada de posts é manual.
+- **Pagamento e cobrança** (planos, comissão de roteiros, patrocínio): não implementados.
+- **Planos de restaurante**, avaliações do Google (Perfil de Empresa) e coleta de comentários.
+- **Hospedagem de fotos** de lugares e imagem de compartilhamento.
+- Base de mapa: tiles gratuitos do OpenFreeMap (dados OpenStreetMap); rever uso/doação antes de tráfego real.
+
+---
+
+## 8. Rodar localmente
+
 ```bash
 npm install
-npm test            # 10 testes (extração, geocodificação, tema/SVG, fluxo completo, rede/restaurantes, símbolos/domínio)
-npm run dev         # build + servidor em http://localhost:4300
+npm test          # testes do servidor (extração, planos, ofertas, horários, contas, rede)
+npm run dev       # build + servidor em http://localhost:4300
+bash scripts/build-pages.sh   # gera a versão estática da demonstração em pages-dist/
 ```
-Para ser admin: `ADMIN_EMAIL=seu@email npm run dev` e entre com esse e-mail (menu lateral → Administração, ou `/admin`).
-Variáveis: `MIN_FOLLOWERS`, `BASE_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `DB_PATH`, `META_APP_ID/SECRET`, `TIKTOK_CLIENT_KEY/SECRET` (ver `.env.example`). Requer Node ≥ 22.5 (`node:sqlite`).
-Bancos criados antes desta versão são migrados sozinhos (colunas novas); criadores já aprovados são marcados como "onboarding concluído".
 
-## Bibliotecas de símbolos
+Requer Node ≥ 22.5 (`node:sqlite`). Para ser admin: `ADMIN_EMAIL=seu@email npm run dev` e entre com esse e-mail. Em desenvolvimento o link de acesso aparece na tela, sem enviar e-mail.
 
-Estúdio > Símbolos oferece quatro estilos: Básicos (próprios), 3D (Fluent Emoji, MIT), Emoji (Noto, Apache-2.0) e Contorno (Lucide, ISC), além dos SVGs enviados pelo criador. O id do símbolo é `lib:<estilo>:<nome>`. Os subconjuntos curados (cerca de 125 emojis e 73 ícones de contorno) ficam em `web/src/iconlib/*.json`, carregados sob demanda, e são gerados por `node scripts/build-iconlib.mjs` a partir dos pacotes `@iconify-json/*` (devDependencies). Para incluir um ícone, adicione-o em `web/src/iconcat.js` e rode o script. Avisos de licença: `web/public/licencas-simbolos.txt`.
+Variáveis (ver `.env.example`): `PORT`, `BASE_URL`, `MIN_FOLLOWERS`, `ADMIN_EMAIL`, `RESEND_API_KEY`, `MAIL_FROM`, `DB_PATH`, `GOOGLE_CLIENT_ID`, `META_APP_ID/SECRET`, `TIKTOK_CLIENT_KEY/SECRET`.
 
-## Identidade wagli e gamificação
+## 9. Estrutura
 
-- Marca: amarelo `#FFC400`, creme `#FDF1E3`, preto `#171713`, Inter. O logotipo e as 24 abelhas (4 níveis × 6 personalidades) vêm do Figma e ficam em `web/src/brand/` sem alteração (só foram removidos os fundos do export). O logotipo é preto: use sobre amarelo ou creme.
-- Níveis em `web/src/levels.js` (compartilhado com o servidor): Primeiro voo 0–99 XP, Exploradora 100–299, Polinizadora 300–699, Guardiã 700+.
-- Hoje só existe uma forma de ganhar XP: "Já fui" em um lugar do mapa (+10 XP, até 10 por dia, marcação declarada pelo usuário). As missões e contribuições validadas da proposta ainda não foram implementadas. API em `server/routes/voo.js`; tela em `/voo`.
+```
+server/        API (Hono + node:sqlite): auth, criador, público, viewer, admin, voo
+  plans.js     planos e permissões (fonte única)   offers.js  roteiros pagos, produtos e patrocínio
+  hours.js     horários                            theme.js   tema e SVG seguros
+web/src/
+  pages/       Auth (entrar/criar conta), Panel, Studio, Build, Saved (explorador), Admin, Network (rede e restaurante), Site
+  pub/         mapa público (MapSheet no celular, Desk no desktop)
+  landing/     página inicial e de restaurantes (mockups usam o app real)
+  lib/         roteador, painel genérico (RolePanel), sessão e dados da demonstração
+tests/         testes do servidor
+```
 
-## Landing (evolução estratégica)
+## 10. Identidade
 
-A home (`web/src/pages/Site.jsx`) compõe as seções de `web/src/landing/`: `hero` (Content to Map), `story` (problema e feed × mapa), `flow` (como funciona e Da bio à mesa), `showcase` (galeria de identidades e personalização), `insights`, `trust` (confiança, monetização, planos, FAQ e CTA final). `motion.jsx` centraliza a lógica de movimento (cena visível, `prefers-reduced-motion`, pausa global) e `landing.css` as durações/curvas (`--t-fast`, `--t-base`, `--t-slow`, `--ease`).
-
-- `/@demo` é um mapa público de demonstração (dados fictícios de `web/src/demoData.js`), aberto sem cadastro e sem gerar métricas.
-- Dados do Insights e das vitrines são ilustrativos e estão identificados como tal na página. O mapa geral (`/rede`) saiu da landing e fica no rodapé.
-
-### Mockups realistas da landing
-
-Os mockups usam o próprio app: `landing/pubpreview.jsx` renderiza o `Home` público real (e o `NoResult`) com dados de `demoData.js`, na escala do celular (`landing/device.jsx`), e `landing/social.jsx` traz perfis, posts e reels genéricos (sem marcas). As 42 fotos de comida ficam em `web/public/photos` (Wikimedia Commons, licenças abertas; créditos em `/creditos-fotos.txt`).
-
-O ponto inicial do mapa deixou de ser configurável: o servidor sempre enquadra todos os lugares (`start: 'all'`). Os modelos prontos agora são Solar, Noite, Maré, Doce e Mono.
-
-### Mapa individual no celular (padrão Viver SP)
-
-`web/src/pub/MapSheet.jsx`: o mapa ocupa a tela toda, com barra do criador no topo, chips flutuantes (ao meu redor e categorias), folha inferior arrastável (peek, meia e cheia) com a lista, cartão flutuante ao tocar em um pin (os demais pins esmaecem) e abas Início, Bairros, Categorias, Roteiros e Perfil (como no Viver SP: Bairros, Categorias e Roteiros abrem painéis que sobem da base e filtram o mapa e a lista; Perfil traz bio, links, compartilhar e salvos; o link `/@slug?p=bairros|categorias|roteiros|perfil` abre direto o painel). No computador continua a lista ao lado do mapa. A mesma tela aparece na prévia do Estúdio e nos mockups da landing.
-
-A landing foi enxugada (sem as seções Problema, Da bio à mesa e Personalização) e as perguntas frequentes ficam em `/perguntas`.
-
+Amarelo `#FFC400`, preto `#171713`, creme e Inter. O logotipo e as abelhas vêm do Figma e ficam em `web/src/brand/` sem alteração. Símbolos do Estúdio: Básicos (próprios), 3D (Fluent Emoji, MIT), Emoji (Noto, Apache-2.0) e Contorno (Lucide, ISC), além de SVGs enviados pelo criador.
