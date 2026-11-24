@@ -395,3 +395,16 @@ test('roteiro à venda e produtos: só nos planos certos, preço limitado, prév
   assert.equal(locked.locked, true); assert.equal(locked.stops.length, 2); assert.equal(locked.stopCount, 4)
   assert.equal(lockRoute(route, true).stops.length, 4); assert.equal(lockRoute({ ...route, price: null }, false).locked, undefined)
 })
+
+test('plano Grátis: painel só com visitas totais e estúdio com visual básico', async () => {
+  const { limitStats, can } = await import('../server/plans.js')
+  const { lockStudio, sanitizeTheme } = await import('../server/theme.js')
+  assert.equal(can('free', 'insights'), false); assert.equal(can('creator', 'insights'), true)
+  const l = limitStats({ days: 30, sessions: 50, placeOpens: 9, searches: [{ term: 'a' }], topPlaces: [{ id: 1 }], opportunity: { term: 'a' }, perDay: [] })
+  assert.equal(l.sessions, 50); assert.equal(l.placeOpens, null); assert.deepEqual(l.searches, []); assert.equal(l.opportunity, null); assert.equal(l.limited, true)
+  const prev = sanitizeTheme({ cluster: true, mapLabels: true })
+  const want = sanitizeTheme({ accent: '#2d7ff9', cluster: false, mapLabels: false, labelDensity: 5, categories: prev.categories.map((c) => ({ ...c, icon: 'star' })) })
+  const out = lockStudio(want, prev)
+  assert.equal(out.accent, '#2d7ff9'); assert.equal(out.cluster, true); assert.equal(out.mapLabels, true)
+  assert.equal(out.categories[0].icon, prev.categories[0].icon)
+})

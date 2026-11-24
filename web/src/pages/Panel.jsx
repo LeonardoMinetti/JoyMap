@@ -58,14 +58,14 @@ export function Overview() {
       {!c.published && <div className="note row"><span className="sp"><b>Seu mapa ainda não está no ar.</b> Revise os lugares e publique para os seguidores verem.</span><Link className="btn sm" to="/revisar">Revisar e publicar</Link></div>}
       <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{pending ? ` (${pending})` : ''}</Link></div>} />
       {!s ? <Loading /> : s.error ? <p className="err">Não foi possível carregar.</p> : <>
-        <div className="g4"><Kpi v={s.sessions} l="sessões" hint="Visitas ao seu mapa" /><Kpi v={s.placeOpens} l="lugares abertos" hint="Vezes que um lugar foi aberto" /><Kpi v={s.routeClicks} l="cliques em rota" hint="Quem pediu rota até o lugar" /><Kpi v={s.postOpens} l="voltas aos seus posts" hint="Quem voltou ao post original" /></div>
+        <div className="g4"><Kpi v={s.sessions} l="sessões" hint="Visitas ao seu mapa" />{!s.limited && <><Kpi v={s.placeOpens} l="lugares abertos" hint="Vezes que um lugar foi aberto" /><Kpi v={s.routeClicks} l="cliques em rota" hint="Quem pediu rota até o lugar" /><Kpi v={s.postOpens} l="voltas aos seus posts" hint="Quem voltou ao post original" /></>}</div>
         <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
           <div className="card col"><div className="row jb wrap"><b>Sessões por dia</b>{s.sessions > 0 && <span className="sm" aria-live="polite"><b>{fmtDM(shown.d)}</b> · {shown.n} sess{shown.n === 1 ? 'ão' : 'ões'}{hov == null && peak.n ? <Delta> (pico)</Delta> : null}</span>}</div>
             {s.sessions ? <div className="bars" onMouseLeave={() => setHov(null)}>{series.map((d, i) => <i key={d.d} tabIndex={0} role="img" aria-label={`${fmtDM(d.d)}: ${d.n} sessões`} className={(d.d === shown.d && d.n ? 'hi' : '')} onMouseEnter={() => setHov(i)} onFocus={() => setHov(i)} onBlur={() => setHov(null)} style={{ height: `${Math.max(2, (d.n / max) * 100)}%` }} />)}</div> : <p className="sm mut">Ainda sem visitas. Publique o mapa e coloque o link na bio.</p>}</div>
-          <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
-            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>
+          {s.limited ? <div className="card col soft"><span className="eb">Mais dados no plano Criador</span><span className="sm">Buscas do seu público, buscas sem resultado, lugares mais abertos, cliques em rota e perfil da audiência.</span><Link className="btn sm" to="/painel/plano">Ver planos</Link></div> : <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
+            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>}
         </div>
-        <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
+        {!s.limited && <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
           <div className="card col"><div className="row jb"><b>Lugares mais abertos</b><Link className="link xs" to="/painel/lugares">Ver todos</Link></div>
             {top.length ? top.map((p, i) => { const pl = byId.get(p.id); return (
               <Link key={p.id} to={`/revisar/${p.id}`} className="rank"><b className="sm" style={{ width: 18 }}>{i + 1}</b>{pl ? <PlacePhoto place={pl} theme={theme} size={40} style={{ borderRadius: 12 }} /> : <Photo s={40} />}
@@ -74,8 +74,8 @@ export function Overview() {
           <div className="col" style={{ gap: 20, minWidth: 0 }}>
             <div className="card row">{s.featured ? <><Photo /><div className="sp"><span className="eb">Indicação em destaque</span><div className="b">{s.featured.name}</div><div className="xs mut">{s.featured.routes} cliques em rota</div></div></> : <span className="sm mut">A indicação em destaque aparece quando houver cliques em rota.</span>}</div>
             <div className="card soft"><span className="xs mut">{s.note}</span></div></div>
-        </div>
-        <AudienceBlock s={s} /></>}
+        </div>}
+        {!s.limited && <AudienceBlock s={s} />}</>}
     </PanelPage>
   )
 }
@@ -87,6 +87,17 @@ export function Searches() {
   const [f, setF] = useState('all')
   const [q, setQ] = useState('')
   if (!s) return <PanelPage active="buscas"><Loading /></PanelPage>
+  if (s.limited) return (
+    <PanelPage active="buscas">
+      <Head title="Buscas e oportunidades" sub="O que sua audiência procura no seu mapa" />
+      <div className="card col" style={{ gap: 12, alignItems: 'flex-start' }}>
+        <div className="row" style={{ gap: 10 }}><Icon n="lock" s={18} /><b>Disponível a partir do plano Criador</b></div>
+        <span className="sm">Veja o que seu público procura, as buscas que ficaram sem resultado (boas ideias de conteúdo), os lugares mais abertos e os cliques em rota. No plano Grátis, o painel mostra as visitas totais na Visão geral.</span>
+        <div aria-hidden="true" style={{ filter: 'blur(5px)', width: '100%', opacity: 0.7, pointerEvents: 'none' }}>{[['pizza', 74], ['café', 61], ['brunch', 38], ['ramen', 29]].map(([t, n]) => <div key={t} className="row jb" style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}><b className="sm">{t}</b><span className="sm">{n} buscas</span></div>)}</div>
+        <Link className="btn sm" to="/painel/plano">Ver planos</Link>
+      </div>
+    </PanelPage>
+  )
   const rows = (s.searches || []).filter((x) => (f === 'all' || (f === 'empty' && x.empty > 0) || (f === 'ok' && x.empty === 0)) && (!q || x.term.toLowerCase().includes(q.toLowerCase())))
   const total = (s.searches || []).reduce((n, x) => n + x.count, 0)
   const empty = (s.searches || []).reduce((n, x) => n + x.empty, 0)

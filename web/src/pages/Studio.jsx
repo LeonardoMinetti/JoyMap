@@ -148,13 +148,14 @@ function StudioHead({ active }) {
 function Shell({ active, layout = 'side', previewWidth = 460, title, children, fake, tpl }) {
   useTitle(`Estúdio · ${title}`)
   const s = useStudio()
+  const locked = ['categorias', 'pins', 'mapa'].includes(active) && !s.c.plan?.can?.studioFull
   return (
     <div className="page"><div className="app">
       <Side active="estudio" />
       <div className="main stm">
         <StudioHead active={active} />
         <div className={'stbody' + (layout === 'full' ? ' full' : '')}>
-          <div className="ctl">{children}</div>
+          <div className="ctl">{locked ? <div className="card col" style={{ gap: 12, alignItems: 'flex-start' }}><div className="row" style={{ gap: 10 }}><Icon n="lock" s={18} /><b>Disponível a partir do plano Criador</b></div><span className="sm">O plano Grátis tem o visual básico: modelos, cores e fonte. {title === 'Mapa' ? 'O estilo do mapa, os rótulos e o agrupamento de pins' : title === 'Categorias' ? 'As cores de cada categoria' : 'Os pins e os pacotes de símbolos'} ficam liberados no Criador.</span><Link to="/painel/plano" className="btn sm">Ver planos</Link></div> : children}</div>
           {layout !== 'full' && <div className="prev"><div><StudioPhone active={active} fake={fake} />{s.usingSample && <div className="xs mut c" style={{ marginTop: 10, maxWidth: 300 }}>Prévia com lugares de exemplo. Confirme lugares para ver os seus.</div>}</div></div>}
         </div>
       </div>

@@ -2,12 +2,12 @@ import { Hono } from 'hono'
 import { randomBytes } from 'node:crypto'
 import { extract, tiktokId, dateFromTiktokId } from '../extract.js'
 import { enqueueGeocode, searchPlaces } from '../geocode.js'
-import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
+import { sanitizeTheme, sanitizeSvg, accentProblem, lockStudio } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
 import { cleanOffer } from '../offers.js'
-import { can, minTier } from '../plans.js'
+import { can, minTier, limitStats } from '../plans.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
 const CATEGORY = /^[a-z0-9_-]{1,20}$/
@@ -181,7 +181,8 @@ export default function creatorRoutes(app, x) {
     const prev = (x.view(cur).theme.categories || []).filter((k) => k.custom)
     const allow = can(cur.plan_tier, 'customCategories')
     const body = await c.req.json().catch(() => ({}))
-    const theme = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    let theme = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    if (!can(cur.plan_tier, 'studioFull')) theme = lockStudio(theme, x.view(cur).theme)
     if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) return c.json({ error: 'plano', need: minTier('customCategories') }, 403)
     const problem = accentProblem(theme)
     if (problem) return c.json({ error: problem }, 400)
@@ -397,7 +398,7 @@ export default function creatorRoutes(app, x) {
     const origins = {}
     for (const s of sess) origins[s.ref || 'direto'] = (origins[s.ref || 'direto'] || 0) + 1
     const top1 = searches.find((s) => s.empty > 0)
-    return c.json({
+    const full = {
       days, sessions, placeOpens: n('place_open'), routeClicks: n('route_click'), postOpens: n('post_open') + n('video_open'), requests: n('request'),
       searches: searches.map((s) => ({ term: s.term, count: s.n, empty: s.empty, withResults: s.n - s.empty })), topPlaces: top, perDay,
       featured: top[0] && top[0].routes > 0 ? { name: top[0].name, routes: top[0].routes } : null,
@@ -405,7 +406,8 @@ export default function creatorRoutes(app, x) {
       audience: { enough, sample: sess.length, weekdays, mobilePct: enough ? pct(sess.filter((s) => s.dev === 'm').length) : null, returningPct: enough ? pct(sess.filter((s) => s.ret).length) : null,
         origins: enough ? Object.entries(origins).map(([ref, k]) => ({ ref, pct: pct(k) })).sort((a, b) => b.pct - a.pct) : [], cities: null },
       note: 'Clique em rota indica interesse, não visita confirmada. Números são estimativas e nunca identificam pessoas.',
-    })
+    }
+    return c.json(can(fresh(c).plan_tier, 'insights') ? full : limitStats(full))
   })
 
   app.route('/api/creator', cr)

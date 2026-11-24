@@ -129,3 +129,11 @@ export function sanitizeSvg(src) {
   const mode = /fill\s*=\s*["']none["']/i.test(s) && /stroke\s*=\s*["']/i.test(s) ? 'stroke' : 'fill'
   return { d, vb, mode }
 }
+
+// Plano Grátis: "visual básico" (modelos, cores e fonte). Símbolos, pins, rótulos e agrupamento do mapa ficam como estavam.
+export function lockStudio(theme, prev) {
+  const p = sanitizeTheme(prev || {})
+  const icons = new Map(p.categories.map((c) => [c.id, c.icon]))
+  return { ...theme, pinBorder: p.pinBorder, cluster: p.cluster, selected: p.selected, mapLabels: p.mapLabels, labelDensity: p.labelDensity,
+    categories: theme.categories.map((c) => ({ ...c, icon: icons.get(c.id) ?? c.icon })) }
+}

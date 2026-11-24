@@ -1,11 +1,11 @@
 // Painel do criador de demonstração (versão estática / GitHub Pages): sem servidor, sem dados reais.
 // Um criador fictício já aprovado, com lugares fictícios. O que a pessoa muda fica só na aba do navegador
 // (sessionStorage): fechar a aba, ou tocar em "Recomeçar", volta ao início. Nada é enviado a lugar nenhum.
-import { sanitizeTheme, sanitizeSvg, accentProblem } from '../../../server/theme.js'
+import { sanitizeTheme, sanitizeSvg, accentProblem, lockStudio } from '../../../server/theme.js'
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { cleanStops } from '../../../server/stops.js'
-import { planView, TIERS, can } from '../../../server/plans.js'
+import { planView, TIERS, can, limitStats } from '../../../server/plans.js'
 import { cleanOffer, lockRoute } from '../../../server/offers.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
@@ -179,7 +179,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   // estúdio
   if (p === '/creator/theme') {
     const prev = (cr.theme.categories || []).filter((k) => k.custom); const allow = !!cr.plan.can.customCategories
-    const t = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    let t = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    if (!cr.plan.can.studioFull) t = lockStudio(t, cr.theme)
     if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) throw err('plano', 403)
     for (const k of prev) if (!t.categories.some((n) => n.id === k.id)) s.places.forEach((x) => { if (x.category === k.id) x.category = k.base || 'rest' })
     const bad = accentProblem(t); if (bad) throw err(bad); cr.theme = t; return out({ theme: cr.theme })
@@ -203,7 +204,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   }
   if (p === '/creator/domain') throw err('estatico', 503)
   if (p === '/creator/domain/check') throw err('sem_dominio')
-  if (p === '/creator/stats') return stats(s, q.get('days') === '7' ? 7 : 30)
+  if (p === '/creator/stats') { const st = stats(s, q.get('days') === '7' ? 7 : 30); return cr.plan.can.insights ? st : limitStats(st) }
 
   // o mesmo mapa público do site, mas refletindo o que a pessoa mudou aqui
   if (p === `/public/${DEMO_SLUG}`) {
