@@ -424,3 +424,7 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .tplchip.on{background:var(--ink);color:#fff}.tplchip.on:hover{background:var(--ink)}
 .stm-t .pg-h h1{margin:0}.stm-t .pg-h p{margin:8px 0 0}
 @media (max-width:900px){.stm-t .d{font-size:28px}}
+
+/* janela (modal) */
+.mdl-back{position:fixed;inset:0;z-index:70;background:rgba(23,23,19,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.mdl{background:#fff;border-radius:24px;width:min(760px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px;display:grid;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.28)}

@@ -136,6 +136,7 @@ export function PlacesPage() {
   const [cat, setCat] = useState('')
   const [sort, setSort] = useState('recent')
   const [view, setView] = useState('grid')
+  const [upd, setUpd] = useState(() => new URLSearchParams(location.search).get('atualizar') === '1')
   if (!places) return <PanelPage active="lugares"><Loading /></PanelPage>
   const live = places.filter((p) => p.status === 'pending' || p.status === 'confirmed')
   const perf = new Map((s?.topPlaces || []).map((p) => [p.id, p]))
@@ -155,9 +156,9 @@ export function PlacesPage() {
     <PanelPage active="lugares">
       <Head title="Lugares" sub={maxPlaces != null ? `${used} de ${maxPlaces} lugares no plano Grátis${full ? '. Exclua um lugar para adicionar outro, ou conheça o plano Criador, sem limite' : ''}` : `${live.length} lugares no seu mapa`} right={<div className="row wrap">
         {maxPlaces != null && <span className="row" style={{ gap: 8 }} title={`Plano Grátis: até ${maxPlaces} lugares`}><span className="hb" style={{ width: 72, height: 6, borderRadius: 99, background: 'rgba(0,0,0,.14)', overflow: 'hidden', display: 'block' }} aria-hidden="true"><i style={{ width: `${Math.min(100, (used / maxPlaces) * 100)}%` }} /></span><span className="xs"><b>{used}/{maxPlaces}</b></span></span>}
-        <Link className="btn ln sm" to="/painel/atualizar"><Icon n="refresh" s={14} />Atualizar mapa{toUpdate ? ` (${toUpdate})` : ''}</Link>
-        {full ? <><button className="btn sm" onClick={limitMsg}><Icon n="lock" s={14} />Limite atingido</button><Link className="btn ln sm" to="/painel/plano">Ver planos</Link></>
-          : <Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link>}</div>} />
+        <button className="btn ln sm" onClick={() => setUpd(true)}><Icon n="refresh" s={14} />Atualizar mapa{toUpdate ? ` (${toUpdate})` : ''}</button>
+        {full ? <><button className="btn sm" onClick={limitMsg}><Icon n="lock" s={14} c="currentColor" />Limite atingido</button><Link className="btn ln sm" to="/painel/plano">Ver planos</Link></>
+          : <Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} c="currentColor" />Adicionar lugar</Link>}</div>} />
       <section className="blk" aria-label="Lista de lugares">
       <div className="row wrap jb">
         <div className="seg" role="group" aria-label="Filtrar lugares">{FIL.map(([k, l, fn]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}{k !== 'all' && <span className="n">{live.filter(fn).length}</span>}</button>)}</div>
@@ -183,6 +184,7 @@ export function PlacesPage() {
           {!list.length && <tr><td colSpan="5" className="mut">Nenhum lugar nesta lista.</td></tr>}</tbody></table></div>
       )}
       </section>
+      {upd && <UpdateModal places={places} reload={reload} onClose={() => { setUpd(false); if (location.search.includes('atualizar=1')) history.replaceState(null, '', location.pathname) }} />}
     </PanelPage>
   )
 }
@@ -208,21 +210,24 @@ function AudienceBlock({ s }) {
 }
 
 // F5 · atualizar mapa
-export function UpdateMap() {
-  useTitle('Atualizar mapa')
-  const { me, reload } = useMe()
-  const [places, load] = usePlacesList()
-  if (!places) return <PanelPage active="visao"><Loading /></PanelPage>
+// Atualizar mapa: janela sobre a página Lugares (antes era uma página própria)
+function UpdateModal({ places, reload, onClose }) {
+  const { me, reload: reloadMe } = useMe()
   const c = me.creator
   const pending = places.filter((p) => p.status === 'pending')
   const unresolved = places.filter((p) => p.status === 'unresolved')
   const auto = c.settings.autoConfirmHigh
-  const patch = async (id, body) => { await api(`/creator/places/${id}`, { method: 'PATCH', body }); load() }
+  const patch = async (id, body) => { await api(`/creator/places/${id}`, { method: 'PATCH', body }); reload() }
+  useEffect(() => { const k = (e) => e.key === 'Escape' && onClose(); document.addEventListener('keydown', k); const o = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { document.removeEventListener('keydown', k); document.body.style.overflow = o } }, [onClose])
   return (
-    <PanelPage active="visao">
-      <Link className="sm mut" to="/painel">← Visão geral</Link>
-      <Head title="Atualizar mapa" sub={`${pending.length + unresolved.length} posts para resolver`} right={<div className="row"><Link className="btn sm" to="/colar-posts?voltar=/painel/atualizar">Colar novos posts</Link><button className="btn ln sm" onClick={async () => { await api('/creator/settings', { method: 'PUT', body: { autoConfirmHigh: !auto } }); reload() }}>Atualização automática: {auto ? 'confirmar confiança alta' : 'pedir aprovação'}</button></div>} />
-      {c.accounts.instagram !== 'connected' && <Note>A detecção automática de posts novos depende da conexão oficial com o Instagram, que ainda não está ativa. Por enquanto, cole o link e a legenda dos novos posts.</Note>}
+    <div className="mdl-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="mdl" role="dialog" aria-modal="true" aria-label="Atualizar mapa">
+        <div className="row jb" style={{ alignItems: 'flex-start', gap: 12 }}>
+          <div><h2 className="d s32">Atualizar mapa</h2><p className="sm mut">{pending.length + unresolved.length} post{pending.length + unresolved.length === 1 ? '' : 's'} para resolver</p></div>
+          <button className="btn ln sm" aria-label="Fechar" autoFocus onClick={onClose}><Icon n="close" s={14} /></button>
+        </div>
+        <div className="row wrap"><Link className="btn sm" to="/colar-posts?voltar=/painel/atualizar"><Icon n="plus" s={14} c="currentColor" />Colar novos posts</Link><button className="btn ln sm" onClick={async () => { await api('/creator/settings', { method: 'PUT', body: { autoConfirmHigh: !auto } }); reloadMe() }}>Atualização automática: {auto ? 'confirmar confiança alta' : 'pedir aprovação'}</button></div>
+        {c.accounts.instagram !== 'connected' && <Note>A detecção automática de posts novos depende da conexão oficial com o Instagram, que ainda não está ativa. Por enquanto, cole o link e a legenda dos novos posts.</Note>}
       {pending.map((p) => (
         <div key={p.id} className="card row" style={{ gap: 16 }}><Photo s={72} label="post" /><div className="sp"><b>Sugestão: {p.name}{p.neighborhood ? ` · ${p.neighborhood}` : ''}</b><div className="sm mut">{p.tiktokId ? 'Vídeo' : 'Post'}{p.postedOn ? ` de ${fmtDM(p.postedOn)}` : ''} · {p.address ? (p.geoStatus === 'found' ? 'endereço citado na legenda' : 'endereço não encontrado') : 'só o @ do lugar na legenda'}</div></div>
           <span className={'tag ' + (p.confidence === 'high' ? 'ok' : 'wn')}>Confiança {p.confidence === 'high' ? 'alta' : 'média'}</span>
@@ -230,8 +235,9 @@ export function UpdateMap() {
       {unresolved.map((p) => (
         <div key={p.id} className="card row" style={{ gap: 16 }}><Photo s={72} label="post" /><div className="sp"><b>Sem lugar identificado</b><div className="sm mut">{p.snippet ? `“${p.snippet}”` : 'Post sem texto para identificar o lugar'}</div></div><span className="tag">Sem sugestão</span><Link className="btn sm sec" to={`/adicionar?resolver=${p.id}`}>Indicar lugar</Link><button className="btn sm ln" onClick={() => patch(p.id, { status: 'removed' })}>Ignorar</button></div>))}
       {!pending.length && !unresolved.length && <p className="mut">Nada novo para resolver. Cole novos posts quando indicar mais lugares.</p>}
-      <Note>Nada entra no mapa sem a sua aprovação, a menos que você ative a confirmação automática dos lugares de confiança alta.</Note>
-    </PanelPage>
+        <Note>Nada entra no mapa sem a sua aprovação, a menos que você ative a confirmação automática dos lugares de confiança alta.</Note>
+      </div>
+    </div>
   )
 }
 

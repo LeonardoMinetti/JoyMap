@@ -26,7 +26,7 @@ const ROUTES = {
   '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
   '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
-  '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Redirect to="/painel" />, '/painel/atualizar': <Pn.UpdateMap />, '/painel/divulgar': <Pn.Promote />,
+  '/painel': <Pn.Overview />, '/painel/buscas': <Pn.Searches />, '/painel/lugares': <Pn.PlacesPage />, '/painel/audiencia': <Redirect to="/painel" />, '/painel/atualizar': <Redirect to="/painel/lugares?atualizar=1" />, '/painel/divulgar': <Pn.Promote />,
   '/painel/roteiros': <Pn.Roteiros />, '/painel/listas': <Redirect to="/painel/roteiros" />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': <Redirect to="/estudio" />, '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': <Redirect to="/estudio/pins" />,
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': <Redirect to="/estudio" />, '/estudio/links': <Redirect to="/estudio" />, '/estudio/endereco': <Redirect to="/painel/divulgar" />,
