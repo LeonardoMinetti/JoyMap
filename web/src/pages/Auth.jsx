@@ -3,82 +3,107 @@ import React, { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate, useLocation } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Top, Field, Check, Note, Toggle, useTitle } from '../lib/ui.jsx'
+import { Top, Field, Check, Note, useTitle } from '../lib/ui.jsx'
 import { useMe, homeFor } from '../lib/me.jsx'
-import FakeMap from '../FakeMap.jsx'
-import { beeUrl } from '../brand/index.js'
+import { Floaters, DoodleDefs } from '../landing/doodles.jsx'
+import { Scene, useMedia } from '../landing/motion.jsx'
+import { MapMotion, SaveMotion } from './AuthMotion.jsx'
 import { num } from '../theme.jsx'
 
-// Entrada única do site. Um só endereço (/entrar) atende:
-//   Entrar            criador que já tem mapa (link por e-mail, sem senha)
-//   Quero meu mapa    candidatura de quem ainda não tem (/entrar?novo=1)
-//   Explorador        quem não tem mapa e só guarda lugares dos mapas dos outros (/entrar?como=explorador)
-// Os atalhos "Entrar" e "Quero meu mapa" do site abrem esta mesma página; o explorador chega pelo rodapé e pelo mapa de um criador.
+// Entrada única do site (/entrar). Duas contas, a mesma tela:
+//   criador     tem (ou quer ter) um mapa, painel e Estúdio     /entrar   e  /entrar?criar=1
+//   explorador  não tem mapa: guarda lugares dos mapas alheios  /entrar?como=explorador   e  /entrar?como=explorador&criar=1
+// "Entrar" e "Quero meu mapa" abrem esta página; o explorador chega pelo rodapé e pelo mapa de um criador.
+// Acessos: e-mail (link sem senha, já funciona), Google (pronto para ligar: ver `providers` em /api/config) e Instagram (criadores).
 
 export const IconCircle = ({ n, c, bg }) => <div className="sq" style={{ width: 64, height: 64, borderRadius: '50%', background: bg, display: 'grid', placeItems: 'center', flex: 'none' }}><Icon n={n} s={30} c={c} /></div>
 
-const SIDE = {
-  criador: { eb: 'Para criadores', h: 'Suas indicações num mapa com a sua cara.', li: ['Transforme suas indicações em um mapa público', 'Estúdio de estilo para deixar o mapa com a sua identidade', 'Painel para acompanhar o seu mapa'] },
-  explorador: { eb: 'Para exploradores', h: 'Seus lugares salvos, todos juntos.', li: ['Salve lugares de qualquer mapa com um toque', 'Veja tudo em Meus salvos, em qualquer aparelho', 'Sem senha e sem painel. O criador não sabe quem salvou'] },
-}
+const Google = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+    <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z" />
+    <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z" />
+    <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34A21.99 21.99 0 0 0 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z" />
+    <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z" />
+  </svg>
+)
 
-function Side({ kind }) {
-  const S = SIDE[kind]
-  return (
-    <aside className="au-side" aria-label={S.eb}>
-      <div className="au-vis">
-        {kind === 'criador'
-          ? <FakeMap h={220} tone="light" shape="drop" acc="#ff4b2b" n={8} sel={2} lab={false} />
-          : <div className="au-bee"><img src={beeUrl('carinhosa', 2)} alt="" width="150" /></div>}
-      </div>
-      <span className="eb" style={{ color: 'var(--ink)' }}>{S.eb}</span>
-      <h2 className="d s32">{S.h}</h2>
-      <ul className="au-li">{S.li.map((t) => <li key={t}><i><Icon n="check" s={13} c="#fff" /></i>{t}</li>)}</ul>
-    </aside>
-  )
-}
-
-// Moldura das telas de entrada: barra do site, cartão com o conteúdo e, no computador, um painel com o que a pessoa ganha
+// Moldura: fundo em largura total (preto para criador, amarelo para explorador) com elementos flutuantes, o cartão e a ilustração em movimento
 export function AuthFrame({ kind = 'criador', children }) {
+  const wide = useMedia('(min-width: 901px)')
+  const cr = kind === 'criador'
   return (
-    <div className="page lp au">
-      <Top active={-1} />
+    <div className={`page lp au fl-host ${cr ? 'au-criador' : 'au-explorador'}`}>
+      <DoodleDefs />
+      <Top active={-1} overlay dark={cr} />
+      <Floaters set={cr ? 'g' : 'q'} />
       <main className="w au-w">
         <section className="au-card">{children}</section>
-        <Side kind={kind} />
+        {wide && <Scene className="au-mo">{cr ? <MapMotion /> : <SaveMotion />}</Scene>}
       </main>
     </div>
   )
 }
 
-const OFF = { borderColor: 'transparent', background: 'transparent' }
-const Tabs = ({ novo }) => (
-  <Toggle>
-    <Link className={'chip' + (!novo ? ' on' : '')} style={novo ? OFF : undefined} to="/entrar" aria-current={!novo ? 'page' : undefined}>Entrar</Link>
-    <Link className={'chip' + (novo ? ' on' : '')} style={!novo ? OFF : undefined} to="/entrar?novo=1" aria-current={novo ? 'page' : undefined}>Quero meu mapa</Link>
-  </Toggle>
-)
-const Alt = ({ children }) => <p className="au-alt sm mut">{children}</p>
+// endereço de cada tela: só muda o tipo de conta (como) e se é criar conta (criar)
+const url = (leitor, criar, voltar) => { const q = new URLSearchParams(); if (leitor) q.set('como', 'explorador'); if (criar) q.set('criar', '1'); if (voltar && voltar !== '/salvos') q.set('voltar', voltar); const s = q.toString(); return '/entrar' + (s ? `?${s}` : '') }
+const Alt = ({ children }) => <div className="au-alt sm mut">{children}</div>
 
-// Link mágico (sem senha): criador ou explorador. Na demonstração não há e-mail nem servidor: entra direto.
-function MagicForm({ leitor, voltar }) {
+// Acessos sociais: Google (e Instagram para criadores). Ligados pelo servidor; enquanto não estiverem, avisam.
+function Social({ leitor, criar, voltar }) {
+  const { reload } = useMe()
+  const [cfg, setCfg] = useState({})
+  const [msg, setMsg] = useState('')
+  useEffect(() => { api('/config').then((c) => setCfg(c.providers || {})).catch(() => {}) }, [])
+  const go = async (p) => {
+    setMsg('')
+    if (cfg[p]) { location.href = `/api/auth/${p}?${new URLSearchParams({ as: leitor ? 'viewer' : 'creator', ...(criar ? { signup: '1' } : {}), back: voltar })}`; return }
+    // em desenvolvimento o servidor aceita um login simulado de criador de teste
+    if (p === 'instagram' && !STATIC && !criar) { try { await api('/auth/demo', { method: 'POST' }); await reload(); return } catch { /* cai no aviso */ } }
+    setMsg(p)
+  }
+  return (
+    <div className="col" style={{ gap: 10 }}>
+      <button type="button" className="btn ln blk" onClick={() => go('google')}><Google />{criar ? 'Criar conta com Google' : 'Continuar com Google'}</button>
+      {!leitor && <button type="button" className="btn ln blk" onClick={() => go('instagram')}><Icon n="insta" s={18} />{criar ? 'Criar conta com Instagram' : 'Continuar com Instagram'}</button>}
+      {msg && <Note>{msg === 'google' ? 'O acesso com Google ainda não está ativo.' : 'O acesso pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo.'} Use o e-mail.</Note>}
+      <div className="row"><div className="sep sp" /><span className="xs mut">ou com e-mail</span><div className="sep sp" /></div>
+    </div>
+  )
+}
+
+const Head = ({ leitor, criar, children }) => (
+  <>
+    <span className="eb">{leitor ? 'Exploradores' : 'Criadores'}</span>
+    <h1 className="d s44">{criar ? 'Criar conta' : 'Entrar'}</h1>
+    <p className="mut">{children}</p>
+  </>
+)
+const Bottom = ({ leitor, criar, voltar }) => (
+  <Alt>
+    <div>{criar ? 'Já tem conta?' : 'Ainda não tem conta?'} <Link className="link" to={url(leitor, !criar, voltar)}>{criar ? 'Entrar' : 'Criar conta'}</Link></div>
+    <div>{leitor ? 'Tem um mapa?' : 'Só quer salvar lugares?'} <Link className="link" to={url(!leitor, criar, voltar)}>{leitor ? 'Entrar como criador' : 'Entrar como explorador'}</Link></div>
+  </Alt>
+)
+
+// E-mail sem senha (entrar, ou criar conta de explorador). Criador que cria conta passa pelo pedido de mapa (ApplyForm).
+function EmailForm({ leitor, criar, voltar }) {
   const { reload } = useMe()
   const { search: qs } = useLocation()
   const [email, setEmail] = useState(() => { try { return (!leitor && sessionStorage.getItem('applied_email')) || '' } catch { return '' } })
+  const [terms, setTerms] = useState(false)
   const [sent, setSent] = useState(null)
   const [err, setErr] = useState('')
   const [wait, setWait] = useState(0)
-  const [igMsg, setIgMsg] = useState(false)
   useEffect(() => { if (wait <= 0) return; const h = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(h) }, [wait])
   // quando o link é aberto em outra aba, esta tela percebe o login
   useEffect(() => { if (!sent) return; const h = setInterval(() => reload(), 3500); return () => clearInterval(h) }, [sent, reload])
-  // Em desenvolvimento o servidor aceita um login simulado (criador de teste). Em produção, o login real depende da Meta.
-  const igLogin = async () => { try { await api('/auth/demo', { method: 'POST' }); await reload() } catch { setIgMsg(true) } }
   const send = async (e) => {
     e?.preventDefault(); setErr('')
-    if (STATIC) { try { await api('/auth/demo-explorador', { method: 'POST', body: { email } }); await reload() } catch { setErr('Não foi possível entrar na demonstração.') } return }
+    if (criar && leitor && !terms) { setErr('É preciso aceitar os Termos e a Política de Privacidade.'); return }
+    if (STATIC) { setSent({ demo: true }); setWait(30); return } // sem servidor: a tela de "link enviado" oferece abrir o link de teste
     try { setSent(await api('/auth/request', { method: 'POST', body: leitor ? { email, next: 'viewer', back: voltar } : { email } })); setWait(30) } catch (x) { setErr(x.message === 'email_invalido' ? 'Digite um e-mail válido.' : 'Não foi possível enviar. Tente de novo.') }
   }
+  const openDemo = async () => { await api(leitor ? '/auth/demo-explorador' : '/auth/demo', { method: 'POST', body: { email } }); await reload() }
 
   if (sent) return (
     <>
@@ -86,58 +111,40 @@ function MagicForm({ leitor, voltar }) {
       <h1 className="d s44">Link enviado</h1>
       <p className="mut">Abra o e-mail enviado para <b>{email}</b> e toque no botão para entrar. O link expira em 15 minutos.</p>
       <div className="card soft col" style={{ gap: 6 }}><b className="sm">Não chegou?</b><span className="sm mut">Confira o spam ou peça outro link em 30 segundos.</span></div>
-      {sent.devLink && <Note>Modo desenvolvimento: este ambiente não envia e-mails. Use o botão abaixo para abrir o link de acesso.</Note>}
+      {(sent.devLink || sent.demo) && <Note>{sent.demo ? 'Modo demonstração: esta versão não envia e-mails.' : 'Modo desenvolvimento: este ambiente não envia e-mails.'} Use o botão abaixo para abrir o link de acesso.</Note>}
       <div className="col" style={{ gap: 10 }}>
         {sent.devLink && <a className="btn blk" href={sent.devLink}>Abrir o link (modo desenvolvimento)</a>}
+        {sent.demo && <button type="button" className="btn blk" onClick={openDemo}>Abrir o link (modo demonstração)</button>}
         <button type="button" className="btn ln blk" disabled={wait > 0} onClick={() => send()}>{wait > 0 ? `Reenviar link (${wait}s)` : 'Reenviar link'}</button>
         <button type="button" className="link sm au-again" onClick={() => setSent(null)}>Usar outro e-mail</button>
       </div>
     </>
   )
-
-  // demonstração, criador: painel fictício, sem e-mail
-  if (STATIC && !leitor) return (
-    <>
-      <Tabs novo={false} />
-      <h1 className="d s44">Entrar</h1>
-      <p className="mut">Esta é a demonstração. Entre como uma criadora fictícia já aprovada, com lugares de exemplo: dá para editar o mapa, o Estúdio e conferir as métricas. As mudanças ficam só nesta aba e nada é enviado.</p>
-      <button type="button" className="btn blk" onClick={igLogin}>Entrar na demonstração</button>
-      <Alt>Só quer salvar lugares? <Link className="link" to="/entrar?como=explorador">Entrar como explorador</Link></Alt>
-    </>
-  )
-
   return (
-    <form onSubmit={send} className="col" style={{ gap: 18 }}>
-      {!leitor && <Tabs novo={false} />}
-      {leitor && <span className="eb">Explorador</span>}
-      <h1 className="d s44">{leitor ? 'Entrar como explorador' : 'Entrar'}</h1>
-      <p className="mut">{leitor
-        ? `Guarde lugares de qualquer mapa e encontre tudo em Meus salvos, em qualquer aparelho. Sem senha e sem painel.${STATIC ? ' Na demonstração nada é enviado: o e-mail vale só nesta aba e os salvos ficam neste aparelho.' : ''}`
-        : 'Acesse o seu painel e o Estúdio de estilo. Enviamos um link para o seu e-mail, sem senha.'}</p>
+    <form onSubmit={send} className="col" style={{ gap: 16 }}>
+      <Head leitor={leitor} criar={criar}>{criar
+        ? 'Guarde lugares de qualquer mapa e encontre tudo num só lugar, em qualquer aparelho. Sem painel e sem senha.'
+        : leitor ? 'Veja os lugares que você salvou, os criadores que acompanha e a sua conta.' : 'Acesse o seu painel, o Estúdio de estilo e o seu mapa.'}</Head>
       {qs.get('erro') === 'link' && <Note>Este link expirou ou já foi usado. Peça outro.</Note>}
+      <Social leitor={leitor} criar={criar} voltar={voltar} />
       <Field label="E-mail" id="m"><div className="in f"><input id="m" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
+      {criar && leitor && <Check on={terms} onChange={setTerms}>Aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>}
       {err && <p className="err" role="alert">{err}</p>}
-      <button className="btn blk">{STATIC ? 'Entrar na demonstração' : 'Enviar link de acesso'}</button>
-      {!STATIC && <span className="xs mut c">{leitor ? 'O link vale por 15 minutos e só funciona uma vez. Seus salvos são só seus: o criador não sabe quem salvou.' : 'O link vale por 15 minutos e só funciona uma vez.'}</span>}
-      {!leitor && <>
-        <div className="row"><div className="sep sp" /><span className="xs mut">ou</span><div className="sep sp" /></div>
-        <button type="button" className="btn ln blk" onClick={igLogin}><Icon n="insta" s={18} />Entrar com Instagram</button>
-        {igMsg && <Note>O login pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo. Use o link por e-mail.</Note>}</>}
-      {leitor
-        ? <Alt>Tem um mapa? <Link className="link" to="/entrar">Entrar como criador</Link></Alt>
-        : <Alt>Só quer salvar lugares? <Link className="link" to="/entrar?como=explorador">Entrar como explorador</Link></Alt>}
+      <button className="btn blk">{criar ? 'Criar conta com e-mail' : 'Continuar com e-mail'}</button>
+      <span className="xs mut c">Enviamos um link de acesso, sem senha. Ele vale por 15 minutos e só funciona uma vez.</span>
+      <Bottom leitor={leitor} criar={criar} voltar={voltar} />
     </form>
   )
 }
 
-// Candidatura: quem ainda não tem mapa pede o seu
-function ApplyForm({ me }) {
+// Criar conta de criador = pedir o mapa: o perfil é analisado antes de liberar
+function ApplyForm({ me, voltar }) {
+  const { reload } = useMe()
   const [minF, setMin] = useState(null)
   const [f, setF] = useState({ handle: '', email: me?.user?.email || '', tiktok: '', acceptTerms: true })
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [demoDone, setDemoDone] = useState(false)
-  const { reload } = useMe()
   useEffect(() => { api('/config').then((c) => setMin(c.minFollowers)).catch(() => {}) }, [])
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const submit = async (e) => {
@@ -149,55 +156,56 @@ function ApplyForm({ me }) {
       try { sessionStorage.setItem('applied_email', f.email.trim().toLowerCase()) } catch { /* ok */ }
       navigate('/candidatura/enviada')
     } catch (x) {
-      setErr({ email_invalido: 'Digite um e-mail válido.', handle_invalido: 'Use só letras, números, ponto e sublinhado no @.', tiktok_invalido: 'O @ do TikTok parece inválido.', aceite_obrigatorio: 'É preciso aceitar os Termos e a Política de Privacidade.', ja_existe: 'Já existe uma candidatura com este e-mail.', handle_em_uso: 'Este @ já tem uma candidatura.' }[x.message] || 'Não foi possível enviar. Tente de novo.')
+      setErr({ email_invalido: 'Digite um e-mail válido.', handle_invalido: 'Use só letras, números, ponto e sublinhado no @.', tiktok_invalido: 'O @ do TikTok parece inválido.', aceite_obrigatorio: 'É preciso aceitar os Termos e a Política de Privacidade.', ja_existe: 'Já existe uma conta com este e-mail.', handle_em_uso: 'Este @ já tem uma conta.' }[x.message] || 'Não foi possível enviar. Tente de novo.')
     } finally { setBusy(false) }
   }
   if (demoDone) return (
     <>
       <IconCircle n="clock" c="#93370d" bg="var(--suns)" />
       <h1 className="d s44">Candidatura recebida</h1>
-      <p className="mut">Na demonstração nada foi enviado. Com a plataforma no ar, conferimos o perfil e avisamos por e-mail quando for aprovado.</p>
+      <p className="mut">Estamos analisando o perfil <b>@{f.handle.replace(/^@/, '')}</b>. Conferimos o número de seguidores e se você é o titular. Quando for aprovado, entre com <b>{f.email}</b>.</p>
+      <Note>Modo demonstração: nada foi enviado. Use o botão abaixo para ver o painel de exemplo.</Note>
       <div className="col" style={{ gap: 10 }}>
-        <button type="button" className="btn blk" onClick={async () => { await api('/auth/demo', { method: 'POST' }); await reload() }}>Entrar na demonstração</button>
+        <button type="button" className="btn blk" onClick={async () => { await api('/auth/demo', { method: 'POST' }); await reload() }}>Abrir o painel (modo demonstração)</button>
         <Link className="btn ln blk" to="/@demo">Ver o mapa de exemplo</Link>
       </div>
     </>
   )
   return (
-    <form onSubmit={submit} className="col" style={{ gap: 18 }}>
-      <Tabs novo />
-      <h1 className="d s44">Peça o seu mapa</h1>
-      <p className="mut">Analisamos cada perfil.{minF != null && <> Mínimo de {num(minF)} seguidores.</>} Sem senha e sem cobrança nesta etapa.</p>
+    <form onSubmit={submit} className="col" style={{ gap: 16 }}>
+      <Head leitor={false} criar>Conta de criador: você pede o seu mapa e analisamos o perfil.{minF != null && <> Mínimo de {num(minF)} seguidores.</>}</Head>
+      <Social leitor={false} criar voltar={voltar} />
       <Field label="Seu @ no Instagram" id="a"><div className="in"><span className="mut">@</span><input id="a" value={f.handle} onChange={set('handle')} placeholder="seuperfil" autoComplete="off" required /></div></Field>
       <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
       <Field label="@ no TikTok (opcional)" id="t"><div className="in"><input id="t" value={f.tiktok} onChange={set('tiktok')} placeholder="@seuperfil" autoComplete="off" /></div></Field>
       <Check on={f.acceptTerms} onChange={(v) => setF({ ...f, acceptTerms: v })}>Sou o titular ou represento este perfil e aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>
       {err && <p className="err" role="alert">{err} {err.includes('Já existe') && <Link className="link" to="/entrar">Entrar</Link>}</p>}
-      <button className="btn blk" disabled={busy}>Enviar candidatura</button>
-      <Alt>Só quer salvar lugares? <Link className="link" to="/entrar?como=explorador">Entrar como explorador</Link></Alt>
+      <button className="btn blk" disabled={busy}>Criar conta</button>
+      <span className="xs mut c">Sem senha e sem cobrança nesta etapa.</span>
+      <Bottom leitor={false} criar voltar={voltar} />
     </form>
   )
 }
 
 export function Login() {
   const { me } = useMe()
-  const { search: qs } = useLocation() // reage à troca de ?novo= / ?como= sem recarregar
+  const { search: qs } = useLocation() // reage à troca de ?criar= / ?como= sem recarregar
   const como = qs.get('como')
   const explorador = como === 'explorador' || como === 'usuario' || qs.get('leitor') === '1'
-  const novo = !explorador && qs.get('novo') === '1'
-  // volta só para um mapa (/@criador...) ou para a lista de salvos
+  const criar = qs.get('criar') === '1' || qs.get('novo') === '1'
+  // volta só para um mapa (/@criador...) ou para os salvos
   const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
-  useTitle(explorador ? 'Entrar como explorador' : novo ? 'Peça seu mapa' : 'Entrar')
+  useTitle(`${criar ? 'Criar conta' : 'Entrar'}${explorador ? ' de explorador' : ''}`)
   useEffect(() => {
     if (!me?.user) return
     const home = homeFor(me)
     if (me.creator || home.startsWith('/restaurante')) navigate(home, { replace: true }) // criador: painel ou etapa em andamento
     else if (explorador) navigate(voltar, { replace: true }) // explorador: volta para onde estava
-    else if (!novo) navigate(me.user.role === 'viewer' ? '/entrar?novo=1' : home, { replace: true }) // logado sem mapa: só falta pedir o seu
-  }, [me, explorador, novo, voltar])
+    else if (!criar) navigate(me.user.role === 'viewer' ? '/entrar?criar=1' : home, { replace: true }) // logado sem mapa: só falta pedir o seu
+  }, [me, explorador, criar, voltar])
   return (
     <AuthFrame kind={explorador ? 'explorador' : 'criador'}>
-      {novo ? <ApplyForm me={me} /> : <MagicForm key={explorador ? 'e' : 'c'} leitor={explorador} voltar={voltar} />}
+      {criar && !explorador ? <ApplyForm me={me} voltar={voltar} /> : <EmailForm key={`${explorador}${criar}`} leitor={explorador} criar={criar} voltar={voltar} />}
     </AuthFrame>
   )
 }

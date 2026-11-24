@@ -13,7 +13,9 @@ const clean = (h) => String(h || '').trim().replace(/^@/, '').toLowerCase()
 export default function auth(app, x) {
   const { db, cfg } = x
 
-  app.get('/api/config', (c) => c.json({ minFollowers: x.minFollowers(), devLinks: cfg.dev }))
+  // `providers` diz à tela de entrar quais acessos sociais já estão ligados. Para ligar o Google: defina GOOGLE_CLIENT_ID e implemente
+  // GET /api/auth/google?as=viewer|creator&signup=1&back=/@slug (redireciona ao Google; no retorno cria/entra no usuário e define o cookie `sid`).
+  app.get('/api/config', (c) => c.json({ minFollowers: x.minFollowers(), devLinks: cfg.dev, providers: { google: !!process.env.GOOGLE_CLIENT_ID } }))
 
   // Candidatura pública (B1): cria o cadastro "em análise". Seguidores e titularidade são conferidos por quem analisa.
   app.post('/api/apply', async (c) => {

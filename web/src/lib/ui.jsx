@@ -28,7 +28,7 @@ export function Top({ active = -1, overlay = false, dark = false }) {
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
         {me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link className="btn sm" to="/salvos">Meus salvos</Link> : <Link className="btn sm" to="/painel">Meu painel</Link>) : <>
           <Link className="btn ln sm tb-in" to="/entrar">Entrar</Link>
-          <Link className="btn sm" to="/entrar?novo=1">Quero meu mapa</Link></>}
+          <Link className="btn sm" to="/entrar?criar=1">Quero meu mapa</Link></>}
         <button type="button" className="tb-burger" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="tb-menu" onClick={() => setOpen(!open)}><i /><i /><i /></button>
         {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link to="/salvos" onClick={go}>Meus salvos</Link> : <Link to="/painel" onClick={go}>Meu painel</Link>) : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
       </header>

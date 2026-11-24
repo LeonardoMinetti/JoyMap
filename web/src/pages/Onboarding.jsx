@@ -19,7 +19,7 @@ export function ApplyStatus({ sent }) {
   useEffect(() => { api('/config').then((c) => setMin(c.minFollowers)).catch(() => {}) }, [])
   if (me === undefined) return <Loading />
   const c = me.creator
-  if (!sent && !c) return <Redirect to="/entrar?novo=1" />
+  if (!sent && !c) return <Redirect to="/entrar?criar=1" />
   if (c && c.status === 'approved') return <Redirect to={homeFor(me)} />
   const status = sent ? 'pending' : c.status
   let email = ''

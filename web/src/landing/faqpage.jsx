@@ -44,7 +44,7 @@ export function FaqPage() {
               <h2 className="d s32">Não achou a sua resposta?</h2>
               <hr />
               <p>Peça o seu mapa e a gente responde na análise do perfil. Ou explore um mapa de demonstração agora.</p>
-              <div className="fqp-cta"><Link className="btn dk" to="/entrar?novo=1">Quero meu mapa</Link><Link className="link sm" to="/@demo">Explorar um mapa</Link></div>
+              <div className="fqp-cta"><Link className="btn dk" to="/entrar?criar=1">Quero meu mapa</Link><Link className="link sm" to="/@demo">Explorar um mapa</Link></div>
             </div>
             <Link className="fqp-back" to="/"><Icon n="back" s={16} c="currentColor" />Voltar ao início</Link>
           </aside>
