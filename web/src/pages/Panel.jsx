@@ -329,7 +329,6 @@ export function Roteiros() {
   const r = rows?.[sel]
   const can = me.creator.plan?.can || {}
   const stopSort = useReorder(r?.stops || [], (n) => setRows(rows.map((x, j) => (j === sel ? { ...x, stops: n } : x))))
-  const [openStop, setOpenStop] = useState(null)
   if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
   const confirmed = places.filter((p) => p.status === 'confirmed')
   const byId = new Map(places.map((p) => [p.id, p]))
@@ -339,7 +338,7 @@ export function Roteiros() {
   const remove = () => { if (r.stops.length && !confirm(`Remover o roteiro "${r.name || 'sem nome'}"?`)) return; setRows(rows.filter((_, j) => j !== sel)); setSel(Math.max(0, sel - 1)) }
   const toggle = (id) => set({ stops: r.stops.some((v) => v.placeId === id) ? r.stops.filter((v) => v.placeId !== id) : [...r.stops, blankStop(id)] })
   const setStop = (k, patch) => set({ stops: r.stops.map((v) => (v._k === k ? { ...v, ...patch } : v)) })
-  const addText = () => { const b = blankStop(); set({ stops: [...r.stops, b] }); setOpenStop(b._k) }
+  const addText = () => set({ stops: [...r.stops, blankStop()] })
   const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows.filter((x) => x.name.trim()) } }); await load(); setSel(0); toast('Roteiros salvos (já valem no mapa publicado)') }
   const cats = theme.categories.filter((c) => confirmed.some((p) => p.category === c.id))
   const pool = confirmed.filter((p) => (!cat || p.category === cat) && (!q || `${p.name} ${p.neighborhood || ''}`.toLowerCase().includes(q.toLowerCase())))
@@ -372,15 +371,14 @@ export function Roteiros() {
             <div className="card col" style={{ gap: 10 }}>
               <div className="row jb"><b>Paradas <span className="mut sm">({r.stops.length})</span></b><span className="xs mut">Arraste para mudar a ordem</span></div>
               {pts.length > 0 && <div style={{ borderRadius: 16, overflow: 'hidden', pointerEvents: 'none' }}><MapCanvas places={pts} theme={{ ...theme, cluster: false, mapLabels: false }} symbols={me.creator.symbols} interactive={false} style={{ height: 170 }} /></div>}
-              {r.stops.map((st, i) => { const p = st.placeId != null ? byId.get(st.placeId) : null; const open = openStop === st._k; return (
+              {r.stops.map((st, i) => { const p = st.placeId != null ? byId.get(st.placeId) : null; const open = true; return (
                 <div key={st._k} {...stopSort.props(i)} className="card soft col" style={{ padding: 12, gap: 12 }}>
                   <div className="row" style={{ gap: 10 }}>
                     {stopSort.handle(i)}<b className="sm" style={{ width: 20, textAlign: 'center' }}>{i + 1}</b>
                     {p ? <PlacePhoto place={p} theme={theme} size={44} style={{ borderRadius: 12 }} /> : <span className="catico" style={{ background: '#171713', borderRadius: 12, width: 44, height: 44 }}><Icon n="edit" s={18} c="#fff" /></span>}
                     <div className="sp"><b className="sm">{st.title || p?.name || 'Capítulo de texto'}</b><div className="xs mut trunc">{st.when || (p ? `${catOf(theme, p.category).name}${p.neighborhood ? ` · ${p.neighborhood}` : ''}` : 'Sem lugar no mapa')}{st.text ? ' · com história' : ''}</div></div>
                     <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => stopSort.move(i, i - 1)}><Icon n="caretup" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.stops.length - 1} onClick={() => stopSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
-                    <button className={'btn sm ' + (open ? '' : 'sec')} aria-expanded={open} onClick={() => setOpenStop(open ? null : st._k)}>{open ? 'Fechar' : 'Contar a história'}</button>
-                    <button className="btn ln sm" aria-label="Remover parada" onClick={() => set({ stops: r.stops.filter((v) => v._k !== st._k) })}><Icon n="close" s={14} /></button>
+                    <button className="btn bd2 sm" aria-label="Remover parada" onClick={() => set({ stops: r.stops.filter((v) => v._k !== st._k) })}><Icon n="close" s={14} /></button>
                   </div>
                   {open && <div className="col" style={{ gap: 12 }}>
                     <div className="g2" style={{ alignItems: 'start' }}>
