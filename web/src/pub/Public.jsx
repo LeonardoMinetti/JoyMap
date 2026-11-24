@@ -223,7 +223,6 @@ export default function Public({ slug, embed }) {
       <SavedNote saved={saved} slug={creator.slug} />
       {mine.map((p) => <PlaceRow key={p.id} p={p} theme={theme} onClick={() => openFicha(p.id)} right={<button className="picon" style={{ border: 0 }} aria-label="Remover dos salvos" onClick={(e) => { e.stopPropagation(); saved.toggle(p.id) }}><Icon n="heart" s={22} c="#d93a1c" /></button>} />)}
       {!mine.length && <p className="mut sm c">Nada salvo ainda. Toque no coração de um lugar.</p>}
-      <button className="pb line" disabled style={{ borderColor: 'var(--line)', color: 'var(--mut)' }}>Entrar para sincronizar (em breve)</button>
     </div></>, '/salvos')
   }
   // E1 · mapa do criador no celular: mapa em tela cheia + folha inferior (padrão do Viver SP)

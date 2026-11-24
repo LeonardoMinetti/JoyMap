@@ -174,7 +174,7 @@ export function PlansBlock({ min, compact }) {
               <div className="pn-price"><b className="d">{p.price[i]}</b><span>{Array.isArray(p.per) ? p.per[i] : p.per}</span></div>
               {p.note && annual ? <span className="xs pn-note">{p.note}</span> : <span className="xs pn-note">{p.trial ? '30 dias grátis após aprovação e lançamento' : 'Sem prazo e sem cartão'}</span>}
               <ul className="pn-ul">{p.items.map(([t, tip]) => <li key={t}><i aria-hidden="true"><Icon n="check" s={12} c="#171713" /></i><span>{t}{tip && <Tip text={tip} />}</span></li>)}</ul>
-              <Link className={'btn btn-lg pn-cta ' + (p.main ? 'dk' : p.k === 'pro' ? '' : 'ln')} to="/candidatura">Quero meu mapa</Link>
+              <Link className={'btn btn-lg pn-cta ' + (p.main ? 'dk' : p.k === 'pro' ? '' : 'ln')} to="/entrar?novo=1">Quero meu mapa</Link>
             </article>))}
         </div>
         <Compare open={open} setOpen={setOpen} />
@@ -234,7 +234,7 @@ export function FinalCta() {
         <span className="tag" style={{ background: 'var(--cream)' }}>Seu jeito. Seu voo.</span>
         <h2 id="fim" className="d h-sec" style={{ maxWidth: 760 }}>Você já tem o conteúdo. Falta o mapa.</h2>
         <p className="lead" style={{ maxWidth: 560 }}>Dê um novo destino às suas recomendações e descubra até onde elas podem levar sua audiência.</p>
-        <div className="row wrap" style={{ gap: 12, justifyContent: 'center' }}><Link className="btn dk btn-lg" to="/candidatura">Quero meu mapa</Link><Link className="btn ln btn-lg" to="/@demo">Explorar um mapa</Link></div>
+        <div className="row wrap" style={{ gap: 12, justifyContent: 'center' }}><Link className="btn dk btn-lg" to="/entrar?novo=1">Quero meu mapa</Link><Link className="btn ln btn-lg" to="/@demo">Explorar um mapa</Link></div>
       </div>
     </section>
   )

@@ -1,57 +1,15 @@
-import { STATIC } from '../lib/base.js'
 import React, { useEffect, useState } from 'react'
 import { api } from '../api.js'
-import { Link, Redirect, navigate, useLocation } from '../lib/router.jsx'
+import { Link, Redirect, navigate } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Logo, Hd, Stage, Step, Note, Check, Field, Switch, Toggle, Guard, Loading, useTitle } from '../lib/ui.jsx'
+import { Logo, Hd, Stage, Step, Note, Field, Switch, Toggle, Guard, Loading, useTitle } from '../lib/ui.jsx'
 import { useMe, homeFor } from '../lib/me.jsx'
 import MotionMap from '../MotionMap.jsx'
+import { AuthFrame, IconCircle } from './Auth.jsx'
 import { num } from '../theme.jsx'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const First = (name) => String(name || '').split(' ')[0]
-const IconCircle = ({ n, c, bg }) => <div className="sq" style={{ width: 64, height: 64, borderRadius: '50%', background: bg, display: 'grid', placeItems: 'center' }}><Icon n={n} s={30} c={c} /></div>
-
-// B1 · Candidatura (pública)
-export function Apply() {
-  useTitle('Peça seu mapa')
-  const { me } = useMe()
-  const [minF, setMin] = useState(null)
-  const [f, setF] = useState({ handle: '', email: '', tiktok: '', acceptTerms: true })
-  const [err, setErr] = useState('')
-  const [busy, setBusy] = useState(false)
-  useEffect(() => { api('/config').then((c) => setMin(c.minFollowers)).catch(() => {}) }, [])
-  if (me?.creator) return <Redirect to={homeFor(me)} />
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
-  const submit = async (e) => {
-    e.preventDefault(); setErr(''); setBusy(true)
-    try {
-      await api('/apply', { method: 'POST', body: f })
-      try { sessionStorage.setItem('applied_email', f.email.trim().toLowerCase()) } catch { /* ok */ }
-      navigate('/candidatura/enviada')
-    } catch (x) {
-      setErr({ email_invalido: 'Digite um e-mail válido.', handle_invalido: 'Use só letras, números, ponto e sublinhado no @.', tiktok_invalido: 'O @ do TikTok parece inválido.', aceite_obrigatorio: 'É preciso aceitar os Termos e a Política de Privacidade.', ja_existe: 'Já existe uma candidatura com este e-mail. Entre para ver o andamento.', handle_em_uso: 'Este @ já tem uma candidatura.' }[x.message] || 'Não foi possível enviar. Tente de novo.')
-    } finally { setBusy(false) }
-  }
-  return (
-    <Stage>
-      <form onSubmit={submit} style={{ display: 'contents' }}>
-        <Hd back="/" title="Peça seu mapa" right={<span className="xs mut" style={{ fontFamily: 'Archivo' }}>1 de 3</span>} />
-        <div className="bd">
-          <Step n={1} of={3} />
-          <h1 className="d s44">Conte quem é você</h1>
-          <p className="mut sm">Analisamos cada perfil. Mínimo de {minF == null ? '…' : num(minF)} seguidores.</p>
-          <Field label="Seu @ no Instagram" id="a"><div className="in"><span className="mut">@</span><input id="a" value={f.handle} onChange={set('handle')} placeholder="seuperfil" autoComplete="off" required /></div></Field>
-          <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
-          <Field label="@ no TikTok (opcional)" id="t"><div className="in"><input id="t" value={f.tiktok} onChange={set('tiktok')} placeholder="@seuperfil" autoComplete="off" /></div></Field>
-          <Check on={f.acceptTerms} onChange={(v) => setF({ ...f, acceptTerms: v })}>Sou o titular ou represento este perfil e aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>
-          {err && <p className="err" role="alert">{err} {err.includes('Entre') && <Link className="link" to="/entrar?como=criador">Entrar</Link>}</p>}
-        </div>
-        <div className="ft"><button className="btn blk" disabled={busy}>Enviar candidatura</button><span className="xs mut c">Sem senha. Sem cobrança nesta etapa.</span></div>
-      </form>
-    </Stage>
-  )
-}
 
 // Candidatura recebida / em análise / lista de espera / não aprovada (B3 e variantes)
 export function ApplyStatus({ sent }) {
@@ -61,7 +19,7 @@ export function ApplyStatus({ sent }) {
   useEffect(() => { api('/config').then((c) => setMin(c.minFollowers)).catch(() => {}) }, [])
   if (me === undefined) return <Loading />
   const c = me.creator
-  if (!sent && !c) return <Redirect to="/candidatura" />
+  if (!sent && !c) return <Redirect to="/entrar?novo=1" />
   if (c && c.status === 'approved') return <Redirect to={homeFor(me)} />
   const status = sent ? 'pending' : c.status
   let email = ''
@@ -73,17 +31,14 @@ export function ApplyStatus({ sent }) {
     rejected: { icon: 'close', c: '#b42318', bg: 'var(--bads)', h: 'Candidatura não aprovada', p: 'Por enquanto não conseguimos atender este perfil. Obrigado pelo interesse.' },
   }[status] || {}
   return (
-    <Stage>
-      <div className="hd"><Logo size={22} dot={16} /></div>
-      <div className="bd" style={{ justifyContent: 'center' }}>
-        <IconCircle n={T.icon} c={T.c} bg={T.bg} />
-        <h1 className="d s44">{T.h}</h1>
-        <p className="mut">{status === 'pending' && email ? <>Estamos analisando o perfil. Conferimos o número de seguidores e se você é o titular. Quando for aprovado, entre com <b>{email}</b>.</> : T.p}</p>
-        {c && <div className="card soft col" style={{ gap: 6 }}><div className="row jb"><span className="sm">Seu perfil</span><b>@{c.handle}</b></div><div className="row jb"><span className="sm">Seguidores</span><b>{c.followers ? num(c.followers) : 'em conferência'}</b></div><div className="row jb"><span className="sm">Mínimo atual</span><b>{min == null ? '…' : num(min)}</b></div></div>}
-        <Note>Seu e-mail fica guardado só para este aviso e é apagado se você pedir.</Note>
-      </div>
-      <div className="ft"><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar?como=criador">Já fui aprovado: entrar</Link>}</div>
-    </Stage>
+    <AuthFrame kind="criador">
+      <IconCircle n={T.icon} c={T.c} bg={T.bg} />
+      <h1 className="d s44">{T.h}</h1>
+      <p className="mut">{status === 'pending' && email ? <>Estamos analisando o perfil. Conferimos o número de seguidores e se você é o titular. Quando for aprovado, entre com <b>{email}</b>.</> : T.p}</p>
+      {c && <div className="card soft col" style={{ gap: 6 }}><div className="row jb"><span className="sm">Seu perfil</span><b>@{c.handle}</b></div><div className="row jb"><span className="sm">Seguidores</span><b>{c.followers ? num(c.followers) : 'em conferência'}</b></div><div className="row jb"><span className="sm">Mínimo atual</span><b>{min == null ? '…' : num(min)}</b></div></div>}
+      <Note>Seu e-mail fica guardado só para este aviso e é apagado se você pedir.</Note>
+      <div className="col" style={{ gap: 10 }}><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar">Já fui aprovado: entrar</Link>}</div>
+    </AuthFrame>
   )
 }
 
@@ -105,107 +60,6 @@ export function Approved() {
         </div></div>
       <div className="ft"><button className="btn blk" onClick={async () => { await api('/creator/onboarding', { method: 'PUT', body: { step: 'instagram' } }); await reload(); navigate('/conectar/instagram') }}>Continuar</button></div>
     </Stage></Guard>
-  )
-}
-
-// B4 · Entrar  /  B5 · Link enviado
-export function Login() {
-  useTitle('Entrar')
-  const { me, reload } = useMe()
-  const [email, setEmail] = useState(() => { try { return sessionStorage.getItem('applied_email') || '' } catch { return '' } })
-  const [sent, setSent] = useState(null)
-  const [err, setErr] = useState('')
-  const [wait, setWait] = useState(0)
-  const [igMsg, setIgMsg] = useState(false)
-  // espectador: quem não tem mapa e só quer guardar lugares entra por aqui (/entrar?leitor=1&voltar=/@criador)
-  const { search: qs } = useLocation() // reage à troca de ?como= sem recarregar
-  const como = qs.get('como') || (qs.get('leitor') === '1' ? 'usuario' : null) // criador (tem mapa e painel) ou usuário (só guarda lugares)
-  const leitor = como === 'usuario'
-  const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
-  useEffect(() => { if (me?.user) navigate(leitor ? voltar : me.user.role === 'viewer' && !me.creator ? '/candidatura' : homeFor(me), { replace: true }) }, [me])
-  useEffect(() => { if (wait <= 0) return; const h = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(h) }, [wait])
-  // quando o link é aberto em outra aba, esta tela percebe o login
-  useEffect(() => { if (!sent) return; const h = setInterval(() => reload(), 3500); return () => clearInterval(h) }, [sent, reload])
-  // Em desenvolvimento o servidor aceita um login simulado (criador de teste). Em produção, o login real depende da Meta.
-  const igLogin = async () => { try { await api('/auth/demo', { method: 'POST' }); await reload() } catch { setIgMsg(true) } }
-  const send = async (e) => {
-    e?.preventDefault(); setErr('')
-    try { setSent(await api('/auth/request', { method: 'POST', body: leitor ? { email, next: 'viewer', back: voltar } : { email } })); setWait(30) } catch (x) { setErr(x.message === 'email_invalido' ? 'Digite um e-mail válido.' : 'Não foi possível enviar. Tente de novo.') }
-  }
-  if (sent) return (
-    <Stage>
-      <Hd back="/entrar" title="Verifique seu e-mail" />
-      <div className="bd" style={{ justifyContent: 'center' }}>
-        <IconCircle n="mail" c="#d93a1c" bg="var(--accs)" />
-        <h1 className="d s44">Link enviado</h1>
-        <p className="mut">Abra o e-mail enviado para <b>{email}</b> e toque no botão para entrar. O link expira em 15 minutos.</p>
-        <div className="card soft col" style={{ gap: 6 }}><b className="sm">Não chegou?</b><span className="sm mut">Confira o spam ou peça outro link em 30 segundos.</span></div>
-        {sent.devLink && <Note>Modo desenvolvimento: este ambiente não envia e-mails. <a href={sent.devLink} style={{ color: 'inherit', fontWeight: 700 }}>Abrir o link de acesso</a></Note>}
-      </div>
-      <div className="ft">{sent.devLink && <a className="btn blk" href={sent.devLink}>Abrir o link (modo desenvolvimento)</a>}<button className="btn ln blk" disabled={wait > 0} onClick={() => send()}>{wait > 0 ? `Reenviar link (${wait}s)` : 'Reenviar link'}</button></div>
-    </Stage>
-  )
-  if (!como) return (
-    <Stage>
-      <Hd back="/" title="Entrar" />
-      <div className="bd" style={{ justifyContent: 'center' }}>
-        <Logo />
-        <h1 className="d s44">Como você quer entrar?</h1>
-        <p className="mut">Escolha o tipo de acesso. Dá para ter os dois com o mesmo e-mail.</p>
-        <Link to="/entrar?como=criador" className="card col" style={{ gap: 6, textDecoration: 'none', color: 'inherit' }}>
-          <div className="row jb"><b className="d s26">Sou criador</b><Icon n="next" s={18} /></div>
-          <span className="sm mut">Tenho, ou quero ter, um mapa próprio de lugares que indico. Acesso ao painel, ao Estúdio de estilo e às métricas.</span>
-        </Link>
-        <Link to="/entrar?como=usuario" className="card col" style={{ gap: 6, textDecoration: 'none', color: 'inherit' }}>
-          <div className="row jb"><b className="d s26">Sou usuário</b><Icon n="next" s={18} /></div>
-          <span className="sm mut">Não tenho mapa. Quero guardar os lugares que salvo dos mapas dos criadores e ver tudo num só lugar, em qualquer aparelho. Sem painel.</span>
-        </Link>
-      </div>
-      <div className="ft"><span className="xs mut c">Ainda não tem mapa? <b><Link to="/candidatura">Peça o seu</Link></b></span></div>
-    </Stage>
-  )
-  if (STATIC && leitor) return (
-    <Stage>
-      <Hd back="/entrar" title="Entrar como usuário" />
-      <div className="bd" style={{ justifyContent: 'center' }}>
-        <Logo />
-        <h1 className="d s44">Conta de usuário</h1>
-        <p className="mut">Na demonstração não existe conta de usuário: os lugares que você salva ficam só neste aparelho. Com a plataforma no ar, você entra com e-mail, sem senha, e vê seus salvos em qualquer aparelho.</p>
-        <Link className="btn blk" to="/salvos">Ver meus salvos neste aparelho</Link>
-      </div>
-    </Stage>
-  )
-  if (STATIC) return (
-    <Stage>
-      <Hd back="/entrar" title="Entrar como criador" />
-      <div className="bd" style={{ justifyContent: 'center' }}>
-        <Logo />
-        <h1 className="d s44">Painel de demonstração</h1>
-        <p className="mut">Entre como uma criadora fictícia já aprovada, com lugares de exemplo. Dá para editar o mapa, o Estúdio e conferir as métricas. As mudanças ficam só nesta aba e nada é enviado.</p>
-        <button type="button" className="btn blk" onClick={igLogin}>Entrar na demonstração</button>
-      </div>
-    </Stage>
-  )
-  return (
-    <Stage>
-      <form onSubmit={send} style={{ display: 'contents' }}>
-        <Hd back="/entrar" title={leitor ? 'Entrar como usuário' : 'Entrar como criador'} />
-        <div className="bd" style={{ justifyContent: 'center' }}>
-          <Logo />
-          <h1 className="d s44">{leitor ? 'Entre para guardar seus lugares' : 'Acesse sem senha'}</h1>
-          {leitor && <p className="mut">Com uma conta você salva lugares de qualquer mapa e os encontra em todos os seus aparelhos. Não precisa de senha nem de criar um mapa.</p>}
-          {location.search.includes('erro=link') && <Note>Este link expirou ou já foi usado. Peça outro.</Note>}
-          <p className="mut">Enviamos um link de acesso para o seu e-mail. Ele vale por 15 minutos e só funciona uma vez.</p>
-          <Field label="E-mail" id="m"><div className="in f"><input id="m" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
-          {err && <p className="err" role="alert">{err}</p>}
-          <button className="btn blk">Enviar link de acesso</button>
-          {!leitor && <><div className="row"><div className="sep sp" /><span className="xs mut">ou</span><div className="sep sp" /></div>
-          <button type="button" className="btn ln blk" onClick={igLogin}><Icon n="insta" s={18} />Entrar com Instagram</button>
-          {igMsg && <Note>O login pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo. Use o link por e-mail.</Note>}</>}
-        </div>
-        <div className="ft">{leitor ? <span className="xs mut c">Seus salvos são só seus: o criador não sabe quem salvou.</span> : <span className="xs mut c">Ainda não tem mapa? <b><Link to="/candidatura">Peça o seu</Link></b></span>}</div>
-      </form>
-    </Stage>
   )
 }
 

@@ -437,3 +437,21 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .mapbn>svg{margin-right:12px}
 .studio .side .mapbn,.mtabs~.mapbn{display:none}
 @media (max-width:900px){.side .mapbn{display:none}}
+
+/* ===== Entrar: página única (criador, candidatura e explorador) ===== */
+.au{min-height:100dvh}
+.au-w{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px;max-width:1000px;padding-top:20px;padding-bottom:72px}
+.au-card{background:#fff;border-radius:28px;padding:36px;box-shadow:0 6px 20px rgba(23,23,19,.07);display:flex;flex-direction:column;gap:18px;align-self:start}
+.au-card .link{font-weight:700}
+.au-alt{text-align:center;margin-top:2px;padding-top:16px;border-top:1px solid var(--line)}
+.au-again{align-self:center}
+.au-side{background:var(--acc);border-radius:28px;padding:28px;display:flex;flex-direction:column;gap:14px;justify-content:center;align-self:stretch;overflow:hidden}
+.au-vis{border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 10px 26px rgba(23,23,19,.16);margin-bottom:8px}
+.au-bee{height:220px;display:grid;place-items:center;background:var(--cream)}
+.au-li{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.au-li li{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600}
+.au-li i{width:22px;height:22px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none;margin-top:-1px}
+@media (max-width:900px){.au-w{grid-template-columns:minmax(0,1fr);max-width:520px;padding-bottom:48px}.au-side{display:none}}
+@media (max-width:520px){.au-card{padding:26px 20px;border-radius:24px;gap:16px}}
+.sf-l .sf-in{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)}
+.au-card{align-self:stretch}.au-card>form{flex:1}.au-alt{margin-top:auto}

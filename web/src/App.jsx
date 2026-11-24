@@ -4,6 +4,7 @@ import { MeProvider, useMe } from './lib/me.jsx'
 import { Loading, Guard } from './lib/ui.jsx'
 import * as Site from './pages/Site.jsx'
 import * as On from './pages/Onboarding.jsx'
+import * as Au from './pages/Auth.jsx'
 import * as Build from './pages/Build.jsx'
 import * as St from './pages/Studio.jsx'
 import * as Pn from './pages/Panel.jsx'
@@ -18,12 +19,12 @@ import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/salvos', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/entrar', '/candidatura', '/salvos', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
   '/': <Site.Landing />, '/voo': <Voo />, '/salvos': <Saved />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
-  '/candidatura': <On.Apply />, '/candidatura/enviada': <On.ApplyStatus sent />, '/candidatura/status': <On.ApplyStatus />, '/candidatura/aprovado': <On.Approved />, '/entrar': <On.Login />,
+  '/candidatura': <Redirect to="/entrar?novo=1" />, '/candidatura/enviada': <On.ApplyStatus sent />, '/candidatura/status': <On.ApplyStatus />, '/candidatura/aprovado': <On.Approved />, '/entrar': <Au.Login />,
   '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
   '/publicar': <Build.Publish />, '/publicado': <Build.Published />, '/colar-posts': <Build.PastePosts />,
@@ -45,7 +46,7 @@ function Routes() {
   const pub = path.match(/^\/@([a-z0-9_-]+)(\/.*)?$/i)
   if (pub) return <Public slug={pub[1].toLowerCase()} />
   if (me === undefined) return <Loading />
-  if (STATIC && !STATIC_OK.has(path) && !isCreatorPath(path) && path !== '/entrar') return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
+  if (STATIC && !STATIC_OK.has(path) && !isCreatorPath(path)) return ROUTES[path] || path.startsWith('/revisar/') ? <Site.StaticNotice /> : <Redirect to="/" />
   const ed = path.match(/^\/revisar\/(\d+)$/)
   if (ed) return <Build.EditPlace id={ed[1]} />
   const el = ROUTES[path]

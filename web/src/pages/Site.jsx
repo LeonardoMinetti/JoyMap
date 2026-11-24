@@ -110,7 +110,7 @@ export function Examples() {
           })}
           {!list.length && <p className="mut">Sem exemplos nesta categoria.</p>}
         </div>
-        <div className="hero row jb wrap" style={{ padding: '32px 40px' }}><div><h2 className="d s32">O seu pode ser diferente de todos</h2><p className="mut sm">Veja o Estúdio de estilo em ação.</p></div><Link className="btn" to="/candidatura">Quero meu mapa</Link></div>
+        <div className="hero row jb wrap" style={{ padding: '32px 40px' }}><div><h2 className="d s32">O seu pode ser diferente de todos</h2><p className="mut sm">Veja o Estúdio de estilo em ação.</p></div><Link className="btn" to="/entrar?novo=1">Quero meu mapa</Link></div>
       </div>
       <SiteFooter />
     </div>

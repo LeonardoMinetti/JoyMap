@@ -68,7 +68,7 @@
 /* ===== Mapa do criador no celular: mapa + folha inferior (padrão Viver SP) ===== */
 .pub .ms{position:relative;height:100%;width:100%;overflow:hidden;font-family:var(--pf);background:var(--bg);color:var(--fg)}
 .ms-map{position:absolute;inset:0}.ms-map .leaflet-top.leaflet-right{top:112px}.ms-map .leaflet-top.leaflet-right .leaflet-control-zoom{margin-right:12px;border:0;box-shadow:0 3px 10px rgba(0,0,0,.2);border-radius:12px;overflow:hidden}
-.ms-top{position:absolute;left:0;right:0;top:0;height:56px;z-index:700;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.ms-top{position:absolute;left:0;right:0;top:0;height:56px;z-index:700;display:flex;align-items:center;gap:8px;padding:0 6px 0 16px;background:var(--bg);border-bottom:1px solid var(--line)}
 .ms-top .pav{width:34px;height:34px;font-size:16px;flex:none}.ms-top .pt{display:block;font-size:20px;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ms-hs{display:block;font-size:11px;color:var(--mut)}
 .ms-ib{width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--fg);display:grid;place-items:center;cursor:pointer;flex:none}
@@ -223,3 +223,9 @@
 
 .ms-pb .ms-route{margin-top:12px}.ms-pb .ms-route:first-child{margin-top:6px}
 .ms-sh{padding-top:2px}
+
+/* conta do explorador no cabeçalho do mapa */
+.ms-me{width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;font:700 13px var(--pf)}
+.pub .box .pb{align-self:flex-start}
+
+.ms-top .ms-ib{width:36px;height:36px}

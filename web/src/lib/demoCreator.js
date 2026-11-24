@@ -20,6 +20,11 @@ const iso = (d) => new Date(Date.now() + d * 86400000).toISOString().slice(0, 10
 export const demoOn = () => { try { return sessionStorage.getItem(FLAG) === '1' } catch { return false } }
 export const demoEnter = () => { try { sessionStorage.setItem(FLAG, '1') } catch { /* ok */ } }
 export const demoLeave = () => { try { sessionStorage.removeItem(FLAG) } catch { /* ok */ } }
+// explorador de demonstração: só guarda o e-mail digitado nesta aba (nada é enviado); os salvos continuam neste aparelho
+const VIEWER = 'wagli_viewer_demo_v1'
+export const viewerEmail = () => { try { return sessionStorage.getItem(VIEWER) || '' } catch { return '' } }
+export const viewerEnter = (email) => { try { sessionStorage.setItem(VIEWER, String(email || 'explorador@demo.wagli').trim().slice(0, 120)) } catch { /* ok */ } }
+export const viewerLeave = () => { try { sessionStorage.removeItem(VIEWER) } catch { /* ok */ } }
 export const demoReset = () => { mem = null; try { sessionStorage.removeItem(KEY) } catch { /* ok */ } }
 // rotas que só existem para quem está logado: abrir direto o endereço já entra na demonstração
 const CREATOR_PATH = /^\/(painel|estudio|publicar|publicado|previa|revisar|adicionar|sem-lugar|unidades|colar-posts|montando|boas-vindas|consentimentos|plano|pagamento)(\/|$)/

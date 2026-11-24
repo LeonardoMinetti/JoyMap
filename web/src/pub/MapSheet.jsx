@@ -4,7 +4,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn } from './shared.jsx'
 import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
@@ -138,7 +138,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>
             <button type="button" className="ms-ib" aria-label="Buscar" tabIndex={preview ? -1 : 0} onClick={() => !preview && setSearchOpen(true)}><Icon n="search" s={20} c="currentColor" /></button>
             <button type="button" className="ms-ib" aria-label="Salvos" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel(panel === 'salvos' ? null : 'salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
-            <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button></>}
+            <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button>
+            <AccountBtn slug={creator.slug} preview={preview} /></>}
       </header>
       <div className="ms-chips" role="group" aria-label="Filtros">
         {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}

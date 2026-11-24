@@ -28,19 +28,24 @@ export function Top({ active = -1, overlay = false, dark = false }) {
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
         {me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link className="btn sm" to="/salvos">Meus salvos</Link> : <Link className="btn sm" to="/painel">Meu painel</Link>) : <>
           <Link className="btn ln sm tb-in" to="/entrar">Entrar</Link>
-          <Link className="btn sm" to="/candidatura">Quero meu mapa</Link></>}
+          <Link className="btn sm" to="/entrar?novo=1">Quero meu mapa</Link></>}
         <button type="button" className="tb-burger" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="tb-menu" onClick={() => setOpen(!open)}><i /><i /><i /></button>
         {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link to="/salvos" onClick={go}>Meus salvos</Link> : <Link to="/painel" onClick={go}>Meu painel</Link>) : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
       </header>
     </>
   )
 }
-export const SiteFooter = () => (
-  <footer className="w sf">
-    <Logo size={26} />
-    <nav className="sf-l" aria-label="Rodapé"><Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/rede">Mapa geral (protótipo)</Link><Link to="/voo">Meu voo</Link></nav>
-  </footer>
-)
+export function SiteFooter() {
+  const { me } = useMe()
+  // quem não tem mapa e só quer guardar lugares entra por aqui (ou pelo mapa de um criador)
+  const exp = me?.user ? <Link className="sf-in" to={me.creator ? '/painel' : '/salvos'}><Icon n="user" s={16} c="currentColor" />{me.creator ? 'Meu painel' : 'Meus salvos'}</Link> : <Link className="sf-in" to="/entrar?como=explorador"><Icon n="user" s={16} c="currentColor" />Entrar como explorador</Link>
+  return (
+    <footer className="w sf">
+      <Logo size={26} />
+      <nav className="sf-l" aria-label="Rodapé">{exp}<Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/rede">Mapa geral (protótipo)</Link><Link to="/voo">Meu voo</Link></nav>
+    </footer>
+  )
+}
 
 // Menu lateral do painel do criador (F)
 const SIDE = [['visao', 'Visão geral', 'home', '/painel'], ['buscas', 'Buscas', 'search', '/painel/buscas'], ['lugares', 'Lugares', 'pin', '/painel/lugares'],
@@ -139,7 +144,7 @@ export const Loading = () => <div className="pad" style={{ padding: 32 }}>Carreg
 export function Guard({ need = 'user', finished, children }) {
   const { me } = useMe()
   if (me === undefined) return <Loading />
-  if (!me.user) return <Redirect to="/entrar?como=criador" />
+  if (!me.user) return <Redirect to="/entrar" />
   if (need === 'admin') return me.user.role === 'admin' ? children : <Restricted />
   if (need === 'approved') {
     if (!me.creator || me.creator.status !== 'approved') return <Redirect to={homeFor(me)} />

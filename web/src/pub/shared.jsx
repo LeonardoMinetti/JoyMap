@@ -9,7 +9,7 @@ import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
 import { cityOf, openState, openLabel } from './extras.js'
 import { DAY_LONG } from '../../../server/hours.js'
-import { FONTS, catOf, fmtDate, onAccent, symOf } from '../theme.jsx'
+import { FONTS, catOf, fmtDate, initial, onAccent, symOf } from '../theme.jsx'
 
 export const pubVars = (theme) => {
   const f = FONTS[theme.font] || FONTS.sans
@@ -105,11 +105,27 @@ export function useSaved(slug) {
   }
   return { ids: logged && remote ? remote : local, toggle, logged }
 }
-// Aviso sobre onde os salvos ficam (e como levar para a conta)
+// Aviso sobre onde os salvos ficam (e como levar para a conta de explorador)
 export function SavedNote({ saved, slug }) {
+  const { me } = useMe()
   if (saved.logged) return <div className="box xs">Seus salvos ficam na sua conta, em qualquer aparelho. <Link to="/salvos" style={{ fontWeight: 700 }}>Ver salvos de todos os mapas</Link></div>
-  if (STATIC) return <div className="box xs">Seus salvos ficam só neste aparelho. Entrar com e-mail para guardar na conta e ver os salvos de todos os mapas ainda não está disponível na demonstração.</div>
-  return <div className="box xs">Seus salvos ficam só neste aparelho. <Link to={`/entrar?como=usuario&voltar=${encodeURIComponent(`/@${slug}`)}`} style={{ fontWeight: 700 }}>Entre com e-mail</Link> para guardá-los na conta e ver os salvos de todos os mapas.</div>
+  if (STATIC && me?.user) return <div className="box xs">Você entrou na demonstração: seus salvos ficam só neste aparelho. <Link to="/salvos" style={{ fontWeight: 700 }}>Ver salvos de todos os mapas</Link></div>
+  return (
+    <div className="box">
+      <b className="sm">Seus salvos estão só neste aparelho</b>
+      <span className="xs mut">Entre como explorador para guardá-los na conta e ver os salvos de todos os mapas. Sem senha{STATIC ? ' (na demonstração, nada é enviado)' : ''}.</span>
+      <Link className="pb sm" to={`/entrar?como=explorador&voltar=${encodeURIComponent(`/@${slug}`)}`}>Entrar como explorador</Link>
+    </div>
+  )
+}
+// Entrada do explorador no mapa de um criador: "Entrar" para quem ainda não tem conta; atalho para os salvos (ou o painel) para quem já entrou
+export function AccountBtn({ slug, preview }) {
+  const { me } = useMe()
+  if (me === undefined) return null
+  const out = !me.user
+  const to = out ? `/entrar?como=explorador&voltar=${encodeURIComponent(`/@${slug}`)}` : me.creator ? '/painel' : '/salvos'
+  const label = out ? 'Entrar como explorador' : me.creator ? 'Meu painel' : 'Meus salvos de todos os mapas'
+  return <Link className="ms-ib" to={to} aria-label={label} title={label} tabIndex={preview ? -1 : 0} onClick={preview ? (e) => e.preventDefault() : undefined}>{out ? <Icon n="user" s={20} c="currentColor" /> : <span className="ms-me">{initial(me.user.email)}</span>}</Link>
 }
 
 export const NoneOpen = ({ onClear }) => (
