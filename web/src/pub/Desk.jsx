@@ -103,10 +103,11 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   else body = (
     <>
       {theme.bio && <p className="dk-lead">{theme.bio}</p>}
-      <div className="dk-chips" role="group" aria-label="Filtros">
-        <button type="button" className={'ms-chip' + (!f.cats.length ? ' on' : '')} onClick={() => f.setCats([])}>Todos</button>
-        {usedCats.map((c) => <button key={c.id} type="button" className={'ms-chip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => f.setCats([c.id])}><span className="ms-dot" style={{ background: c.color }} />{c.name}</button>)}
-      </div>
+      {f.cats.length > 0 && (
+        <div className="dk-chips" role="group" aria-label="Filtro ativo">
+          {usedCats.filter((c) => f.cats.includes(c.id)).map((c) => <button key={c.id} type="button" className="ms-chip on" aria-label={`Tirar filtro ${c.name}`} onClick={() => f.setCats([])}><span className="ms-dot" style={{ background: c.color }} />{c.name} ×</button>)}
+        </div>
+      )}
       {sechead(hood || 'Lugares', list.length, hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>)}
       {list.length === 0 ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} /> : grid(list)}
     </>
