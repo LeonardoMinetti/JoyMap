@@ -21,6 +21,7 @@ const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ wi
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
 import { resizeLogo } from '../lib/image.js'
+import { termEmoji } from '../lib/termEmoji.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
 import { demoExport } from '../lib/demoCreator.js'
 const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
@@ -63,7 +64,7 @@ export function Overview() {
           <div className="card col"><div className="row jb wrap"><b>Sessões por dia</b>{s.sessions > 0 && <span className="sm" aria-live="polite"><b>{fmtDM(shown.d)}</b> · {shown.n} sess{shown.n === 1 ? 'ão' : 'ões'}{hov == null && peak.n ? <Delta> (pico)</Delta> : null}</span>}</div>
             {s.sessions ? <div className="bars" onMouseLeave={() => setHov(null)}>{series.map((d, i) => <i key={d.d} tabIndex={0} role="img" aria-label={`${fmtDM(d.d)}: ${d.n} sessões`} className={(d.d === shown.d && d.n ? 'hi' : '')} onMouseEnter={() => setHov(i)} onFocus={() => setHov(i)} onBlur={() => setHov(null)} style={{ height: `${Math.max(2, (d.n / max) * 100)}%` }} />)}</div> : <p className="sm mut">Ainda sem visitas. Publique o mapa e coloque o link na bio.</p>}</div>
           {s.limited ? <div className="card col soft"><span className="eb">Mais dados no plano Criador</span><span className="sm">Buscas do seu público, buscas sem resultado, lugares mais abertos, cliques em rota e perfil da audiência.</span><Link className="btn sm" to="/painel/plano">Ver planos</Link></div> : <div className="card col soft"><span className="eb">Oportunidade de conteúdo</span>
-            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>}
+            {s.opportunity ? <><b className="d s32">{s.opportunity.count} buscas por {termEmoji(s.opportunity.term)} "{s.opportunity.term}"</b><span className="sm">{s.opportunity.empty} ficaram sem resultado. Que tal indicar um lugar sobre esse tema?</span><div className="row"><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(s.opportunity.term)}`}>Indicar lugar</Link><Link className="btn sm ln" to="/painel/buscas">Ver buscas</Link></div></> : <span className="sm">Quando seguidores buscarem algo que o mapa não tem, aparece aqui como ideia de conteúdo.</span>}</div>}
         </div>
         {!s.limited && <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
           <div className="card col"><div className="row jb"><b>Lugares mais abertos</b><Link className="link xs" to="/painel/lugares">Ver todos</Link></div>
@@ -111,7 +112,7 @@ export function Searches() {
       <div className="card col" style={{ gap: 4, padding: 12 }}>
         {rows.map((x) => (
           <div key={x.term} className="srch">
-            <div className="sp col" style={{ gap: 6 }}><div className="row jb"><b>{x.term}</b><span className="xs mut">{x.count} busca{x.count === 1 ? '' : 's'}</span></div>
+            <div className="sp col" style={{ gap: 6 }}><div className="row jb"><b><span aria-hidden="true" style={{ marginRight: 8 }}>{termEmoji(x.term)}</span>{x.term}</b><span className="xs mut">{x.count} busca{x.count === 1 ? '' : 's'}</span></div>
               <div className="hb split" title={`${x.withResults} com resultado, ${x.empty} sem`}><i style={{ width: `${(x.withResults / mx) * 100}%` }} /><i className="warn" style={{ width: `${(x.empty / mx) * 100}%` }} /></div></div>
             {x.empty > 0 ? <><span className="tag wn">{x.empty} sem resultado</span><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(x.term)}`}>Indicar lugar</Link></> : <span className="tag ok">Atendida</span>}
           </div>))}
