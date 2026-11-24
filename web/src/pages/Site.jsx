@@ -55,7 +55,6 @@ export function Landing() {
         <FaqTeaser />
         <FinalCta />
         <SiteFooter />
-        <button type="button" className="mo-toggle" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? 'Retomar animações' : 'Pausar animações'}</button>
       </div>
     </PauseCtx.Provider>
   )
