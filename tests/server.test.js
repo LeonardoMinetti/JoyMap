@@ -374,3 +374,19 @@ test('categorias próprias: nome limpo, tipo de base, limite e sem criar novas f
   const lapse = sanitizeTheme({ categories: [mk('xold001', 'Antiga'), mk('xnew001', 'Nova')] }, { only: new Set(['xold001']) })
   assert.deepEqual(lapse.categories.filter((c) => c.custom).map((c) => c.id), ['xold001'])
 })
+
+test('roteiro à venda e produtos: só nos planos certos, preço limitado, prévia trancada', async () => {
+  const { cleanOffer, cleanProducts, lockRoute, netOf } = await import('../server/offers.js')
+  const r = { price: '19.4', products: [{ title: ' Guia ', url: 'https://x.com/a', price: 'R$ 9' }, { title: 'Ruim', url: 'javascript:alert(1)' }, { title: '', url: 'https://x.com' }] }
+  assert.deepEqual(cleanOffer(r, 'free'), { price: null, products: [] })
+  assert.deepEqual(cleanOffer(r, 'creator'), { price: 19, products: [] })
+  const pro = cleanOffer(r, 'pro')
+  assert.equal(pro.price, 19); assert.equal(pro.products.length, 1); assert.equal(pro.products[0].title, 'Guia')
+  assert.equal(cleanOffer({ price: 2 }, 'pro').price, null); assert.equal(cleanOffer({ price: 900 }, 'pro').price, null)
+  assert.equal(cleanProducts(Array(9).fill({ title: 'a', url: 'https://a.com' })).length, 6)
+  assert.equal(netOf(100, 'creator'), 92); assert.equal(netOf(100, 'pro'), 95)
+  const route = { id: 1, price: 19, placeIds: [1, 2, 3], stops: [1, 2, 3, 4].map((n) => ({ placeId: n, text: 'história ' + n })) }
+  const locked = lockRoute(route, false)
+  assert.equal(locked.locked, true); assert.equal(locked.stops.length, 2); assert.equal(locked.stopCount, 4)
+  assert.equal(lockRoute(route, true).stops.length, 4); assert.equal(lockRoute({ ...route, price: null }, false).locked, undefined)
+})

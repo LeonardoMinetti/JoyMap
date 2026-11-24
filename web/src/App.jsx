@@ -13,6 +13,8 @@ import { Voo } from './pages/Voo.jsx'
 import { RestaurantsLanding } from './landing/restaurants.jsx'
 import Public from './pub/Public.jsx'
 import { STATIC } from './lib/base.js'
+import { api } from './api.js'
+import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath, demoReset, demoLeave } from './lib/demoCreator.js'
 
 const STATIC_OK = new Set(['/', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
@@ -51,7 +53,7 @@ function Routes() {
 }
 // Versão estática: avisa que o painel é uma demonstração e deixa recomeçar ou sair
 function DemoBar() {
-  const { me } = useMe()
+  const { me, reload } = useMe()
   const { path } = useLocation()
   const show = STATIC && !!me?.user && !path.startsWith('/@')
   // a faixa não ocupa espaço no fim da página (isso deixava o menu lateral curto): só ganha folga no conteúdo
@@ -62,6 +64,7 @@ function DemoBar() {
     <>
     <div role="status" className="demobar" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
       <span><b>Demonstração.</b> Dados fictícios, salvos só nesta aba.</span>
+      {me.creator?.plan && <label className="row" style={{ gap: 6 }}><span>Plano</span><select aria-label="Plano na demonstração" value={me.creator.plan.tier} onChange={async (e) => { await api('/creator/plan-demo', { method: 'PUT', body: { tier: e.target.value } }); await reload() }} style={{ background: '#3a3a3a', color: '#fff', border: 0, borderRadius: 999, padding: '6px 10px', font: 'inherit' }}>{TIERS.map((t) => <option key={t} value={t}>{TIER_NAMES[t]}</option>)}</select></label>}
       <button className="btn sm" style={{ background: '#fff', color: '#171717' }} onClick={go(() => { demoReset(); demoLeave() })}>Recomeçar</button>
       <button className="btn sm" style={{ background: '#3a3a3a', color: '#fff' }} onClick={go(demoLeave)}>Sair</button>
     </div>

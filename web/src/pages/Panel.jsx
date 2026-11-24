@@ -20,6 +20,7 @@ const AccountPage = ({ tab, children }) => (
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
+import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
 import { demoExport } from '../lib/demoCreator.js'
 const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
 const useStats = (days = 30) => { const [s, setS] = useState(null); useEffect(() => { setS(null); api(`/creator/stats?days=${days}`).then(setS).catch(() => setS({ error: true })) }, [days]); return s }
@@ -310,11 +311,11 @@ export function Roteiros() {
   const [sel, setSel] = useState(0)
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
-  const [on, setOn] = useState(null)
   const load = () => api('/creator/routes').then((d) => { const r = d.routes.map(normRoute); setRows(r); setOrig(JSON.stringify(r)) })
-  useEffect(() => { load(); api('/creator/interest').then((d) => setOn(d.listas)) }, [])
+  useEffect(() => { load() }, [])
   const rowsSort = useReorder(rows || [], (n) => { const cur = rows[sel]; setRows(n); setSel(n.indexOf(cur)) })
   const r = rows?.[sel]
+  const can = me.creator.plan?.can || {}
   const stopSort = useReorder(r?.stops || [], (n) => setRows(rows.map((x, j) => (j === sel ? { ...x, stops: n } : x))))
   const [openStop, setOpenStop] = useState(null)
   if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
@@ -365,7 +366,7 @@ export function Roteiros() {
                     {stopSort.handle(i)}<b className="sm" style={{ width: 20, textAlign: 'center' }}>{i + 1}</b>
                     {p ? <PlacePhoto place={p} theme={theme} size={44} style={{ borderRadius: 12 }} /> : <span className="catico" style={{ background: '#171713', borderRadius: 12, width: 44, height: 44 }}><Icon n="edit" s={18} c="#fff" /></span>}
                     <div className="sp"><b className="sm">{st.title || p?.name || 'Capítulo de texto'}</b><div className="xs mut trunc">{st.when || (p ? `${catOf(theme, p.category).name}${p.neighborhood ? ` · ${p.neighborhood}` : ''}` : 'Sem lugar no mapa')}{st.text ? ' · com história' : ''}</div></div>
-                    <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => stopSort.move(i, i - 1)}><Icon n="up" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.stops.length - 1} onClick={() => stopSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
+                    <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => stopSort.move(i, i - 1)}><Icon n="caretup" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.stops.length - 1} onClick={() => stopSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
                     <button className={'btn sm ' + (open ? '' : 'sec')} aria-expanded={open} onClick={() => setOpenStop(open ? null : st._k)}>{open ? 'Fechar' : 'Contar a história'}</button>
                     <button className="btn ln sm" aria-label="Remover parada" onClick={() => set({ stops: r.stops.filter((v) => v._k !== st._k) })}><Icon n="close" s={14} /></button>
                   </div>
@@ -397,17 +398,34 @@ export function Roteiros() {
                   <span style={{ position: 'absolute', top: 14, right: 14, width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center', background: inn ? 'var(--ink)' : 'rgba(255,255,255,.9)', color: inn ? '#fff' : 'var(--ink)' }}><Icon n={inn ? 'check' : 'plus'} s={14} c={inn ? '#fff' : '#171713'} /></span>
                 </button>) })}{!pool.length && <p className="sm mut" style={{ gridColumn: '1/-1' }}>{confirmed.length ? 'Nenhum lugar encontrado.' : 'Confirme lugares no mapa para montar roteiros.'}</p>}</div>
             </div>
-            <div className="card row jb wrap">
-              <div className="row" role="group" aria-label="Como oferecer este roteiro"><button className="chip on" aria-pressed="true">Grátis no mapa</button><button className="chip" disabled title="A venda de roteiros ainda não está aberta">Vender · em breve</button></div>
-              <button className="btn bd2 sm" onClick={remove}><Icon n="trash" s={14} />Remover roteiro</button>
+            <div className="card col" style={{ gap: 12 }}>
+              <div className="row jb wrap"><div><b>Venda</b><div className="xs mut">Cada roteiro fica grátis no mapa ou é vendido. Você escolhe, roteiro por roteiro.</div></div>{!can.sellRoteiros && <span className="tag">Plano Criador</span>}</div>
+              {can.sellRoteiros ? <>
+                <div className="row" role="group" aria-label="Como oferecer este roteiro"><button className={'chip' + (!r.price ? ' on' : '')} aria-pressed={!r.price} onClick={() => set({ price: null })}>Grátis no mapa</button><button className={'chip' + (r.price ? ' on' : '')} aria-pressed={!!r.price} onClick={() => set({ price: r.price || 19 })}>Vender</button></div>
+                {r.price ? <>
+                  <Field label="Preço (R$)" id="rp"><div className="in" style={{ maxWidth: 160 }}><input id="rp" type="number" inputMode="numeric" min="5" max="500" step="1" value={r.price} onChange={(e) => set({ price: e.target.value === '' ? 5 : Math.max(0, Math.min(500, Math.round(Number(e.target.value)))) })} /></div></Field>
+                  <div className="sm">Taxa do plano {me.creator.plan.tierName}: {can.roteiroFee}%. Você recebe <b>R$ {(Math.round(r.price * (100 - can.roteiroFee)) / 100).toFixed(2).replace('.', ',')}</b> por venda.</div>
+                  <div className="xs mut">Quem não comprou vê as {PREVIEW_STOPS} primeiras paradas; o resto (histórias, dicas e lugares) fica para quem compra. Preço de R$ {PRICE_MIN} a R$ {PRICE_MAX}.</div>
+                  <Note>A cobrança ainda não está ativa. O preço fica salvo e só passa a valer no mapa quando a venda abrir; hoje ninguém é cobrado. Na demonstração, a compra é simulada.</Note>
+                </> : <div className="xs mut">Roteiro grátis aparece inteiro para todos.</div>}
+              </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Vender roteiros está disponível a partir do plano Criador (taxa de 8%, 5% no Pro).</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>
+            <div className="card col" style={{ gap: 12 }}>
+              <div className="row jb wrap"><div><b>Produtos do roteiro</b><div className="xs mut">Links de produtos que combinam com o roteiro, mostrados no fim dele.</div></div>{!can.products && <span className="tag">Plano Pro</span>}</div>
+              {can.products ? <>
+                {(r.products || []).map((pr, k) => { const sp = (patch) => set({ products: r.products.map((v, j) => (j === k ? { ...v, ...patch } : v)) }); return (
+                  <div key={k} className="card soft col" style={{ padding: 12, gap: 8 }}>
+                    <div className="g2"><Field label="Nome do produto" id={`pn${k}`}><div className="in"><input id={`pn${k}`} value={pr.title} maxLength="60" placeholder="Ex.: Guia de bolso" onChange={(e) => sp({ title: e.target.value })} /></div></Field><Field label="Preço (opcional)" id={`pp${k}`}><div className="in"><input id={`pp${k}`} value={pr.price || ''} maxLength="20" placeholder="Ex.: R$ 29" onChange={(e) => sp({ price: e.target.value })} /></div></Field></div>
+                    <Field label="Link" id={`pu${k}`}><div className="in"><input id={`pu${k}`} type="url" value={pr.url} maxLength="300" placeholder="https://" onChange={(e) => sp({ url: e.target.value })} /></div></Field>
+                    <button className="btn bd2 sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ products: r.products.filter((_, j) => j !== k) })}><Icon n="trash" s={14} />Remover produto</button>
+                  </div>) })}
+                <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={(r.products || []).length >= MAX_PRODUCTS} onClick={() => set({ products: [...(r.products || []), { title: '', url: '', price: '' }] })}><Icon n="plus" s={14} />Adicionar produto</button>
+                <div className="xs mut">Até {MAX_PRODUCTS} produtos. Só entram os que têm nome e um link http(s) válido.</div>
+              </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Mostrar produtos no roteiro está disponível no plano Pro.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
+            </div>
+            <div className="row jb wrap"><span className="xs mut">Roteiros e produtos só vão ao ar depois de salvar.</span><button className="btn bd2 sm" onClick={remove}><Icon n="trash" s={14} />Remover roteiro</button></div>
           </div>
         ) : <div className="card col" style={{ gap: 6 }}><b>Nenhum roteiro selecionado</b><span className="sm mut">Crie um roteiro para começar.</span></div>}
-      </div>
-      <div className="card soft col" style={{ gap: 8 }}>
-        <div className="row"><b>Vender roteiros</b><span className="tag wn">Em breve</span></div>
-        <span className="sm mut">Você escolhe: cada roteiro pode continuar grátis no seu mapa ou, quando a venda abrir, ser oferecido pago para quem quiser ir além. Nada muda para os que ficarem grátis. Preço e comissão ainda não estão definidos, então hoje nenhum roteiro é cobrado.</span>
-        <div className="row jb wrap"><span className="sm">Quer participar do teste? Avisamos quando abrir para o seu perfil.</span><button className="btn sm" disabled={on !== false} onClick={async () => { await api('/creator/interest', { method: 'POST', body: { kind: 'listas' } }); setOn(true); toast('Você está na lista') }}>{on ? 'Você está na lista' : 'Entrar na lista'}</button></div>
       </div>
     </PanelPage>
   )
@@ -467,9 +485,6 @@ export function Billing() {
       <div className="g2">
         <div className="card col soft"><span className="eb">Plano atual</span><b className="d s32">{p.tierName || 'Criador'}{p.tier !== 'free' ? ` · ${annual ? 'anual' : 'mensal'}` : ''}</b><span className="sm">R$ [preço] por {annual ? 'ano' : 'mês'}. {p.trialEnds ? `Teste grátis termina em ${fmtDate(p.trialEnds)}.` : 'O teste grátis começa no onboarding.'}</span><div className="row"><button className="btn sm" onClick={async () => { await api('/creator/billing', { method: 'PUT', body: { billing: annual ? 'monthly' : 'annual' } }); reload() }}>Mudar para {annual ? 'mensal' : 'anual'}</button><button className="btn sm ln" onClick={() => toast('Hoje há um único plano pago: Criador.')}>Mudar plano</button></div></div>
         <div className="card col"><span className="eb">Forma de pagamento</span><div className="row"><Icon n="card" s={22} /><b className="sm">Nenhuma cadastrada</b></div><button className="btn sec sm" style={{ alignSelf: 'flex-start' }} disabled>Trocar (em breve)</button></div></div>
-      {STATIC && <div className="card col"><div><b>Plano na demonstração</b><div className="xs mut">Troque para ver o que cada plano libera. A cobrança não existe nesta versão.</div></div>
-        <div className="seg" role="group" aria-label="Plano na demonstração">{[['free', 'Grátis'], ['creator', 'Criador'], ['pro', 'Pro']].map(([k, l]) => <button key={k} className={p.tier === k ? 'on' : ''} aria-pressed={p.tier === k} onClick={async () => { await api('/creator/plan-demo', { method: 'PUT', body: { tier: k } }); await reload(); toast(`Plano ${l} na demonstração`) }}>{l}</button>)}</div>
-        <span className="xs mut">Com o plano Pro, o domínio personalizado abre e a marca wagli some do mapa público.</span></div>}
       <span className="eb">Faturas</span>
       <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th /></tr></thead><tbody><tr><td colSpan="5" className="mut">Nenhuma fatura: a cobrança ainda não está ativa.</td></tr></tbody></table></div>
       <Note>Aviso 7 dias antes de qualquer cobrança ou do fim do teste. Reembolsos seguem a lei e a oferta contratada.</Note>

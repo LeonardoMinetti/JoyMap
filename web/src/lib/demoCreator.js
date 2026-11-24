@@ -5,7 +5,8 @@ import { sanitizeTheme, sanitizeSvg, accentProblem } from '../../../server/theme
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { cleanStops } from '../../../server/stops.js'
-import { planView, TIERS } from '../../../server/plans.js'
+import { planView, TIERS, can } from '../../../server/plans.js'
+import { cleanOffer, lockRoute } from '../../../server/offers.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
 
@@ -51,7 +52,7 @@ function seed(d) {
       settings: { autoConfirmHigh: false, bioLinkIg: false, bioLinkTiktok: false, paused: false, adminPaused: false },
       domain: { name: null, status: 'none' }, hasCover: false, symbols: [], meta: { instagramReady: false, tiktokReady: false },
     },
-    places, photo, routes: DEMO_ROUTES.map((r) => ({ ...r })), interest: false, consentLog: [], notices: [],
+    places, photo, routes: DEMO_ROUTES.map((r) => ({ ...r, price: r.id === 1 ? 19 : null, products: r.id === 1 ? [{ title: 'Guia de bolso: Liberdade', url: 'https://example.com/guia-liberdade', price: 'R$ 29' }, { title: 'Kit de hashis de viagem', url: 'https://example.com/hashis', price: '' }] : [] })), unlocked: [], interest: false, consentLog: [], notices: [],
   }
 }
 async function S() {
@@ -197,7 +198,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/routes' && method === 'GET') return { routes: s.routes }
   if (p === '/creator/routes' && method === 'PUT') {
     const own = new Set(s.places.map((v) => v.id))
-    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops } }).filter((r) => r.name)
+    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops, ...cleanOffer(r, cr.plan.tier) } }).filter((r) => r.name)
     return out({ ok: true })
   }
   if (p === '/creator/domain') throw err('estatico', 503)
@@ -210,9 +211,11 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const ids = new Set(live.map((x) => x.id))
     return {
       creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
-      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length),
+      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
     }
   }
+  // compra simulada: na demonstração não existe cobrança, só o efeito de desbloquear o roteiro
+  if (p === `/public/${DEMO_SLUG}/buy` && method === 'POST') { const id = Number(body.routeId); if (s.routes.some((r) => r.id === id) && !(s.unlocked || (s.unlocked = [])).includes(id)) s.unlocked.push(id); return out({ ok: true }) }
   return null // não é do painel: quem chamou segue o caminho padrão
 }
 

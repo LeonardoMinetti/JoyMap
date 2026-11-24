@@ -4,6 +4,8 @@ import { toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
+import { STATIC } from '../lib/base.js'
+import { DEMO_SLUG } from '../demoData.js'
 import { FONTS, catOf, fmtDate, onAccent, symOf } from '../theme.jsx'
 
 export const pubVars = (theme) => {
@@ -26,10 +28,12 @@ export const NEAR_KM = 5
 // Dados do mapa público + sessão
 export function usePubData(slug, given) {
   const [state, setState] = useState(given ? { data: given } : { loading: true })
+  const [tick, setTick] = useState(0)
+  useEffect(() => { const f = () => setTick((n) => n + 1); window.addEventListener('wagli:refetch', f); return () => window.removeEventListener('wagli:refetch', f) }, [])
   useEffect(() => {
     if (given) return setState({ data: given })
-    api(`/public/${slug}`).then((data) => { setState({ data }); track(slug, 'session') }).catch(() => setState({ error: true }))
-  }, [slug, given])
+    api(`/public/${slug}`).then((data) => { setState({ data }); if (!tick) track(slug, 'session') }).catch(() => setState({ error: true }))
+  }, [slug, given, tick])
   return state
 }
 
@@ -177,6 +181,31 @@ export function RouteTimeline({ route, places, theme, openFicha, preview }) {
     </ol>
   )
 }
+// Roteiro pago: o seguidor vê só as primeiras paradas. A cobrança ainda não existe; na demonstração a compra é simulada.
+function RouteLock({ route, preview }) {
+  const [busy, setBusy] = useState(false)
+  const buy = async () => { setBusy(true); try { await api(`/public/${DEMO_SLUG}/buy`, { method: 'POST', body: { routeId: route.id } }); window.dispatchEvent(new Event('wagli:refetch')); toast('Roteiro liberado (simulação)') } finally { setBusy(false) } }
+  return (
+    <div className="rt-lock" role="note">
+      <span className="rt-lockic" aria-hidden="true"><Icon n="lock" s={18} c="currentColor" /></span>
+      <div className="sp">
+        <b>Prévia: {route.stops.length} de {route.stopCount} paradas</b>
+        <p>O roteiro completo, com todas as histórias e dicas, custa R$ {route.price}.</p>
+        {STATIC ? <><button type="button" className="pb" disabled={busy || preview} tabIndex={preview ? -1 : 0} onClick={buy}>Comprar roteiro · R$ {route.price}</button><span className="xs" style={{ display: 'block', marginTop: 6, opacity: 0.7 }}>Simulação: na demonstração ninguém é cobrado.</span></> : <span className="xs" style={{ opacity: 0.7 }}>A compra ainda não está disponível.</span>}
+      </div>
+    </div>
+  )
+}
+// Produtos que o criador indica no roteiro (plano Pro): links dele, abrem em outra aba
+function RouteProducts({ products, preview }) {
+  return (
+    <section className="rt-prod" aria-label="Produtos deste roteiro">
+      <h3 className="pt">Produtos deste roteiro</h3>
+      <ul>{products.map((p, i) => <li key={i}><a href={p.url} target="_blank" rel="noopener noreferrer nofollow sponsored" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}><span className="sp"><b className="sm">{p.title}</b>{p.price && <span className="xs" style={{ display: 'block', opacity: 0.7 }}>{p.price}</span>}</span><Icon n="next" s={16} c="currentColor" /></a></li>)}</ul>
+      <span className="xs" style={{ opacity: 0.7 }}>Links indicados pelo criador.</span>
+    </section>
+  )
+}
 // Corpo de um roteiro aberto: escolhe como ver (linha do tempo, lista ou, no celular, o mapa)
 export function RouteBody({ route, places, theme, openFicha, renderList, onMap, preview }) {
   const story = hasStory(route)
@@ -188,6 +217,8 @@ export function RouteBody({ route, places, theme, openFicha, renderList, onMap, 
       {route.note && <p className="ms-bio">{route.note}</p>}
       <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
       {view === 'timeline' ? <RouteTimeline route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} /> : renderList()}
+      {route.locked && <RouteLock route={route} preview={preview} />}
+      {route.products?.length > 0 && <RouteProducts products={route.products} preview={preview} />}
     </>
   )
 }

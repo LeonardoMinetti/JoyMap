@@ -6,6 +6,7 @@ import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
+import { cleanOffer } from '../offers.js'
 import { can, minTier } from '../plans.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
@@ -261,18 +262,20 @@ export default function creatorRoutes(app, x) {
     return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'no-store' }) : c.body(null, 404)
   })
   cr.delete('/cover', (c) => { db.prepare('DELETE FROM media WHERE creator_id=?').run(me(c).id); return c.json({ ok: true }) })
-  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
+  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops, price, products FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, price: r.price || null, products: j(r.products, []), placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
   cr.put('/routes', async (c) => {
     const { routes } = await c.req.json().catch(() => ({}))
     const own = new Set(db.prepare("SELECT id FROM places WHERE creator_id=?").all(me(c).id).map((r) => r.id))
+    const tier = fresh(c).plan_tier
     db.prepare('DELETE FROM routes WHERE creator_id=?').run(me(c).id)
     ;(Array.isArray(routes) ? routes : []).slice(0, 12).forEach((r, i) => {
       const name = String(r.name || '').trim().slice(0, 40)
       if (!name) return
       const stops = cleanStops(r.stops, own)
+      const offer = cleanOffer(r, tier)
       // com paradas, os lugares do roteiro saem delas (na ordem da história); sem paradas, vale a lista de lugares
       const ids = stops.length ? [...new Set(stops.map((s) => s.placeId).filter(Boolean))] : (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
-      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos) VALUES (?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i)
+      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos,price,products) VALUES (?,?,?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i, offer.price, JSON.stringify(offer.products))
     })
     return c.json({ ok: true })
   })

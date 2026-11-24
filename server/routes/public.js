@@ -3,6 +3,11 @@ import { readFileSync, existsSync } from 'node:fs'
 import { sha, j, placeKey } from '../lib.js'
 import { DEMO_SLUG, DEMO_ROUTES, demoPlaces } from '../../web/src/demoData.js'
 import { DEFAULT_THEME, sanitizeTheme } from '../theme.js'
+import { can } from '../plans.js'
+import { lockRoute } from '../offers.js'
+
+// Cobrança ainda não existe: sem PAYMENTS=on, nenhum preço aparece no mapa público e nenhum roteiro fica trancado.
+const PAYMENTS = process.env.PAYMENTS === 'on'
 
 const EVENTS = new Set(['session', 'search', 'place_open', 'route_click', 'post_open', 'video_open', 'request'])
 const REPORT_REASONS = ['Informação errada', 'Sou o dono e quero corrigir', 'Conteúdo enganoso ou sem aviso de publicidade', 'Spam ou abuso']
@@ -29,8 +34,8 @@ export default function publicRoutes(app, x) {
     const places = livePlaces(row.id).map((p) => pubPlace(p, row.slug))
     const ids = new Set(places.map((p) => p.id))
     const blocks = Object.fromEntries(v.theme.layout.blocks.map((b) => [b.id, b.on]))
-    const routes = db.prepare('SELECT id, name, note, color, place_ids, stops FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
-      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => r.placeIds.length || r.stops.length)
+    const routes = db.prepare('SELECT id, name, note, color, place_ids, stops, price, products FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
+      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, price: PAYMENTS && can(v.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(v.plan.tier, 'products') ? j(r.products, []) : [], placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => r.placeIds.length || r.stops.length).map((r) => lockRoute(r, false))
     return c.json({
       creator: {
         handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme, showBrand: !v.plan.can.removeBrand,
