@@ -645,5 +645,5 @@
 
 /* assinatura da marca gigante ao fundo da hero, bem discreta */
 .hero2-mark{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.hero2-mark::before{content:"";position:absolute;left:50%;top:50%;width:max(112%,900px);aspect-ratio:37/17;transform:translate(-50%,-46%) rotate(-6deg);background:#fff;opacity:.07;-webkit-mask:url('../brand/logo.svg') center/contain no-repeat;mask:url('../brand/logo.svg') center/contain no-repeat}
-@media (max-width:860px){.hero2-mark::before{width:150%;top:34%}}
+.hero2-mark::before{content:"";position:absolute;left:50%;top:50%;width:max(145%,1200px);aspect-ratio:37/17;transform:translate(-50%,-46%) rotate(-6deg);background:#fff;opacity:.045;-webkit-mask:url('../brand/logo.svg') center/contain no-repeat;mask:url('../brand/logo.svg') center/contain no-repeat}
+@media (max-width:860px){.hero2-mark::before{width:230%;top:38%}}
