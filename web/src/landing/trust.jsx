@@ -52,7 +52,7 @@ export function Monetize() {
   return (
     <section className="sec" aria-labelledby="mon" style={{ background: '#fff', overflow: 'hidden' }}>
       <div className="w col" style={{ gap: 36 }}>
-        <div className="sec-h"><span className="tag wn" style={{ alignSelf: 'flex-start' }}>Em desenvolvimento</span><h2 id="mon" className="d h-sec">Suas recomendações também podem virar um negócio.</h2>
+        <div className="sec-h"><h2 id="mon" className="d h-sec">Suas recomendações também podem virar um negócio.</h2>
           <p className="lead">Transforme seu repertório de lugares em roteiros exclusivos, guias digitais e seleções que sua audiência poderá adquirir diretamente de você.</p></div>
         <Scene className="gd" threshold={0.3}>
           {GUIDES.map((g, i) => (
