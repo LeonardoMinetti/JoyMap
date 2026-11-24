@@ -488,3 +488,6 @@ body{background:var(--cream)}.page{background:var(--cream)}
 /* tabelas da administração no celular: cada linha vira um bloco */
 @media (max-width:700px){.admt thead{display:none}.admt,.admt tbody,.admt tr,.admt td{display:block;width:100%}.admt tr{padding:12px 6px;border-bottom:1px solid var(--line)}.admt td{border:0;padding:4px 0}}
 .mk-toast2.rm-t{top:auto;bottom:26px}
+.au-escolha .au-card{max-width:560px}.au-escolha .au-w{justify-content:center}@media (min-width:901px){.au-escolha .au-card{height:auto}}
+.au-opt{transition:transform .15s,box-shadow .15s}.au-opt:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(23,23,19,.13)}
+.page.au-escolha{background:var(--ink)}

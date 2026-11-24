@@ -37,7 +37,7 @@ export function ApplyStatus({ sent }) {
       <p className="mut">{status === 'pending' && email ? <>Estamos analisando o perfil. Conferimos o número de seguidores e se você é o titular. Quando for aprovado, entre com <b>{email}</b>.</> : T.p}</p>
       {c && <div className="card soft col" style={{ gap: 6 }}><div className="row jb"><span className="sm">Seu perfil</span><b>@{c.handle}</b></div><div className="row jb"><span className="sm">Seguidores</span><b>{c.followers ? num(c.followers) : 'em conferência'}</b></div><div className="row jb"><span className="sm">Mínimo atual</span><b>{min == null ? '…' : num(min)}</b></div></div>}
       <Note>Seu e-mail fica guardado só para este aviso e é apagado se você pedir.</Note>
-      <div className="col" style={{ gap: 10 }}><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar">Já fui aprovado: entrar</Link>}</div>
+      <div className="col" style={{ gap: 10 }}><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar?como=criador">Já fui aprovado: entrar</Link>}</div>
     </AuthFrame>
   )
 }

@@ -188,7 +188,7 @@ export const Avatar = ({ name, color, bg, size = 44, font = 20 }) => <div classN
 export const Loading = () => <div className="pad" style={{ padding: 32 }}>Carregando…</div>
 
 // Guarda de rotas: exige login, criador aprovado ou admin.
-export function Guard({ need = 'user', finished, to = '/entrar', children }) {
+export function Guard({ need = 'user', finished, to = '/entrar?como=criador', children }) {
   const { me } = useMe()
   if (me === undefined) return <Loading />
   if (!me.user) return <Redirect to={to} />

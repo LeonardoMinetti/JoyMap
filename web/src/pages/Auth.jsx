@@ -31,25 +31,25 @@ const Google = () => (
 )
 
 // Moldura: fundo em largura total (preto para criador, amarelo para explorador) com elementos flutuantes, o cartão e a ilustração em movimento
-const KINDS = { criador: { set: 'g', Motion: MapMotion }, explorador: { set: 'q', Motion: SaveMotion }, restaurante: { set: 'd', Motion: RestaurantMotion } }
+const KINDS = { escolha: { set: 'hero', Motion: null }, criador: { set: 'g', Motion: MapMotion }, explorador: { set: 'q', Motion: SaveMotion }, restaurante: { set: 'd', Motion: RestaurantMotion } }
 export function AuthFrame({ kind = 'criador', children }) {
   const wide = useMedia('(min-width: 901px)')
   const { set, Motion } = KINDS[kind]
   return (
     <div className={`page lp au fl-host au-${kind}`}>
       <DoodleDefs />
-      <Top active={-1} overlay dark={kind === 'criador'} />
+      <Top active={-1} overlay dark={kind === 'criador' || kind === 'escolha'} />
       <Floaters set={set} />
       <main className="w au-w">
         <section className="au-card">{children}</section>
-        {wide && <Scene className="au-mo"><Motion /></Scene>}
+        {wide && Motion && <Scene className="au-mo"><Motion /></Scene>}
       </main>
     </div>
   )
 }
 
 // endereço de cada tela: só muda o tipo de conta (como) e se é criar conta (criar)
-const url = (kind, criar, voltar) => { const q = new URLSearchParams(); if (kind !== 'criador') q.set('como', kind); if (criar) q.set('criar', '1'); if (voltar && voltar !== '/salvos') q.set('voltar', voltar); const s = q.toString(); return '/entrar' + (s ? `?${s}` : '') }
+const url = (kind, criar, voltar) => { const q = new URLSearchParams(); q.set('como', kind); if (criar) q.set('criar', '1'); if (voltar && voltar !== '/salvos') q.set('voltar', voltar); const s = q.toString(); return '/entrar' + (s ? `?${s}` : '') }
 const Alt = ({ children }) => <div className="au-alt sm mut">{children}</div>
 
 // Acessos sociais: Google (e Instagram para criadores). Ligados pelo servidor; enquanto não estiverem, avisam.
@@ -203,12 +203,38 @@ function ApplyForm({ me, voltar }) {
   )
 }
 
+// Primeira tela de "Entrar": qual é o tipo de conta
+const CHOICES = [
+  ['criador', 'user', 'Sou criador', 'Tenho, ou quero ter, um mapa das minhas indicações, com painel, Estúdio de estilo e métricas.'],
+  ['explorador', 'heart', 'Sou explorador', 'Quero salvar lugares dos mapas dos criadores e encontrar tudo num só lugar.'],
+  ['restaurante', 'pin', 'Tenho um restaurante', 'Quero ver quais criadores indicam o meu lugar e corrigir os dados exibidos.'],
+]
+function Choose() {
+  return (
+    <AuthFrame kind="escolha">
+      <span className="eb">Entrar</span>
+      <h1 className="d s44">Como você quer entrar?</h1>
+      <p className="mut">Escolha o tipo de conta. Dá para ter mais de uma com o mesmo e-mail.</p>
+      <div className="col" style={{ gap: 12 }}>
+        {CHOICES.map(([k, ic, t, d]) => (
+          <Link key={k} to={url(k, false)} className="card row au-opt" style={{ gap: 14, textDecoration: 'none', color: 'inherit' }}>
+            <span className="av" style={{ flex: 'none' }}><Icon n={ic} s={20} c="currentColor" /></span>
+            <div className="sp"><b>{t}</b><div className="sm mut">{d}</div></div>
+            <Icon n="next" s={18} />
+          </Link>))}
+      </div>
+      <Alt>Ainda não tem conta? Escolha o tipo e toque em <b>Criar conta</b>.</Alt>
+    </AuthFrame>
+  )
+}
+
 export function Login() {
   const { me } = useMe()
   const { search: qs } = useLocation() // reage à troca de ?criar= / ?como= sem recarregar
   const como = qs.get('como')
   const kind = como === 'explorador' || como === 'usuario' || qs.get('leitor') === '1' ? 'explorador' : como === 'restaurante' ? 'restaurante' : 'criador'
   const criar = qs.get('criar') === '1' || qs.get('novo') === '1'
+  const escolher = !como && !criar && qs.get('leitor') !== '1' && !qs.get('erro')
   // volta só para um mapa (/@criador...) ou para os salvos
   const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
   useTitle(`${criar ? 'Criar conta' : 'Entrar'}${kind === 'explorador' ? ' de explorador' : kind === 'restaurante' ? ' de restaurante' : ''}`)
@@ -216,10 +242,12 @@ export function Login() {
     if (!me?.user) return
     const home = homeFor(me)
     if (me.creator || home.startsWith('/restaurante') || home === '/admin') navigate(home, { replace: true }) // criador: painel ou etapa; restaurante e admin: o painel deles
+    else if (escolher) navigate(home, { replace: true }) // já entrou: vai para o painel do tipo de conta
     else if (kind === 'restaurante') navigate('/restaurante', { replace: true })
     else if (kind === 'explorador') navigate(voltar, { replace: true }) // explorador: volta para onde estava
     else if (!criar) navigate(me.user.role === 'viewer' ? '/entrar?criar=1' : home, { replace: true }) // logado sem mapa: só falta pedir o seu
-  }, [me, kind, criar, voltar])
+  }, [me, kind, criar, voltar, escolher])
+  if (escolher) return <Choose />
   return (
     <AuthFrame kind={kind}>
       {criar && kind === 'criador' ? <ApplyForm me={me} voltar={voltar} /> : <EmailForm key={`${kind}${criar}`} kind={kind} criar={criar} voltar={voltar} />}
