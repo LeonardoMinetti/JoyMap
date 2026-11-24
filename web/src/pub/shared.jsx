@@ -109,7 +109,7 @@ export function useSaved(slug) {
 export function SavedNote({ saved, slug }) {
   if (saved.logged) return <div className="box xs">Seus salvos ficam na sua conta, em qualquer aparelho. <Link to="/salvos" style={{ fontWeight: 700 }}>Ver salvos de todos os mapas</Link></div>
   if (STATIC) return <div className="box xs">Seus salvos ficam só neste aparelho. Entrar com e-mail para guardar na conta e ver os salvos de todos os mapas ainda não está disponível na demonstração.</div>
-  return <div className="box xs">Seus salvos ficam só neste aparelho. <Link to={`/entrar?leitor=1&voltar=${encodeURIComponent(`/@${slug}`)}`} style={{ fontWeight: 700 }}>Entre com e-mail</Link> para guardá-los na conta e ver os salvos de todos os mapas.</div>
+  return <div className="box xs">Seus salvos ficam só neste aparelho. <Link to={`/entrar?como=usuario&voltar=${encodeURIComponent(`/@${slug}`)}`} style={{ fontWeight: 700 }}>Entre com e-mail</Link> para guardá-los na conta e ver os salvos de todos os mapas.</div>
 }
 
 export const NoneOpen = ({ onClear }) => (

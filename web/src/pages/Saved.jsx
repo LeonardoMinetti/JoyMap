@@ -39,7 +39,7 @@ export default function Saved() {
       <div className="w" style={{ paddingTop: 40, paddingBottom: 64, maxWidth: 760 }}>
         <h1 className="d s56">Meus salvos</h1>
         <p className="mut" style={{ marginTop: 6 }}>{logged ? 'Os lugares que você guardou na sua conta, de todos os mapas.' : 'Os lugares que você guardou neste aparelho, de todos os mapas.'}</p>
-        {!logged && !STATIC && <div className="note row" style={{ marginTop: 16 }}><span className="sp">Entre com e-mail, sem senha, para guardar seus salvos na conta e ver em qualquer aparelho.</span><Link className="btn sm" to="/entrar?leitor=1&voltar=%2Fsalvos">Entrar</Link></div>}
+        {!logged && !STATIC && <div className="note row" style={{ marginTop: 16 }}><span className="sp">Entre com e-mail, sem senha, para guardar seus salvos na conta e ver em qualquer aparelho.</span><Link className="btn sm" to="/entrar?como=usuario&voltar=%2Fsalvos">Entrar</Link></div>}
         {STATIC && <div className="note" style={{ marginTop: 16 }}>Na demonstração não há conta de espectador: os salvos ficam só neste aparelho.</div>}
         {!rows ? <Loading /> : !rows.length ? <p className="mut" style={{ marginTop: 28 }}>Nada salvo ainda. Abra um mapa e toque no coração de um lugar.</p> : (
           <div className="col" style={{ gap: 28, marginTop: 28 }}>

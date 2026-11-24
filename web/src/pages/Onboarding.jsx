@@ -1,7 +1,7 @@
 import { STATIC } from '../lib/base.js'
 import React, { useEffect, useState } from 'react'
 import { api } from '../api.js'
-import { Link, Redirect, navigate } from '../lib/router.jsx'
+import { Link, Redirect, navigate, useLocation } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { Logo, Hd, Stage, Step, Note, Check, Field, Switch, Toggle, Guard, Loading, useTitle } from '../lib/ui.jsx'
 import { useMe, homeFor } from '../lib/me.jsx'
@@ -45,7 +45,7 @@ export function Apply() {
           <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
           <Field label="@ no TikTok (opcional)" id="t"><div className="in"><input id="t" value={f.tiktok} onChange={set('tiktok')} placeholder="@seuperfil" autoComplete="off" /></div></Field>
           <Check on={f.acceptTerms} onChange={(v) => setF({ ...f, acceptTerms: v })}>Sou o titular ou represento este perfil e aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>
-          {err && <p className="err" role="alert">{err} {err.includes('Entre') && <Link className="link" to="/entrar">Entrar</Link>}</p>}
+          {err && <p className="err" role="alert">{err} {err.includes('Entre') && <Link className="link" to="/entrar?como=criador">Entrar</Link>}</p>}
         </div>
         <div className="ft"><button className="btn blk" disabled={busy}>Enviar candidatura</button><span className="xs mut c">Sem senha. Sem cobrança nesta etapa.</span></div>
       </form>
@@ -82,7 +82,7 @@ export function ApplyStatus({ sent }) {
         {c && <div className="card soft col" style={{ gap: 6 }}><div className="row jb"><span className="sm">Seu perfil</span><b>@{c.handle}</b></div><div className="row jb"><span className="sm">Seguidores</span><b>{c.followers ? num(c.followers) : 'em conferência'}</b></div><div className="row jb"><span className="sm">Mínimo atual</span><b>{min == null ? '…' : num(min)}</b></div></div>}
         <Note>Seu e-mail fica guardado só para este aviso e é apagado se você pedir.</Note>
       </div>
-      <div className="ft"><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar">Já fui aprovado: entrar</Link>}</div>
+      <div className="ft"><Link className="btn blk" to="/exemplos">Ver mapas de exemplo</Link>{!sent && <Link className="btn ln blk" to="/">Voltar ao início</Link>}{sent && <Link className="btn ln blk" to="/entrar?como=criador">Já fui aprovado: entrar</Link>}</div>
     </Stage>
   )
 }
@@ -118,10 +118,11 @@ export function Login() {
   const [wait, setWait] = useState(0)
   const [igMsg, setIgMsg] = useState(false)
   // espectador: quem não tem mapa e só quer guardar lugares entra por aqui (/entrar?leitor=1&voltar=/@criador)
-  const qs = new URLSearchParams(location.search)
-  const leitor = qs.get('leitor') === '1'
+  const { search: qs } = useLocation() // reage à troca de ?como= sem recarregar
+  const como = qs.get('como') || (qs.get('leitor') === '1' ? 'usuario' : null) // criador (tem mapa e painel) ou usuário (só guarda lugares)
+  const leitor = como === 'usuario'
   const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
-  useEffect(() => { if (me?.user) navigate(leitor ? voltar : homeFor(me), { replace: true }) }, [me])
+  useEffect(() => { if (me?.user) navigate(leitor ? voltar : me.user.role === 'viewer' && !me.creator ? '/candidatura' : homeFor(me), { replace: true }) }, [me])
   useEffect(() => { if (wait <= 0) return; const h = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(h) }, [wait])
   // quando o link é aberto em outra aba, esta tela percebe o login
   useEffect(() => { if (!sent) return; const h = setInterval(() => reload(), 3500); return () => clearInterval(h) }, [sent, reload])
@@ -144,9 +145,39 @@ export function Login() {
       <div className="ft">{sent.devLink && <a className="btn blk" href={sent.devLink}>Abrir o link (modo desenvolvimento)</a>}<button className="btn ln blk" disabled={wait > 0} onClick={() => send()}>{wait > 0 ? `Reenviar link (${wait}s)` : 'Reenviar link'}</button></div>
     </Stage>
   )
-  if (STATIC) return (
+  if (!como) return (
     <Stage>
       <Hd back="/" title="Entrar" />
+      <div className="bd" style={{ justifyContent: 'center' }}>
+        <Logo />
+        <h1 className="d s44">Como você quer entrar?</h1>
+        <p className="mut">Escolha o tipo de acesso. Dá para ter os dois com o mesmo e-mail.</p>
+        <Link to="/entrar?como=criador" className="card col" style={{ gap: 6, textDecoration: 'none', color: 'inherit' }}>
+          <div className="row jb"><b className="d s26">Sou criador</b><Icon n="next" s={18} /></div>
+          <span className="sm mut">Tenho, ou quero ter, um mapa próprio de lugares que indico. Acesso ao painel, ao Estúdio de estilo e às métricas.</span>
+        </Link>
+        <Link to="/entrar?como=usuario" className="card col" style={{ gap: 6, textDecoration: 'none', color: 'inherit' }}>
+          <div className="row jb"><b className="d s26">Sou usuário</b><Icon n="next" s={18} /></div>
+          <span className="sm mut">Não tenho mapa. Quero guardar os lugares que salvo dos mapas dos criadores e ver tudo num só lugar, em qualquer aparelho. Sem painel.</span>
+        </Link>
+      </div>
+      <div className="ft"><span className="xs mut c">Ainda não tem mapa? <b><Link to="/candidatura">Peça o seu</Link></b></span></div>
+    </Stage>
+  )
+  if (STATIC && leitor) return (
+    <Stage>
+      <Hd back="/entrar" title="Entrar como usuário" />
+      <div className="bd" style={{ justifyContent: 'center' }}>
+        <Logo />
+        <h1 className="d s44">Conta de usuário</h1>
+        <p className="mut">Na demonstração não existe conta de usuário: os lugares que você salva ficam só neste aparelho. Com a plataforma no ar, você entra com e-mail, sem senha, e vê seus salvos em qualquer aparelho.</p>
+        <Link className="btn blk" to="/salvos">Ver meus salvos neste aparelho</Link>
+      </div>
+    </Stage>
+  )
+  if (STATIC) return (
+    <Stage>
+      <Hd back="/entrar" title="Entrar como criador" />
       <div className="bd" style={{ justifyContent: 'center' }}>
         <Logo />
         <h1 className="d s44">Painel de demonstração</h1>
@@ -158,7 +189,7 @@ export function Login() {
   return (
     <Stage>
       <form onSubmit={send} style={{ display: 'contents' }}>
-        <Hd back="/" title="Entrar" />
+        <Hd back="/entrar" title={leitor ? 'Entrar como usuário' : 'Entrar como criador'} />
         <div className="bd" style={{ justifyContent: 'center' }}>
           <Logo />
           <h1 className="d s44">{leitor ? 'Entre para guardar seus lugares' : 'Acesse sem senha'}</h1>
