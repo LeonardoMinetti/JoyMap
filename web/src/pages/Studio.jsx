@@ -310,7 +310,6 @@ export function StudioMap() {
       <Sec title="Base do mapa" hint="O desenho das ruas e dos bairros por trás dos seus pins">
         <div className="g2" style={{ gap: 10 }}>
           {Object.entries(TONES).map(([k, t]) => <button key={k} aria-pressed={T.tone === k} className={'card col' + (T.tone === k ? ' sel' : '')} style={{ padding: 8, gap: 8, textAlign: 'left' }} onClick={() => setTheme({ tone: k })}><div style={{ borderRadius: 12, overflow: 'hidden', pointerEvents: 'none', position: 'relative' }}><FakeMap h={110} tone={k} n={5} lab={false} />{T.tone === k && <span style={{ position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%', background: 'var(--ink)', display: 'grid', placeItems: 'center' }}><Icon n="check" s={14} c="#fff" /></span>}</div><b className="xs" style={{ paddingLeft: 4 }}>{t.label}</b></button>)}
-          <div className="card soft col" style={{ padding: 8, gap: 6, justifyContent: 'center', alignItems: 'center' }}><Icon n="plus" s={22} /><b className="xs">Mais estilos em breve</b></div>
         </div>
       </Sec>
       <Sec title="Nomes de bairros">
