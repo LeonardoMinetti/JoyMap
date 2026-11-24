@@ -2,21 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Logo, Guard, Loading, Note, useTitle } from '../lib/ui.jsx'
+import { AdminPage, Loading, Note, useTitle } from '../lib/ui.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { num } from '../theme.jsx'
-import { withBase } from '../lib/base.js'
 
 const DEF = { accent: '#d93a1c', tone: 'light', shape: 'circle', pinSize: 55, pinBorder: true, cluster: false, selected: 'outline', mapLabels: true, labelDensity: 40, start: 'all', startView: null, categories: [{ id: 'low', name: 'Baixa confiança', color: '#d93a1c', icon: 'alert' }] }
-function Shell({ active, children }) {
-  const nav = [['candidaturas', 'Candidaturas', '/admin'], ['mapas', 'Mapas', '/admin/mapas'], ['moderacao', 'Moderação', '/admin/moderacao'], ['metricas', 'Métricas', '/admin/metricas']]
-  return (
-    <Guard need="admin"><div className="page"><div className="main" style={{ maxWidth: 1180, margin: '0 auto' }}>
-      <div className="row jb wrap"><div className="row"><Logo /><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Admin</span></div><div className="row wrap">{nav.map(([k, l, to]) => <Link key={k} className={'chip' + (active === k ? ' on' : '')} to={to}>{l}</Link>)}<a className="chip" href={withBase('/painel')}>Sair do admin</a></div></div>
-      {children}
-    </div></div></Guard>
-  )
-}
+const Shell = AdminPage
 
 // I1 · fila de candidaturas
 export function Applications() {
@@ -32,7 +23,7 @@ export function Applications() {
     <Shell active="candidaturas">
       {!d ? <Loading /> : <>
         <div className="row jb wrap"><h1 className="d s44">Fila de candidaturas</h1><div className="row"><span className="tag">Mínimo atual: {num(d.minFollowers)} seguidores</span><button className="btn ln sm" onClick={adjust}>Ajustar critério</button></div></div>
-        <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Perfil</th><th>Seguidores</th><th>Critério</th><th>Verificação</th><th>Status</th><th /></tr></thead><tbody>
+        <div className="card" style={{ padding: 8, overflowX: 'auto' }}><table className="tbl admt"><thead><tr><th>Perfil</th><th>Seguidores</th><th>Critério</th><th>Verificação</th><th>Status</th><th /></tr></thead><tbody>
           {d.creators.map((c) => <Row key={c.id} c={c} S={S} C={C} decide={decide} />)}
           {!d.creators.length && <tr><td colSpan="6" className="mut">Nenhuma candidatura ainda.</td></tr>}</tbody></table></div>
         <Note>Confira o perfil no Instagram, informe o número de seguidores e confirme o titular antes de aprovar. Critérios além de seguidores: perfil ativo, conteúdo de indicação de lugares (gastronomia, viagem, passeios, esportes) e sem sinais de perfil falso. A decisão fica registrada com data e responsável.</Note></>}
@@ -101,7 +92,7 @@ export function Moderation() {
       <h1 className="d s44">Denúncias</h1>
       <div className="row wrap">{CH.map(([k, l]) => <button key={k} className={'chip' + (st === k ? ' on' : '')} onClick={() => { setSt(k); setSel(null) }}>{l}{d ? ` (${d.counts[k]})` : ''}</button>)}</div>
       {!d ? <Loading /> : <>
-        <div className="card" style={{ padding: 8 }}><table className="tbl"><thead><tr><th>Lugar / mapa</th><th>Motivo</th><th>Denúncias</th><th>Prazo</th><th /></tr></thead><tbody>
+        <div className="card" style={{ padding: 8, overflowX: 'auto' }}><table className="tbl admt"><thead><tr><th>Lugar / mapa</th><th>Motivo</th><th>Denúncias</th><th>Prazo</th><th /></tr></thead><tbody>
           {d.groups.map((g) => <tr key={g.ids[0]} style={sel === g.ids[0] ? { background: 'var(--soft)' } : undefined}><td><b>{g.placeName || 'Mapa inteiro'}</b><div className="xs mut">@{g.handle}</div></td><td>{g.reason}</td><td>{g.count}</td><td>{st === 'resolved' ? '—' : g.daysLeft ? `${g.daysLeft} dias` : 'vence hoje'}</td><td>{st !== 'resolved' && <button className={'btn sm' + (st === 'review' ? ' sec' : '')} onClick={() => setSel(g.ids[0])}>{st === 'open' ? 'Analisar' : 'Abrir'}</button>}</td></tr>)}
           {!d.groups.length && <tr><td colSpan="5" className="mut">Nada por aqui.</td></tr>}</tbody></table></div>
         <div className="card col" style={{ gap: 8 }}><b>Ações possíveis</b>

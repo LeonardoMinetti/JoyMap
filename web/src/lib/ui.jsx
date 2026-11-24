@@ -8,6 +8,8 @@ import logoUrl from '../brand/logo.svg'
 import FakeMap from '../FakeMap.jsx'
 import { withBase } from './base.js'
 
+// Para onde o botão do topo leva quem já entrou, conforme o tipo de conta
+export const homeLink = (me) => me.user.role === 'admin' ? ['Admin', '/admin'] : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
 export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="wagli"><img src={logoUrl} alt="wagli" style={{ height: size }} /></Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
@@ -26,11 +28,11 @@ export function Top({ active = -1, overlay = false, dark = false }) {
         <Logo />
         <nav className="l" aria-label="Principal">{NAV.map(([l, to], i) => <Link key={l} className={i === active ? 'it on' : 'it'} to={to}>{l}</Link>)}</nav>
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
-        {me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link className="btn sm" to="/salvos">Meus salvos</Link> : <Link className="btn sm" to="/painel">Meu painel</Link>) : <>
+        {me?.user ? <Link className="btn sm" to={homeLink(me)[1]}>{homeLink(me)[0]}</Link> : <>
           <Link className="btn ln sm tb-in" to="/entrar">Entrar</Link>
           <Link className="btn sm" to="/entrar?criar=1">Quero meu mapa</Link></>}
         <button type="button" className="tb-burger" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="tb-menu" onClick={() => setOpen(!open)}><i /><i /><i /></button>
-        {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? (me.user.role === 'viewer' && !me.creator ? <Link to="/salvos" onClick={go}>Meus salvos</Link> : <Link to="/painel" onClick={go}>Meu painel</Link>) : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
+        {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? <Link to={homeLink(me)[1]} onClick={go}>{homeLink(me)[0]}</Link> : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
       </header>
     </>
   )
@@ -38,11 +40,11 @@ export function Top({ active = -1, overlay = false, dark = false }) {
 export function SiteFooter() {
   const { me } = useMe()
   // quem não tem mapa e só quer guardar lugares entra por aqui (ou pelo mapa de um criador)
-  const exp = me?.user ? <Link className="sf-in" to={me.creator ? '/painel' : '/salvos'}><Icon n="user" s={16} c="currentColor" />{me.creator ? 'Meu painel' : 'Meus salvos'}</Link> : <Link className="sf-in" to="/entrar?como=explorador"><Icon n="user" s={16} c="currentColor" />Entrar como explorador</Link>
+  const exp = me?.user ? <Link className="sf-in" to={homeLink(me)[1]}><Icon n="user" s={16} c="currentColor" />{homeLink(me)[0]}</Link> : <Link className="sf-in" to="/entrar?como=explorador"><Icon n="user" s={16} c="currentColor" />Entrar como explorador</Link>
   return (
     <footer className="w sf">
       <Logo size={26} />
-      <nav className="sf-l" aria-label="Rodapé">{exp}<Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/rede">Mapa geral (protótipo)</Link><Link to="/voo">Meu voo</Link></nav>
+      <nav className="sf-l" aria-label="Rodapé">{exp}<Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/para-restaurantes">Para restaurantes</Link><Link to="/voo">Meu voo</Link></nav>
     </footer>
   )
 }
@@ -102,9 +104,8 @@ export function Side({ active }) {
   )
 }
 
-// Espaço do explorador: o mesmo layout do painel do criador (menu lateral no computador; barra superior e abas fixas no celular), com três áreas
-const EXP = [['salvos', 'Salvos', 'heart', '/salvos'], ['criadores', 'Criadores', 'map', '/salvos/criadores'], ['conta', 'Conta', 'user', '/salvos/conta']]
-export function ExplorerPage({ active, children }) {
+// Layout de painel para qualquer tipo de conta (mesmo visual do painel do criador): menu lateral no computador; barra superior e abas fixas no celular
+function RolePanel({ items, active, label, banner, children, loginTo }) {
   const { me, reload } = useMe()
   const u = me?.user
   const out = async () => { await api('/auth/logout', { method: 'POST' }); await reload(); navigate('/') }
@@ -113,23 +114,41 @@ export function ExplorerPage({ active, children }) {
     <div className="page"><div className="app">
       <div className="side">
         <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
-        <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(name)}</div><div style={{ minWidth: 0 }}><div className="b sm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{name}</div><div className="xs mut">Explorador</div></div></div>
-        {EXP.map(([k, l, i, to]) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}</Link>)}
-        <Link className="mapbn" to="/@demo" style={{ marginTop: 'auto' }} aria-label="Explorar um mapa">
-          <span className="mapbn-pv"><FakeMap h={104} tone="light" shape="drop" acc="#ff4b2b" n={6} lab={false} /></span>
-          <span className="mapbn-tx"><b className="sm">Explorar um mapa</b><span className="xs">Descubra novos lugares</span></span>
-          <Icon n="next" s={16} c="currentColor" />
-        </Link>
-        {u ? <button className="it" style={{ background: 'none', border: 0, textAlign: 'left' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button> : <Link className="it" to="/entrar?como=explorador&voltar=%2Fsalvos"><Icon n="user" s={18} c="#404040" />Entrar</Link>}
+        <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(name)}</div><div style={{ minWidth: 0 }}><div className="b sm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{name}</div><div className="xs mut">{label}</div></div></div>
+        {items.map(([k, l, i, to]) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}</Link>)}
+        <div style={{ marginTop: 'auto', display: 'grid', gap: 4 }}>
+          {banner}
+          {u ? <button className="it" style={{ background: 'none', border: 0, textAlign: 'left' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button> : <Link className="it" to={loginTo}><Icon n="user" s={18} c="#404040" />Entrar</Link>}
+        </div>
       </div>
-      <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}>{u ? <button type="button" className="link xs" onClick={out}>Sair</button> : <Link className="link xs" to="/entrar?como=explorador&voltar=%2Fsalvos">Entrar</Link>}<div className="av">{initial(name)}</div></div></div>
-      <nav className="mtabs" aria-label="Espaço do explorador">
-        {EXP.map(([k, l, i, to]) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{l}</span></Link>)}
+      <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}>{u ? <button type="button" className="link xs" onClick={out}>Sair</button> : <Link className="link xs" to={loginTo}>Entrar</Link>}<div className="av">{initial(name)}</div></div></div>
+      <nav className="mtabs" aria-label={label}>
+        {items.map(([k, l, i, to]) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{l}</span></Link>)}
       </nav>
       <div className="main">{children}</div>
     </div></div>
   )
 }
+const EXP = [['salvos', 'Salvos', 'heart', '/salvos'], ['criadores', 'Criadores', 'map', '/salvos/criadores'], ['conta', 'Conta', 'user', '/salvos/conta']]
+export const ExplorerPage = ({ active, children }) => (
+  <RolePanel items={EXP} active={active} label="Explorador" loginTo="/entrar?como=explorador&voltar=%2Fsalvos"
+    banner={<Link className="mapbn" to="/@demo" aria-label="Explorar um mapa">
+      <span className="mapbn-pv"><FakeMap h={104} tone="light" shape="drop" acc="#ff4b2b" n={6} lab={false} /></span>
+      <span className="mapbn-tx"><b className="sm">Explorar um mapa</b><span className="xs">Descubra novos lugares</span></span>
+      <Icon n="next" s={16} c="currentColor" />
+    </Link>}>{children}</RolePanel>
+)
+// Administração: candidaturas, mapas, moderação, rede (mapa geral) e métricas
+const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
+export const AdminPage = ({ active, children }) => (
+  <Guard need="admin"><RolePanel items={ADM} active={active} label="Administração" loginTo="/entrar"
+    banner={<a className="it" href={withBase('/painel')}><Icon n="home" s={18} c="#404040" />Painel de criador</a>}>{children}</RolePanel></Guard>
+)
+// Restaurante: tipo de conta próprio (sem plano definido ainda)
+const RST = [['visao', 'Visão geral', 'home', '/restaurante'], ['percepcao', 'Percepção', 'shield', '/restaurante/percepcao'], ['lugar', 'Reivindicar', 'pin', '/restaurantes'], ['conta', 'Conta', 'user', '/restaurante/conta']]
+export const RestaurantPage = ({ active, children }) => (
+  <Guard to="/entrar?como=restaurante"><RolePanel items={RST} active={active} label="Restaurante" loginTo="/entrar?como=restaurante">{children}</RolePanel></Guard>
+)
 
 // Abas de navegação entre seções de uma mesma área (Estúdio, Minha conta). Padrão único do painel.
 export function Tabs({ items, active, label }) {
@@ -170,10 +189,10 @@ export const Avatar = ({ name, color, bg, size = 44, font = 20 }) => <div classN
 export const Loading = () => <div className="pad" style={{ padding: 32 }}>Carregando…</div>
 
 // Guarda de rotas: exige login, criador aprovado ou admin.
-export function Guard({ need = 'user', finished, children }) {
+export function Guard({ need = 'user', finished, to = '/entrar', children }) {
   const { me } = useMe()
   if (me === undefined) return <Loading />
-  if (!me.user) return <Redirect to="/entrar" />
+  if (!me.user) return <Redirect to={to} />
   if (need === 'admin') return me.user.role === 'admin' ? children : <Restricted />
   if (need === 'approved') {
     if (!me.creator || me.creator.status !== 'approved') return <Redirect to={homeFor(me)} />

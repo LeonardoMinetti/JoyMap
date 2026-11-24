@@ -49,7 +49,7 @@ export default function auth(app, x) {
     if (!EMAIL.test(e)) return c.json({ error: 'email_invalido' }, 400)
     const token = randomBytes(24).toString('hex')
     db.prepare('INSERT INTO login_tokens(hash,email,expires_at) VALUES (?,?,?)').run(sha(token), e, Date.now() + 15 * 60000)
-    const dest = next === 'viewer' ? `&next=viewer${safeBack(back) ? `&back=${encodeURIComponent(safeBack(back))}` : ''}` : next === '/voo' ? '&next=voo' : ''
+    const dest = next === 'restaurante' ? '&next=restaurante' : next === 'viewer' ? `&next=viewer${safeBack(back) ? `&back=${encodeURIComponent(safeBack(back))}` : ''}` : next === '/voo' ? '&next=voo' : ''
     const link = `${cfg.baseUrl}/api/auth/verify?token=${token}${dest}`
     if (await x.sendMail(e, 'Seu link de acesso', `Abra para entrar (vale 15 minutos, uso único):\n${link}`)) return c.json({ ok: true })
     return c.json({ ok: true, devLink: cfg.dev ? link : undefined })
@@ -60,13 +60,15 @@ export default function auth(app, x) {
     if (!row || row.used || row.expires_at < Date.now()) return c.redirect('/entrar?erro=link')
     db.prepare('UPDATE login_tokens SET used=1 WHERE hash=?').run(row.hash)
     const viewer = c.req.query('next') === 'viewer'
-    if (viewer) db.prepare("INSERT OR IGNORE INTO users(email, role) VALUES (?, 'viewer')").run(row.email)
+    const restaurant = c.req.query('next') === 'restaurante'
+    if (viewer || restaurant) db.prepare('INSERT OR IGNORE INTO users(email, role) VALUES (?, ?)').run(row.email, viewer ? 'viewer' : 'restaurant')
     else db.prepare('INSERT OR IGNORE INTO users(email) VALUES (?)').run(row.email)
     const u = db.prepare('SELECT * FROM users WHERE email=?').get(row.email)
     if (cfg.adminEmail && row.email === cfg.adminEmail && u.role !== 'admin') db.prepare("UPDATE users SET role='admin' WHERE id=?").run(u.id)
     const sid = randomBytes(24).toString('hex')
     db.prepare('INSERT INTO sessions(hash,user_id,expires_at) VALUES (?,?,?)').run(sha(sid), u.id, Date.now() + 30 * 86400000)
     setCookie(c, 'sid', sid, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 30 * 86400, secure: !cfg.dev })
+    if (restaurant) return c.redirect('/restaurante')
     if (viewer) return c.redirect(safeBack(c.req.query('back')) || '/salvos')
     return c.redirect(c.req.query('next') === 'voo' ? '/voo' : '/painel')
   })

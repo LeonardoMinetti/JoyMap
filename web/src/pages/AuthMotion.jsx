@@ -55,3 +55,26 @@ export function SaveMotion() {
     </Phone>
   )
 }
+
+const INDIC = [['Mapa de demonstração', '#ff4b2b', '2 d'], ['Bia & Caio', '#2d7ff9', '1 sem'], ['Duda & Lu', '#36c5a0', '3 sem']]
+// Restaurante: criadores indicam o lugar e as indicações chegam ao painel
+export function RestaurantMotion() {
+  const { on, rm, paused } = useScene()
+  const f = useCycle([1200, 1100, 1100, 1100, 3600], { on, rm, paused })
+  const n = Math.min(f, 3)
+  return (
+    <Phone h={PH} label="Ilustração: indicações de criadores chegando ao painel do restaurante">
+      <Native h={PH}>
+        <div className="rm">
+          <b className="rm-h">Izakaya Exemplo</b>
+          <span className="rm-s">Liberdade · lugar verificado</span>
+          <div className="rm-k"><div><b>{n}</b><span>criadores indicaram</span></div><div><b>{n}</b><span>indicações</span></div></div>
+          <div className="rm-c"><b>Indicações recebidas</b>
+            {INDIC.map(([nm, c, d], i) => <div key={nm} className={'rm-i' + (i < n ? ' on' : '')}><i style={{ background: c }} /><span>{nm}</span><em>{d}</em></div>)}
+          </div>
+        </div>
+      </Native>
+      <div className="mk-toast2 rm-t"><i className={f === 4 ? 'ok' : ''} />{f === 4 ? 'Painel atualizado' : 'Nova indicação'}<b>{n} {n === 1 ? 'criador' : 'criadores'}</b></div>
+    </Phone>
+  )
+}

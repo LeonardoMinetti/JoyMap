@@ -12,7 +12,7 @@ import { Accordion } from './trust.jsx'
 const em = (n) => ({ lib: `lib:fluent3d:${n}` })
 const hl = { background: 'linear-gradient(transparent 60%, var(--hl, var(--acc)) 60%)', padding: '0 4px' }
 const Deco = ({ set, children }) => <div className="fl-host">{children}<Floaters set={set} /></div>
-const CLAIM = '/restaurantes'
+const CLAIM = '/entrar?como=restaurante&criar=1'
 
 const BENEFITS = [
   ['magnifying-glass-tilted-left', 'Veja quem indica você', 'Descubra quais criadores incluíram o seu restaurante no mapa, e quando. Sem precisar vasculhar feeds.', null],

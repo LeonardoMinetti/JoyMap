@@ -474,3 +474,17 @@ body{background:var(--cream)}.page{background:var(--cream)}
 /* mesma altura em todos os cenários de entrar e criar conta (computador): o cartão tem altura fixa e o rodapé de links fica embaixo */
 .au-card>form{flex:1}.au-alt{margin-top:auto}
 @media (min-width:901px){.au-card{height:690px}.au-mo .dv-s{height:676px!important}}
+/* Administração · Rede: lista e mapa lado a lado (mapa primeiro no celular) */
+.net{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;height:calc(100vh - 150px);min-height:520px}
+.net-m{position:relative;border-radius:24px;overflow:hidden;background:#e9edf1;box-shadow:0 6px 20px rgba(23,23,19,.07)}
+.net-l{overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px}
+@media (max-width:900px){.net{grid-template-columns:minmax(0,1fr);height:auto;min-height:0}.net-m{height:340px}.net-l{overflow:visible}}
+.page.au-restaurante{background:var(--mint)}
+.rm{padding:14px 20px;display:grid;gap:12px;align-content:start;height:100%;background:#fff}
+.rm-h{font:700 30px/1.05 var(--disp);letter-spacing:-.025em;padding-top:56px}.rm-s{font-size:14px;color:var(--mut);margin-top:-8px}
+.rm-k{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rm-k div{border-radius:20px;padding:16px;background:var(--cream);display:grid;gap:4px}.rm-k b{font:700 40px/1 var(--disp);letter-spacing:-.03em}.rm-k span{font-size:13px;color:var(--mut)}
+.rm-c{border-radius:22px;box-shadow:inset 0 0 0 1.5px var(--line);padding:16px;display:grid;gap:12px}.rm-c>b{font-size:17px}
+.rm-i{display:flex;align-items:center;gap:12px;font-size:15px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s;min-height:22px}.rm-i.on{opacity:1;transform:none}.rm-i i{width:12px;height:12px;border-radius:50%;flex:none}.rm-i span{flex:1}.rm-i em{font-style:normal;font-size:13px;color:var(--mut)}
+/* tabelas da administração no celular: cada linha vira um bloco */
+@media (max-width:700px){.admt thead{display:none}.admt,.admt tbody,.admt tr,.admt td{display:block;width:100%}.admt tr{padding:12px 6px;border-bottom:1px solid var(--line)}.admt td{border:0;padding:4px 0}}
+.mk-toast2.rm-t{top:auto;bottom:26px}

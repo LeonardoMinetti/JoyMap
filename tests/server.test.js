@@ -467,4 +467,9 @@ test('espectador: entra com e-mail, salva lugares de um mapa e os vê em todos o
   assert.equal((await (await call(app, cookie, '/api/saved')).json()).saved.length, 0)
   // o criador não vê quem salvou: a conta do leitor não abre o painel
   assert.notEqual((await call(app, cookie, '/api/creator/places')).status, 200)
+  // conta de restaurante: tipo próprio, entra no painel do restaurante
+  const rr = await (await post(app, '/api/auth/request', { email: 'dono@rest.com', next: 'restaurante' })).json()
+  const rv = await app.request(`/api/auth/verify?token=${new URL(rr.devLink).searchParams.get('token')}&next=restaurante`)
+  assert.equal(rv.headers.get('location'), '/restaurante')
+  assert.equal(db.prepare("SELECT role FROM users WHERE email='dono@rest.com'").get().role, 'restaurant')
 })

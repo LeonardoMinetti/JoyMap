@@ -11,7 +11,7 @@ export const roleOn = () => { try { return sessionStorage.getItem(ROLE) || '' } 
 export const roleEnter = (r) => { try { sessionStorage.setItem(ROLE, r) } catch { /* ok */ } }
 export const roleLeave = () => { try { sessionStorage.removeItem(ROLE) } catch { /* ok */ } }
 export const roleMe = (r) => ({
-  user: { id: 9, email: r === 'admin' ? 'admin@teste.wagli' : 'restaurante@teste.wagli', role: r === 'admin' ? 'admin' : 'user' },
+  user: { id: 9, email: r === 'admin' ? 'admin@teste.wagli' : 'restaurante@teste.wagli', role: r === 'admin' ? 'admin' : 'restaurant' },
   creator: null, notices: [], minFollowers: 10000,
   claims: r === 'restaurante' ? [{ id: 1, place_key: 'k1', place_name: 'Izakaya Exemplo', status: 'approved' }] : [],
 })

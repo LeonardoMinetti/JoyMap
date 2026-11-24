@@ -16,6 +16,8 @@ export function homeFor(me) {
   const c = me?.creator
   try { if (me?.user && sessionStorage.getItem('claim_draft')) return '/restaurantes' } catch { /* ok */ }
   if (!c && me?.user?.role === 'viewer') return '/salvos'
+  if (!c && me?.user?.role === 'restaurant') return '/restaurante'
+  if (!c && me?.user?.role === 'admin') return '/admin'
   if (!c) return me?.claims?.length ? '/restaurante' : '/entrar?criar=1'
   if (c.status !== 'approved') return '/candidatura/status'
   if (c.onboarding !== 'done') return STEP_PATH[c.onboarding] || '/painel'

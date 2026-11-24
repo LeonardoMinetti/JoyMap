@@ -6,18 +6,16 @@ import { demoCreatorApi, demoOn, demoEnter, demoLeave, isCreatorPath, viewerEmai
 const NO_SERVER = () => Object.assign(new Error('Disponível apenas na versão com servidor'), { status: 503, data: { error: 'estatico' } })
 async function staticApi(path, opts) {
   // painel do criador de demonstração (fictício, só no navegador): ver lib/demoCreator.js
-  if (path === '/auth/demo-explorador') { viewerEnter(opts.body?.email); return { ok: true } }
+  if (path === '/auth/demo-explorador') { roleLeave(); viewerEnter(opts.body?.email); return { ok: true } }
+  if (path === '/auth/demo-restaurante' || path === '/auth/demo-admin') { demoLeave(); roleEnter(path.endsWith('admin') ? 'admin' : 'restaurante'); return { ok: true } }
   if (path === '/auth/demo' || path === '/auth/logout') { roleLeave(); if (path === '/auth/logout') viewerLeave(); return demoCreatorApi(path, opts) }
   if (path === '/me') {
     // telas de administração, restaurante e voo: abrir o endereço direto já entra com um perfil fictício
     const rp = stripBase(location.pathname)
     const want = /^\/admin(\/|$)/.test(rp) ? 'admin' : /^\/restaurante/.test(rp) ? 'restaurante' : ''
     if (want) { demoLeave(); roleEnter(want) }
-    else {
-      roleLeave()
-      if (/^\/voo/.test(rp) && !viewerEmail() && !demoOn()) viewerEnter('explorador@teste.wagli')
-      else if (!demoOn() && isCreatorPath(rp)) demoEnter()
-    }
+    else if (/^\/voo/.test(rp) && !viewerEmail() && !demoOn()) { roleLeave(); viewerEnter('explorador@teste.wagli') }
+    else if (!demoOn() && isCreatorPath(rp)) { roleLeave(); demoEnter() }
   }
   if (demoOn()) { const r = await demoCreatorApi(path, opts); if (r) return r }
   if (path === '/me' && roleOn()) return roleMe(roleOn())
