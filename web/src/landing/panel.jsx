@@ -70,8 +70,8 @@ function Trust() {
   return (
     <div className="md">
       <div className="md-2 st" style={{ '--k': 0 }}>
-        <div className="md-yes"><b>O wagli analisa</b><ul><li>Legendas das publicações autorizadas</li><li>Localização e data</li><li>Dados agregados, sem pessoas</li></ul></div>
-        <div className="md-no"><b>O wagli não lê</b><ul><li>Mensagens</li><li>Lista de seguidores</li><li>Comentários</li></ul></div>
+        <div className="md-yes"><b>O JoyMap analisa</b><ul><li>Legendas das publicações autorizadas</li><li>Localização e data</li><li>Dados agregados, sem pessoas</li></ul></div>
+        <div className="md-no"><b>O JoyMap não lê</b><ul><li>Mensagens</li><li>Lista de seguidores</li><li>Comentários</li></ul></div>
       </div>
       <ul className="md-pills">{['Sem senha das suas redes', 'Consentimentos revogáveis', 'Participações extras desativadas'].map((t, i) => <li key={t} className="st" style={{ '--k': i + 1 }}><Icon n="check" s={13} c="currentColor" />{t}</li>)}</ul>
       <p className="md-note st" style={{ '--k': 4 }}>Os textos legais (termos e privacidade) ainda passam por revisão jurídica.</p>
@@ -85,7 +85,7 @@ const CARDS = [
   { k: 'cat', tag: 'Insights', t: 'Categorias e bairros com mais interesse', d: 'Descubra quais categorias e bairros despertam mais interesse na sua audiência.', bg: 'var(--ink)', fg: '#fff', av: { img: ['pizza', 'massa', 'burger'], more: 5 }, body: Categories },
   { k: 'top', tag: 'Insights', t: 'Recomendações que mais despertam interesse', d: 'Saiba quais das suas indicações são mais abertas, sem identificar quem abriu.', bg: '#E4E4E4', fg: 'var(--ink)', av: { img: ['latte', 'croissant', 'bolo'], more: 6 }, body: TopOpened },
   { k: 'ctl', tag: 'Controle', t: 'Você decide o que é publicado e compartilhado', d: 'Nada vai ao ar sem a sua aprovação, e cada compartilhamento é uma decisão separada sua.', bg: '#A5DFCA', fg: 'var(--ink)', av: { em: ['handshake', 'world-map', 'star'] }, body: Choices },
-  { k: 'priv', tag: 'Confiança', t: 'Sem senhas, sem mensagens, sem expor pessoas', d: 'Você não precisa dar a senha das suas redes, e o wagli não lê mensagens nem identifica pessoas.', bg: '#C9B0E9', fg: 'var(--ink)', av: { em: ['locked', 'sparkles', 'handshake'] }, body: Trust },
+  { k: 'priv', tag: 'Confiança', t: 'Sem senhas, sem mensagens, sem expor pessoas', d: 'Você não precisa dar a senha das suas redes, e o JoyMap não lê mensagens nem identifica pessoas.', bg: '#C9B0E9', fg: 'var(--ink)', av: { em: ['locked', 'sparkles', 'handshake'] }, body: Trust },
 ]
 const SHORT = ['Buscas sem resultado', 'Categorias e bairros', 'Mais abertos', 'Você decide', 'Privacidade']
 
@@ -119,7 +119,7 @@ export function InsightsControl() {
       <div className="w col" style={{ gap: 36 }}>
         <div className="sec-h"><span className="tag" style={{ alignSelf: 'flex-start' }}>WAGLI INSIGHTS · CONTROLE E CONFIANÇA</span>
           <h2 id="ins" className="d h-sec">Seu próximo conteúdo pode estar <span style={hl}>na busca da sua audiência.</span> E as decisões continuam <span style={{ ...hl, '--hl': '#C9B0E9' }}>com você.</span></h2>
-          <p className="lead">As redes mostram como um conteúdo performou. O wagli pode mostrar o que as pessoas tentam encontrar, sem abrir mão da privacidade de ninguém.</p></div>
+          <p className="lead">As redes mostram como um conteúdo performou. O JoyMap pode mostrar o que as pessoas tentam encontrar, sem abrir mão da privacidade de ninguém.</p></div>
         <div ref={ref} className="sl">
           <div className="sl-tabs" role="tablist" aria-label="Insights e controle">
             {CARDS.map((x, n) => <button key={x.k} type="button" role="tab" aria-selected={n === i} className={n === i ? 'on' : ''} onClick={() => go(n)}><i aria-hidden="true" style={{ background: x.bg }} />{SHORT[n]}</button>)}

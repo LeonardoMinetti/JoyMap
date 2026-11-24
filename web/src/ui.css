@@ -277,7 +277,7 @@ body{background:var(--cream)}.page{background:var(--cream)}
   .studio .ctl,.studio .ctl.wide{width:100%;padding:18px 16px;border-right:0}
 }
 
-/* ===== painéis de uso real: identidade wagli (preto e branco, cartões macios, cores em pequenas doses) ===== */
+/* ===== painéis de uso real: identidade JoyMap (preto e branco, cartões macios, cores em pequenas doses) ===== */
 .page{background:var(--cream)}
 .side{background:#fff;border-right:0;box-shadow:1px 0 0 rgba(23,23,19,.06);padding:22px 14px}
 .side .it{gap:12px;padding:7px 12px 7px 8px;border-radius:99px;color:var(--ink2);transition:background .2s,color .2s}

@@ -1,9 +1,9 @@
-# wagli
+# JoyMap
 
-**wagli** é uma plataforma para quem indica lugares (criadores de conteúdo) transformarem essas indicações num **mapa público, com a sua identidade**, para usar na bio. Quem segue explora o mapa e salva lugares. Restaurantes veem quem os indica.
+**JoyMap** é uma plataforma para quem indica lugares (criadores de conteúdo) transformarem essas indicações num **mapa público, com a sua identidade**, para usar na bio. Quem segue explora o mapa e salva lugares. Restaurantes veem quem os indica.
 
-- **Demonstração (sem servidor, dados fictícios):** https://leonardominetti.github.io/wagli-demo/
-- **Página de vendas para restaurantes:** https://leonardominetti.github.io/wagli-demo/para-restaurantes
+- **Demonstração (sem servidor, dados fictícios):** https://leonardominetti.github.io/JoyMap/
+- **Página de vendas para restaurantes:** https://leonardominetti.github.io/JoyMap/para-restaurantes
 - Código: Vite + React (`web/`), servidor Hono + SQLite (`server/`), testes `node --test` (`tests/`).
 
 > **Estado do projeto:** MVP/protótipo funcional. O servidor existe e é testado, mas ainda **não está hospedado**. A demonstração publicada roda só no navegador. Pagamento, conexão oficial com Instagram/TikTok e login com Google estão descritos abaixo como "ainda não reais".
@@ -18,7 +18,7 @@
 | **Explorador** | Quem segue mapas e só quer guardar lugares | Espaço com 3 abas: **Salvos**, **Criadores**, **Conta** (sem painel) | Grátis (único) |
 | **Restaurante** | Dono ou responsável por um lugar | Painel próprio: indicações recebidas, percepção de confiança, reivindicar lugar, conta | Ainda sem planos definidos |
 
-Além deles existe o **administrador** (equipe wagli), que não aparece como botão em nenhum lugar do site: só entra pelo endereço `/admin` ou ao entrar com o e-mail definido em `ADMIN_EMAIL`.
+Além deles existe o **administrador** (equipe JoyMap), que não aparece como botão em nenhum lugar do site: só entra pelo endereço `/admin` ou ao entrar com o e-mail definido em `ADMIN_EMAIL`.
 
 **Entrada:** `/entrar` pergunta o tipo de conta e leva ao login correspondente. Cada tipo tem *Entrar* e *Criar conta*, por **link no e-mail (sem senha)**. Google e Instagram (criadores) estão prontos na tela e ligam quando o servidor tiver as credenciais. "Quero meu mapa" abre direto a criação de conta de criador.
 
@@ -68,7 +68,7 @@ Fila de candidaturas (com critério de seguidores ajustável), revisão de mapas
 | Painel de métricas (buscas, cliques, público) | só visitas totais | completo | completo |
 | Categorias próprias | não | não | sim (até 15 no total) |
 | Domínio próprio | não | não | sim |
-| Remover a marca wagli do mapa | não | não | sim |
+| Remover a marca JoyMap do mapa | não | não | sim |
 | Atualização automática e histórico completo | não | sim | sim |
 
 **Explorador** é gratuito. **Restaurante** ainda não tem planos.
@@ -122,7 +122,7 @@ Fila de candidaturas (com critério de seguidores ajustável), revisão de mapas
 
 ## 6. Demonstração publicada (GitHub Pages)
 
-Roda 100% no navegador, com dados fictícios; o que se altera fica só na aba. O acesso por e-mail na demonstração é restrito ao e-mail do dono. Endereços úteis (base `https://leonardominetti.github.io/wagli-demo`):
+Roda 100% no navegador, com dados fictícios; o que se altera fica só na aba. O acesso por e-mail na demonstração é restrito ao e-mail do dono. Endereços úteis (base `https://leonardominetti.github.io/JoyMap`):
 
 | Endereço | O que mostra |
 |---|---|
@@ -179,3 +179,29 @@ tests/         testes do servidor
 ## 10. Identidade
 
 Amarelo `#FFC400`, preto `#171713`, creme e Inter. O logotipo e as abelhas vêm do Figma e ficam em `web/src/brand/` sem alteração. Símbolos do Estúdio: Básicos (próprios), 3D (Fluent Emoji, MIT), Emoji (Noto, Apache-2.0) e Contorno (Lucide, ISC), além de SVGs enviados pelo criador.
+
+## 11. Deploys: nome e categoria
+
+Este repositório (**JoyMap**) é o único do projeto: código, servidor, testes e a demonstração. A demonstração é publicada no GitHub Pages por um workflow (`.github/workflows/deploy.yml`) que, a cada push na `main`, roda os testes, gera a versão estática e publica.
+
+Todo deploy é **nomeado e categorizado**:
+
+```bash
+scripts/deploy.sh <categoria> "<nome do deploy>"
+# ex.: scripts/deploy.sh login "Escolha do tipo de conta"
+```
+
+O commit fica `[categoria] nome`, recebe a tag `deploy/<categoria>/NNN-slug`, entra em [`DEPLOYS.md`](DEPLOYS.md) e aparece com esse nome na aba Actions.
+
+| Categoria | Para quê |
+|---|---|
+| `site` | Página inicial, planos, perguntas, rodapé |
+| `login` | Entrar, criar conta, escolha do tipo de conta |
+| `criador` | Painel e Estúdio do criador |
+| `explorador` | Espaço do explorador (Salvos, Criadores, Conta) |
+| `restaurante` | Painel e página de vendas para restaurantes |
+| `admin` | Administração e Rede |
+| `mapa` | Mapa público (desktop e celular) |
+| `conteudo` | Textos, nomes, imagens |
+| `ajuste` | Correções e acabamentos |
+| `docs` | README e documentação |

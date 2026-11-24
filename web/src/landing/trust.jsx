@@ -14,7 +14,7 @@ const hl = { background: 'linear-gradient(transparent 60%, var(--hl, var(--acc))
 // Seção 09 · Controle e confiança
 const PRINCIPLES = [
   'Você revisa e aprova cada recomendação antes de publicar.', 'Não é necessário compartilhar a senha das suas redes sociais.',
-  'O wagli não lê mensagens, listas de seguidores nem comentários.', 'O painel usa informações agregadas, sem identificar pessoas.',
+  'O JoyMap não lê mensagens, listas de seguidores nem comentários.', 'O painel usa informações agregadas, sem identificar pessoas.',
   'Você decide se quer participar do mapa geral.', 'Você decide, separadamente, se quer compartilhar informações com restaurantes.',
   'Consentimentos são independentes e revogáveis.', 'Participações adicionais ficam desativadas por padrão.',
 ]
@@ -76,13 +76,13 @@ export function Monetize() {
 const T = {
   recent: 'O mapa mostra os lugares dos posts mais recentes. O histórico completo é dos planos pagos.',
   manual: 'Você cola o link e a legenda de cada post, ou busca o lugar, e revisa tudo antes de publicar.',
-  brand: 'Nos planos Grátis e Criador, um selo "Mapa feito com wagli" aparece no rodapé da sua página pública. No Pro, ele some.',
+  brand: 'Nos planos Grátis e Criador, um selo "Mapa feito com JoyMap" aparece no rodapé da sua página pública. No Pro, ele some.',
   full: 'Todos os lugares que você já indicou entram no mapa, não só os dos posts recentes.',
   auto: 'Seus posts novos entram sozinhos no mapa, depois que você conecta a conta. Depende das integrações oficiais das plataformas, que ainda estão sendo liberadas.',
   limite: 'No plano Grátis o mapa tem até 20 lugares. Nos planos pagos não há limite.',
-  studio: 'Cores, fonte, categorias, pins e símbolos do seu mapa. No plano Grátis, o mapa usa o tema padrão do wagli (Solar, com cor principal preta).',
+  studio: 'Cores, fonte, categorias, pins e símbolos do seu mapa. No plano Grátis, o mapa usa o tema padrão do JoyMap (Solar, com cor principal preta).',
   panel: 'Mostra o que o seu público busca no mapa, inclusive o que não encontrou, e quais lugares são abertos e geram pedido de rota. Sempre em números agregados, sem identificar pessoas.',
-  roteiro: 'Você cria roteiros com paradas e história. Cada um pode ficar grátis ou ser vendido, e a wagli cobra uma taxa só sobre as vendas.',
+  roteiro: 'Você cria roteiros com paradas e história. Cada um pode ficar grátis ou ser vendido, e a JoyMap cobra uma taxa só sobre as vendas.',
   produto: 'Coloque o link de um produto, como uma mochila ou um guia, dentro de um roteiro, para o seguidor ver e abrir.',
   patrocinado: 'Faça um roteiro em parceria com uma marca. Ele aparece com a etiqueta "Roteiro patrocinado" e o logo da marca no cartão, para o seguidor saber que é parceria.',
   dominio: 'O endereço do seu mapa usa o seu nome, como maps.wagli/natalia-souza. Nos outros planos o endereço leva um código, como maps.wagli/k7x2p.',
@@ -91,11 +91,11 @@ const T = {
 }
 const PLANS = [
   { k: 'free', icon: 'round-pushpin', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
-    items: [['Até 20 lugares no mapa', T.limite], ['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Tema padrão do wagli, sem Estúdio de estilo', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
+    items: [['Até 20 lugares no mapa', T.limite], ['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Tema padrão do JoyMap, sem Estúdio de estilo', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
   { k: 'creator', icon: 'trophy', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
     items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro], ['Produtos nos seus roteiros', T.produto]] },
   { k: 'pro', icon: 'crown', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
-    items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca wagli na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Criação de roteiros patrocinados com marcas parceiras', T.patrocinado], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
+    items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca JoyMap na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Criação de roteiros patrocinados com marcas parceiras', T.patrocinado], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
 ].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
 const Y = 'Sim', N = 'Não'
 // [item, Grátis, Criador, Pro, explicação, oculto?]
@@ -104,7 +104,7 @@ const COMPARE = [
   ['Para quem', 'Engajar o público, sem vender nada', 'Mapa completo, sempre em dia', 'Vender roteiros e ter a marca própria'],
   ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico', T.recent],
   ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', T.auto],
-  ['Sem a marca wagli na página', N, N, Y, T.brand],
+  ['Sem a marca JoyMap na página', N, N, Y, T.brand],
   ['Lugares no mapa', 'Até 20', 'Sem limite', 'Sem limite', T.limite],
   ['Estúdio de estilo', 'Não, usa o tema padrão', 'Completo', 'Completo', T.studio],
   ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior', T.panel],
@@ -161,7 +161,7 @@ export function PlansBlock({ min, compact }) {
     <section id="planos" className="sec" aria-labelledby="planos-h" style={{ background: 'var(--cream)' }}>
       <div className="w col" style={{ gap: 32 }}>
         <div className="sec-h c"><span className="eb">Planos e condições de entrada</span><h2 id="planos-h" className="d h-sec">Comece pelo seu <span style={hl}>mapa.</span></h2>
-          <p className="lead">Um plano grátis, em que você mesmo atualiza o mapa, e dois pagos, para quem quer o mapa completo sempre em dia e roteiros que podem ser vendidos. Você paga pouco e a wagli ganha quando você ganha.</p></div>
+          <p className="lead">Um plano grátis, em que você mesmo atualiza o mapa, e dois pagos, para quem quer o mapa completo sempre em dia e roteiros que podem ser vendidos. Você paga pouco e a JoyMap ganha quando você ganha.</p></div>
         <div className="row" style={{ justifyContent: 'center' }}>
           <div className="pl-per pn-per" role="group" aria-label="Periodicidade da assinatura"><button type="button" aria-pressed={!annual} className={'chip' + (!annual ? ' on' : '')} onClick={() => setAnnual(false)}>Mensal</button><button type="button" aria-pressed={annual} className={'chip' + (annual ? ' on' : '')} onClick={() => setAnnual(true)}>Anual · 2 meses grátis</button></div>
         </div>

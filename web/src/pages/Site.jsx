@@ -161,7 +161,7 @@ export function StaticNotice() {
       <div className="w col" style={{ alignItems: 'center', textAlign: 'center', paddingTop: 96, gap: 18, maxWidth: 560 }}>
         <div className="sq" style={{ width: 72, height: 72, background: 'var(--soft)', display: 'grid', placeItems: 'center' }}><Icon n="pin" s={32} c="#6b6b6b" /></div>
         <h1 className="d s56">Esta tela ainda não está aberta</h1>
-        <p className="mut">Esta é uma versão de demonstração para testar a experiência no celular: a página inicial, os planos, as perguntas e o mapa de exemplo funcionam. Candidatura, login, painel e estúdio dependem do servidor da wagli e ainda não estão abertos ao público.</p>
+        <p className="mut">Esta é uma versão de demonstração para testar a experiência no celular: a página inicial, os planos, as perguntas e o mapa de exemplo funcionam. Candidatura, login, painel e estúdio dependem do servidor da JoyMap e ainda não estão abertos ao público.</p>
         <Link className="btn" to="/@demo">Abrir o mapa de exemplo</Link>
         <Link className="btn sec" to="/">Voltar ao início</Link>
       </div>

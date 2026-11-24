@@ -281,7 +281,7 @@ export function StudioCategories() {
 
 // D4 · biblioteca de símbolos
 // Pacote de símbolos: vale para todas as categorias de uma vez (o criador não escolhe símbolo por categoria)
-const PACKS = [['base', 'Básicos', 'Ícones simples do wagli'], ...Object.entries(LIBS).map(([k, v]) => [k, v.label, v.long])]
+const PACKS = [['base', 'Básicos', 'Ícones simples do JoyMap'], ...Object.entries(LIBS).map(([k, v]) => [k, v.label, v.long])]
 const packIcon = (pack, cat) => { const b = cat.base || cat.id; return pack === 'base' ? CATEGORIES.find((c) => c.id === b).icon : `lib:${pack}:${SAMPLE_ICON[pack][b]}` }
 function SymbolPicker() {
   const { theme: T, setTheme, c: cr } = useStudio()

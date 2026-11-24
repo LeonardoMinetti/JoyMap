@@ -4,7 +4,7 @@ import { navigate, toast } from '../lib/router.jsx'
 import { useMe } from '../lib/me.jsx'
 import { PENDING } from '../pages/Voo.jsx'
 
-// "Já fui": registra a visita (vale XP no voo da wagli). Sem login, leva para entrar e volta depois.
+// "Já fui": registra a visita (vale XP no voo da JoyMap). Sem login, leva para entrar e volta depois.
 export default function VisitButton({ slug, placeId }) {
   const { me } = useMe()
   const [on, setOn] = useState(false)

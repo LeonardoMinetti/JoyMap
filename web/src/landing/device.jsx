@@ -29,7 +29,7 @@ export function Native({ children, h, top = 46, className = "", theme }) {
   )
 }
 // Janela de navegador para as telas de computador (painel).
-export function Browser({ children, url = 'wagli · painel do criador', side = true }) {
+export function Browser({ children, url = 'JoyMap · painel do criador', side = true }) {
   return (
     <div className="bw">
       <div className="bw-bar" aria-hidden="true"><span><i /><i /><i /></span><b>{url}</b></div>

@@ -8,7 +8,7 @@ import { Scene, useCycle, useEver, useScene } from './motion.jsx'
 const em = (n) => ({ lib: `lib:fluent3d:${n}` })
 const hl = { background: 'linear-gradient(transparent 60%, var(--hl, var(--acc)) 60%)', padding: '0 4px' }
 
-// Feed x mapa: o feed rola sem fim de um lado; do outro, o mesmo conteúdo na tela pública real do wagli.
+// Feed x mapa: o feed rola sem fim de um lado; do outro, o mesmo conteúdo na tela pública real do JoyMap.
 const FEED = [
   { photo: 'pizza', user: '@sabordacidade', caption: 'A melhor pizza do bairro, anota aí.', age: 'há 2 meses' }, { photo: 'sushi', user: '@sabordacidade', caption: 'Combinado na Liberdade.', age: 'há 5 meses' },
   { photo: 'latte', user: '@sabordacidade', caption: 'Café para ficar mais um pouco.', age: 'há 1 ano' }, { photo: 'burger', user: '@sabordacidade', caption: 'Smash burger de sexta.', age: 'há 3 meses' },
@@ -57,12 +57,12 @@ function FvmPhones() {
   return (
     <>
       <div className="fvm-box off">
-        <span className="fvm-lb off">Sem wagli</span>
+        <span className="fvm-lb off">Sem JoyMap</span>
         <SemPhone on={on} rm={rm} paused={paused} />
         <ul className="fvm-ul off">{SEM.map((t) => <li key={t}><i aria-hidden="true">✕</i>{t}</li>)}</ul>
       </div>
       <div className="fvm-box on">
-        <span className="fvm-lb on">Com wagli</span>
+        <span className="fvm-lb on">Com JoyMap</span>
         <Phone h={590} label="Tela pública do mapa de um criador, com as mesmas indicações organizadas em pins">
           <Native h={590}>{ever && <PubPreview theme={DEMO_THEME} />}</Native>
         </Phone>

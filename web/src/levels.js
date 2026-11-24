@@ -9,7 +9,7 @@ export const PERSONALITIES = [
 ]
 export const LEVELS = [
   { n: 1, name: 'Primeiro voo', min: 0, max: 99, detail: 'Asas pequenas, sem listras' },
-  { n: 2, name: 'Exploradora', min: 100, max: 299, detail: 'Amarelo wagli, asas clássicas' },
+  { n: 2, name: 'Exploradora', min: 100, max: 299, detail: 'Amarelo JoyMap, asas clássicas' },
   { n: 3, name: 'Polinizadora', min: 300, max: 699, detail: 'Corpo âmbar, asas maiores em jade' },
   { n: 4, name: 'Guardiã', min: 700, max: null, detail: 'Coroa, violeta e dourado, asas lilás' },
 ]

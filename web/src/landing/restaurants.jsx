@@ -51,7 +51,7 @@ function Hero() {
         <div className="col hero2-tx">
           <span className="tag hero2-eb">Para restaurantes</span>
           <h1 className="d rs-h1">Os criadores já indicam <span className="rs-nl">o seu restaurante.</span></h1>
-          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>O wagli reúne, em mapas de criadores, as indicações do seu lugar. Reivindique o seu restaurante, corrija as informações e acompanhe quem indica você.</p>
+          <p className="s20" style={{ maxWidth: 520, fontWeight: 500 }}>O JoyMap reúne, em mapas de criadores, as indicações do seu lugar. Reivindique o seu restaurante, corrija as informações e acompanhe quem indica você.</p>
           <div className="row wrap" style={{ gap: 12 }}>
             <Link className="btn dk btn-lg" to={CLAIM}>Reivindicar meu restaurante</Link>
             <Link className="btn ln btn-lg" to="/@demo">Ver um mapa de exemplo</Link>
@@ -80,9 +80,9 @@ function Problem() {
         <div className="sec-h c"><span className="eb">Hoje, na prática</span><h2 id="rs-p" className="d h-sec">A indicação acontece. <span style={hl}>Você só fica sabendo depois.</span></h2>
           <p className="lead">Cada vez mais gente escolhe onde comer a partir do que um criador indica. Mas esse caminho passa por feeds que você não acompanha, com informações que você não controla.</p></div>
         <div className="rs-vs">
-          <div className="rs-box off"><span className="fvm-lb off">Sem wagli</span>
+          <div className="rs-box off"><span className="fvm-lb off">Sem JoyMap</span>
             <ul className="fvm-ul off">{['Você descobre a indicação pelo movimento, não pelo criador.', 'Endereço ou nome errado circula nos posts sem correção.', 'Não dá para saber quais criadores falam do seu lugar.', 'Parceria e indicação espontânea se misturam.'].map((t) => <li key={t}><i aria-hidden="true">✕</i>{t}</li>)}</ul></div>
-          <div className="rs-box on"><span className="fvm-lb on">Com wagli</span>
+          <div className="rs-box on"><span className="fvm-lb on">Com JoyMap</span>
             <ul className="fvm-ul on">{['Você vê quais criadores indicaram o seu lugar.', 'Os dados exibidos nos mapas ficam corretos, porque você os corrige.', 'Contagens agregadas mostram o interesse pelo lugar, quando o criador autoriza.', 'Você avisa o público sobre uma oferta ou evento, direto no mapa que ele já usa.'].map((t) => <li key={t}><i aria-hidden="true">✓</i>{t}</li>)}</ul></div>
         </div>
       </div>
@@ -109,7 +109,7 @@ function Benefits() {
 function PanelMock() {
   const a = DEMO_IDENTITIES[0], b = DEMO_IDENTITIES[1]
   return (
-    <Browser url="wagli · painel do restaurante" side={false}>
+    <Browser url="JoyMap · painel do restaurante" side={false}>
       <div className="rs-mock">
         <div className="row jb wrap"><div><b className="d s26">Cantina Exemplo</b><div className="xs mut">Bela Vista · lugar verificado</div></div><span className="tag ok">Verificado</span></div>
         <div className="rs-kpis"><div><b>3</b><span>criadores indicaram</span></div><div><b>5</b><span>indicações</span></div><div><b>1</b><span>com publi declarada</span></div></div>

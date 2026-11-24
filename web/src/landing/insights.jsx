@@ -57,7 +57,7 @@ export function Insights() {
             <p className="ins-cap ins-cap2"><b>2</b>Nenhuma indicação corresponde e a pessoa pede uma.</p>
           </div>
           <div className="ins-mid" aria-hidden="true"><span className="ins-chip">+1 busca sem resultado</span><i className="ins-dot" /><span className="ins-anon">contada de forma agregada, sem identificar pessoas</span></div>
-          <Browser url="wagli · painel do criador · Buscas">
+          <Browser url="JoyMap · painel do criador · Buscas">
           <div className="ins-db">
             <div className="ins-dbh"><div><b className="d s20" style={{ display: 'block' }}>Buscas e oportunidades</b><span className="xs mut">O que sua audiência procura no seu mapa</span></div><span className="tag wn">Dados ilustrativos</span></div>
             <div className="ins-tabs" role="tablist" aria-label="Visualizações do painel">{TABS.map(([k, l]) => <button key={k} role="tab" id={'tb-' + k} aria-selected={tab === k} aria-controls="ins-panel" className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
@@ -77,7 +77,7 @@ export function Insights() {
         <ul className="ins-kp">
           {[['bar-chart', 'Categorias que despertam interesse'], ['round-pushpin', 'Bairros e regiões procurados'], ['star', 'Recomendações com mais interesse'], ['magnifying-glass-tilted-left', 'Buscas que não encontraram resultado'], ['light-bulb', 'Demandas que podem inspirar novos conteúdos']].map(([e, t]) => <li key={t}><Icon s={30} sym={em(e)} />{t}</li>)}
         </ul>
-        <p className="d s26 c" style={{ maxWidth: 820, margin: '0 auto' }}>As redes mostram como um conteúdo performou. O wagli pode mostrar <span style={hl}>o que as pessoas tentam encontrar</span> no seu mapa.</p>
+        <p className="d s26 c" style={{ maxWidth: 820, margin: '0 auto' }}>As redes mostram como um conteúdo performou. O JoyMap pode mostrar <span style={hl}>o que as pessoas tentam encontrar</span> no seu mapa.</p>
       </div>
     </section>
   )

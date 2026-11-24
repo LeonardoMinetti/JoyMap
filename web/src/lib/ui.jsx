@@ -10,7 +10,7 @@ import { withBase } from './base.js'
 
 // Para onde o botão do topo leva quem já entrou, conforme o tipo de conta
 export const homeLink = (me) => me.user.role === 'admin' ? null : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
-export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="wagli"><img src={logoUrl} alt="wagli" style={{ height: size }} /></Link>
+export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="JoyMap"><img src={logoUrl} alt="JoyMap" style={{ height: size }} /></Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
 const NAV = [['Como funciona', '/#como-funciona'], ['Exemplos', '/#exemplos'], ['Insights', '/#insights'], ['Planos', '/#planos'], ['Perguntas', '/perguntas']]
@@ -206,4 +206,4 @@ export function Restricted() {
 export function PanelPage({ active, children }) {
   return <Guard need="approved" finished><div className="page"><div className="app"><Side active={active} /><div className="main">{children}</div></div></div></Guard>
 }
-export function useTitle(t) { useEffect(() => { document.title = t ? `${t} · wagli` : 'wagli' }, [t]) }
+export function useTitle(t) { useEffect(() => { document.title = t ? `${t} · JoyMap` : 'JoyMap' }, [t]) }

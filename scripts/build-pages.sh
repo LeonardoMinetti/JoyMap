@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Gera a versão estática (sem servidor) para o GitHub Pages em ./pages-dist
-# Uso: scripts/build-pages.sh [/subcaminho/]   (padrão: /wagli-demo/)
+# Uso: scripts/build-pages.sh [/subcaminho/]   (padrão: /JoyMap/)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BASE="${1:-/wagli-demo/}"
+BASE="${1:-/JoyMap/}"
 OUT="$PWD/pages-dist"
 VITE_STATIC=1 WAGLI_BASE="$BASE" WAGLI_OUT="$OUT" npx vite build web
 

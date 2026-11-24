@@ -1,0 +1,43 @@
+# Publica a demonstração no GitHub Pages a cada push na main.
+# Cada deploy é nomeado e categorizado pela mensagem do commit: "[categoria] nome" (veja scripts/deploy.sh e DEPLOYS.md).
+name: Deploy
+run-name: "Deploy · ${{ github.event.head_commit.message || github.event.inputs.nome || 'manual' }}"
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      nome:
+        description: 'Nome do deploy (ex.: [login] Escolha do tipo de conta)'
+        required: false
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: bash scripts/build-pages.sh /JoyMap/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4

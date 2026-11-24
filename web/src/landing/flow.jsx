@@ -20,9 +20,9 @@ function StepConnect() {
           <div className="bd" style={{ gap: 12 }}>
             <span className="tag wn" style={{ alignSelf: 'flex-start' }}>Demonstração ilustrativa</span>
             <h2 className="d s32">Autorize a leitura das suas publicações</h2>
-            <p className="mut sm">Você entra pela tela oficial da plataforma. A senha nunca passa pelo wagli.</p>
-            <div className="card soft col" style={{ gap: 4 }}><b className="sm">O wagli analisa</b><span className="sm mut">Publicações autorizadas: legenda, localização e data.</span></div>
-            <div className="card col" style={{ gap: 4 }}><b className="sm">O wagli não lê</b><span className="sm mut">Mensagens, lista de seguidores e comentários.</span></div>
+            <p className="mut sm">Você entra pela tela oficial da plataforma. A senha nunca passa pelo JoyMap.</p>
+            <div className="card soft col" style={{ gap: 4 }}><b className="sm">O JoyMap analisa</b><span className="sm mut">Publicações autorizadas: legenda, localização e data.</span></div>
+            <div className="card col" style={{ gap: 4 }}><b className="sm">O JoyMap não lê</b><span className="sm mut">Mensagens, lista de seguidores e comentários.</span></div>
           </div>
           <div className="ft"><button type="button" tabIndex={-1} className={'btn blk' + (f === 1 ? ' press' : '') + (f === 2 ? ' ok' : '')}>{f === 2 ? '✓ Conectado' : 'Autorizar'}</button></div>
         </div>
