@@ -4,7 +4,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE } from './shared.jsx'
 import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
@@ -135,7 +135,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           : <MapCanvas places={shown} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
       </div>
       <header className={'ms-top' + (brand ? ' has-brand' : '')}>
-        {brand && <BrandMark preview={preview} />}
+        {brand && <div className="jm-strip"><BrandMark preview={preview} /><span className="jm-tag">{BRAND_LINE}</span></div>}
         {searchOpen
           ? <><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button type="button" className="ms-ib" aria-label="Fechar busca" onClick={() => { setSearchOpen(false); f.setQ?.('') }}><Icon n="close" s={20} c="currentColor" /></button></>
           : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>

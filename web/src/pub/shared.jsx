@@ -130,6 +130,7 @@ export function AccountBtn({ slug, preview }) {
 }
 
 // Marca JoyMap no topo do mapa (como no Viver SP). Some no plano Pro (showBrand false). A cor segue o texto do tema do criador.
+export const BRAND_LINE = 'Os lugares de quem você segue.'
 export function BrandMark({ preview }) {
   const mask = `url("${logoUrl}") left center / contain no-repeat`
   return <Link className="jm-brand" to="/" aria-label="Mapa feito com JoyMap" tabIndex={preview ? -1 : 0} onClick={preview ? (e) => e.preventDefault() : undefined}><span style={{ WebkitMask: mask, mask }} /></Link>
