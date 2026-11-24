@@ -281,7 +281,7 @@ export default function creatorRoutes(app, x) {
       const offer = cleanOffer(r, tier)
       // com paradas, os lugares do roteiro saem delas (na ordem da história); sem paradas, vale a lista de lugares
       const ids = stops.length ? [...new Set(stops.map((s) => s.placeId).filter(Boolean))] : (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
-      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos,price,products,sponsor) VALUES (?,?,?,?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i, offer.price, JSON.stringify(offer.products), offer.sponsor ? JSON.stringify(offer.sponsor) : null)
+      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos,price,products,sponsor) VALUES (?,?,?,?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 240), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i, offer.price, JSON.stringify(offer.products), offer.sponsor ? JSON.stringify(offer.sponsor) : null)
     })
     return c.json({ ok: true })
   })

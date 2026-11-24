@@ -319,12 +319,14 @@ const stopIds = (r) => [...new Set(r.stops.map((v) => v.placeId).filter((v) => v
 
 // o mesmo cartão que o seguidor vê na aba Roteiros do mapa
 function RoutePreview({ route, places, theme }) {
+  const spn = route.sponsor?.brand && route.sponsor?.logo ? route.sponsor : null
   const rp = route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean)
   return (
     <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
-      <div className={'ms-route' + (route.sponsor?.brand ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color && !route.sponsor?.brand ? { background: route.color, color: onColor(route.color) } : {}) }}>
-        <SponsorMark s={route.sponsor?.brand ? route.sponsor : null} /><SponsorTag s={route.sponsor?.brand ? route.sponsor : null} /><b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
-        <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
+      <div className={'ms-route' + (spn ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color && !spn ? { background: route.color, color: onColor(route.color) } : {}) }}>
+        {spn && <span className="rc-top"><SponsorTag s={spn} /><SponsorMark s={spn} /></span>}
+        <span className="rc-head"><b className="pt">{route.name || 'Nome do roteiro'}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<Icon n="next" s={20} c="currentColor" /></span></span>
+        {route.note && <><hr /><p className="rc-note">{route.note}</p></>}
       </div>
     </div>
   )
@@ -393,7 +395,8 @@ export function Roteiros() {
                   <button type="button" className={'chip' + (!r.color ? ' on' : '')} onClick={() => set({ color: null })}>Cor do mapa</button>
                   {[...ACCENTS, ...CAT_COLORS].map((col) => <button key={col} type="button" aria-label={`Cor ${col}`} aria-pressed={r.color?.toLowerCase() === col} className={'dotsw' + (r.color?.toLowerCase() === col ? ' on' : '')} style={{ background: col }} onClick={() => set({ color: col })} />)}
                   <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={r.color || theme.accent} onChange={(e) => set({ color: e.target.value })} aria-label="Outra cor do cartão" /></label></div></div>
-              <div className="g2"><Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field><Field label="Observação" id="ro"><div className="in"><input id="ro" value={r.note || ''} maxLength="60" placeholder="Ex.: 3 h de passeio" onChange={(e) => set({ note: e.target.value })} /></div></Field></div>
+              <Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field>
+              <Field label="Descrição do roteiro" id="ro"><textarea id="ro" className="in" rows="3" maxLength="240" value={r.note || ''} placeholder="Conte em poucas linhas por que esse roteiro vale o passeio: para quem é, quanto tempo leva e o que torna especial." onChange={(e) => set({ note: e.target.value })} /><span className="xs mut">{(r.note || '').length}/240 · aparece no cartão do roteiro, abaixo do título</span></Field>
             </div>
             <div className="card col" style={{ gap: 10 }}>
               <div className="row jb"><b>Paradas <span className="mut sm">({r.stops.length})</span></b><span className="xs mut">Arraste para mudar a ordem</span></div>

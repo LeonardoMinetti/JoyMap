@@ -176,8 +176,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}
           {(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
             <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
-              <SponsorMark s={r.sponsor} /><SponsorTag s={r.sponsor} /><b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
-              <span className="ms-stack">{rp.slice(0, 3).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 3 && <em>+{rp.length - 3}</em>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
+              {r.sponsor && <span className="rc-top"><SponsorTag s={r.sponsor} /><SponsorMark s={r.sponsor} /></span>}
+              <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack">{rp.slice(0, 3).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 3 && <em>+{rp.length - 3}</em>}<Icon n="next" s={20} c="currentColor" /></span></span>
+              {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
             </button>) })}
         </Panel>)}
       {panel === 'salvos' && (

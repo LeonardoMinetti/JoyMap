@@ -202,3 +202,14 @@
 .dk-routes .ms-route.has-sp{grid-column:1/-1;padding:24px 28px}
 .dk-routes .ms-route.has-sp .pt{font-size:34px;padding-right:200px}
 .dk-routes .ms-route.has-sp .sp-logo{height:64px;max-width:180px;padding:6px 14px;top:20px;right:24px}
+
+/* cartão de roteiro: título + fotos na mesma linha e descrição encorpada embaixo (como no Viver SP) */
+.ms-route .rc-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+.ms-route .sp-logo{position:static;box-shadow:none}
+.ms-route.has-sp .pt,.dk-routes .ms-route.has-sp .pt{padding-right:0}
+.rc-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.rc-head .pt{flex:1;min-width:0}
+.rc-head .ms-stack{flex:none}
+.ms-route .rc-note{margin:2px 0 0;font-size:16px;line-height:1.5;opacity:.95}
+.dk-routes .ms-route .rc-note{font-size:18px}
+.dk-routes .ms-route.has-sp .sp-logo{top:auto;right:auto}

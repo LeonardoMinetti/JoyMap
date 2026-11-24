@@ -95,8 +95,9 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   if (fichaPlace) body = <DeskFicha place={fichaPlace} data={data} ctx={ctx} others={others} onOpen={openFicha} onBack={() => go('/')} />
   else if (view === 'roteiros') body = <>{(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}<div className="dk-routes">{(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
     <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => { setRouteId(r.id); setView('route') }}>
-      <SponsorMark s={r.sponsor} /><SponsorTag s={r.sponsor} /><b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
-      <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
+      {r.sponsor && <span className="rc-top"><SponsorTag s={r.sponsor} /><SponsorMark s={r.sponsor} /></span>}
+      <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}<Icon n="next" s={20} c="currentColor" /></span></span>
+      {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead('Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}</>

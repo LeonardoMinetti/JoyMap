@@ -204,7 +204,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/routes' && method === 'PUT') {
     if (!cr.plan.can.roteiros) throw err('plano', 403)
     const own = new Set(s.places.map((v) => v.id))
-    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops, ...cleanOffer(r, cr.plan.tier) } }).filter((r) => r.name)
+    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 240), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops, ...cleanOffer(r, cr.plan.tier) } }).filter((r) => r.name)
     return out({ ok: true })
   }
   if (p === '/creator/domain') throw err('estatico', 503)
