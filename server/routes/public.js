@@ -33,7 +33,7 @@ export default function publicRoutes(app, x) {
       .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => r.placeIds.length || r.stops.length)
     return c.json({
       creator: {
-        handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme,
+        handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme, showBrand: !v.plan.can.removeBrand,
         links: blocks.links ? v.links.filter((l) => l.on) : [], cover: v.hasCover && v.theme.layout.cover,
         symbols: Object.fromEntries(x.symbolMap(row.id, true).map((s) => [s.id, { d: s.d, vb: s.vb, mode: s.mode }])),
       },

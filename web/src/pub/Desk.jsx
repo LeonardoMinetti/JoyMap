@@ -138,7 +138,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         </header>
         <div className="dk-scroll" ref={scroller}>
           {body}
-          <div className="pfoot">Mapa feito com <b>wagli</b></div>
+          {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </div>
       </section>
       <div className="dk-map">

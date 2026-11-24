@@ -269,6 +269,11 @@ test('símbolo próprio passa por aprovação; domínio próprio só ativa com C
   assert.equal(pend.length, 1)
   await call(app, adm.cookie, `/api/admin/symbols/${up.id}`, 'POST', { status: 'approved' })
 
+  // domínio personalizado é do plano Pro: no Criador o servidor recusa, mesmo que a tela seja burlada
+  const cid = (await (await call(app, s.cookie, '/api/me')).json()).creator.id
+  assert.equal((await call(app, s.cookie, '/api/creator/domain', 'PUT', { domain: 'mapa.dudacome.com.br' })).status, 403)
+  assert.equal((await call(app, adm.cookie, `/api/admin/creators/${cid}/plan`, 'POST', { tier: 'pro' })).status, 200)
+  assert.equal((await (await call(app, s.cookie, '/api/me')).json()).creator.plan.tier, 'pro')
   assert.equal((await call(app, s.cookie, '/api/creator/domain', 'PUT', { domain: 'sem ponto' })).status, 400)
   const d = await (await call(app, s.cookie, '/api/creator/domain', 'PUT', { domain: 'https://mapa.dudacome.com.br/x' })).json()
   assert.equal(d.domain, 'mapa.dudacome.com.br')
@@ -341,4 +346,17 @@ test('roteiro como história: paradas só com lugares do criador, limites e text
   assert.equal(r[1].placeId, null)
   assert.equal(r[2].text.length, 600)
   assert.equal(cleanStops(new Array(50).fill({ placeId: 1 }), own).length, 30)
+})
+
+test('planos: permissões por plano e domínio personalizado só no Pro', async () => {
+  const { can, minTier, planView, tierOf, CAPS } = await import('../server/plans.js')
+  assert.equal(tierOf('qualquer'), 'creator') // quem já existia fica no Criador
+  assert.equal(can('free', 'customCategories'), false)
+  assert.equal(can('creator', 'customCategories'), true)
+  assert.equal(can('creator', 'customDomain'), false)
+  assert.equal(can('pro', 'customDomain'), true)
+  assert.equal(minTier('removeBrand'), 'pro')
+  assert.equal(CAPS.creator.roteiroFee, 8)
+  assert.equal(CAPS.pro.roteiroFee, 5)
+  assert.equal(planView('free').tierName, 'Grátis')
 })

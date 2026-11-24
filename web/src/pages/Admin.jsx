@@ -23,7 +23,7 @@ export function Applications() {
   const [d, setD] = useState(null)
   const load = useCallback(() => api('/admin/creators').then(setD), [])
   useEffect(() => { load() }, [load])
-  const decide = async (id, body) => { try { await api(`/admin/creators/${id}/decision`, { method: 'POST', body }); load() } catch (x) { toast(x.message === 'abaixo_do_criterio' ? 'Abaixo do mínimo de seguidores: use a lista de espera.' : 'Não foi possível salvar.') } }
+  const decide = async (id, body, tier) => { try { if (tier) await api(`/admin/creators/${id}/plan`, { method: 'POST', body: { tier } }); else await api(`/admin/creators/${id}/decision`, { method: 'POST', body }); load() } catch (x) { toast(x.message === 'abaixo_do_criterio' ? 'Abaixo do mínimo de seguidores: use a lista de espera.' : 'Não foi possível salvar.') } }
   const adjust = async () => { const v = prompt('Novo mínimo de seguidores:', d.minFollowers); if (v == null) return; await api('/admin/config', { method: 'PUT', body: { minFollowers: v } }); load() }
   const S = { approved: ['ok', 'Aprovado'], pending: ['wn', 'Aguardando decisão'], waitlist: ['', 'Lista de espera'], rejected: ['bd2', 'Recusado'] }
   const C = { met: ['ok', 'Atende'], below: ['bd2', 'Abaixo'], unknown: ['wn', 'Informar seguidores'] }
@@ -46,7 +46,7 @@ function Row({ c, S, C, decide }) {
       <td><div className="row" style={{ gap: 6 }}><input className="in" type="number" min="0" style={{ width: 110, minHeight: 36, padding: '4px 10px' }} aria-label={`Seguidores de ${c.handle}`} value={f} onChange={(e) => setF(e.target.value)} />{dirty && <button className="btn sm" onClick={() => decide(c.id, { status: c.status, followers: f })}>Salvar</button>}</div></td>
       <td><span className={`tag ${C[c.criterion][0]}`}>{C[c.criterion][1]}</span></td>
       <td><button className={'tag ' + (c.verified ? 'ok' : 'wn')} style={{ border: 0, cursor: 'pointer' }} onClick={() => decide(c.id, { status: c.status, verified: !c.verified })}>{c.verified ? 'Titular confirmado' : 'Conferir perfil'}</button></td>
-      <td><span className={`tag ${S[c.status][0]}`}>{S[c.status][1]}</span></td>
+      <td><span className={`tag ${S[c.status][0]}`}>{S[c.status][1]}</span>{c.status === 'approved' && <select className="selbox" style={{ marginTop: 6, minHeight: 32 }} aria-label={`Plano de ${c.handle}`} value={c.tier || 'creator'} onChange={(e) => decide(c.id, null, e.target.value)}><option value="free">Grátis</option><option value="creator">Criador</option><option value="pro">Pro</option></select>}</td>
       <td><div className="row wrap" style={{ gap: 6 }}>{c.status !== 'approved' && <button className="btn sm" disabled={c.criterion !== 'met' || !c.verified} title={c.criterion !== 'met' ? 'Informe seguidores acima do mínimo' : !c.verified ? 'Confirme o titular antes' : ''} onClick={() => decide(c.id, { status: 'approved' })}>Aprovar</button>}{c.status !== 'waitlist' && <button className="btn sm ln" onClick={() => decide(c.id, { status: 'waitlist' })}>Lista de espera</button>}{c.status !== 'rejected' && <button className="btn sm sec" onClick={() => decide(c.id, { status: 'rejected' })}>Recusar</button>}</div></td></tr>
   )
 }

@@ -1,3 +1,4 @@
+import { planView } from './plans.js'
 import { getCookie } from 'hono/cookie'
 import { createHash } from 'node:crypto'
 import { normalizeAddress, strip } from './extract.js'
@@ -51,7 +52,7 @@ export function makeCtx(db, opts = {}) {
     return {
       id: cr.id, handle: cr.handle, tiktok: cr.tiktok, slug: cr.slug, displayName: cr.display_name, followers: cr.followers, status: cr.status, verified: !!cr.verified,
       published: !!cr.published, onboarding: cr.onboarding, accounts: { instagram: cr.instagram_state, tiktok: cr.tiktok_state },
-      plan: { name: 'trial', billing: cr.billing, trialEnds: cr.trial_ends },
+      plan: { name: 'trial', billing: cr.billing, trialEnds: cr.trial_ends, ...planView(cr.plan_tier) },
       theme,
       links: links(cr), consents: j(cr.consents, {}),
       settings: { autoConfirmHigh: !!s.autoConfirmHigh, bioLinkIg: !!s.bioLinkIg, bioLinkTiktok: !!s.bioLinkTiktok, paused: !!s.paused, adminPaused: !!s.adminPaused },

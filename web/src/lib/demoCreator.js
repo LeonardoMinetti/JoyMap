@@ -5,6 +5,7 @@ import { sanitizeTheme, sanitizeSvg, accentProblem } from '../../../server/theme
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { cleanStops } from '../../../server/stops.js'
+import { planView, TIERS } from '../../../server/plans.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
 
@@ -44,7 +45,7 @@ function seed(d) {
     nextId: 100,
     creator: {
       id: 1, handle: 'criador_demo', tiktok: null, slug: DEMO_SLUG, displayName: 'Criador Demo', followers: 12000, status: 'approved', verified: true, published: true, onboarding: 'done',
-      accounts: { instagram: 'none', tiktok: 'none' }, plan: { name: 'trial', billing: 'monthly', trialEnds: iso(21) },
+      accounts: { instagram: 'none', tiktok: 'none' }, plan: { name: 'trial', billing: 'monthly', trialEnds: iso(21), ...planView('creator') },
       theme: sanitizeTheme(d.creator.theme), links: [{ title: 'Instagram do criador (exemplo)', url: 'https://example.com', on: true }],
       consents: { hosting: true, network: false, aggregatesForRestaurants: false, marketing: false },
       settings: { autoConfirmHigh: false, bioLinkIg: false, bioLinkTiktok: false, paused: false, adminPaused: false },
@@ -97,6 +98,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/connect/instagram' || p === '/creator/connect/tiktok') throw err('nao_configurado', 501)
   if (p === '/creator/accounts') { cr.accounts[body.network] = body.state; return out({ ok: true }) }
   if (p === '/creator/trial') { cr.plan = { ...cr.plan, billing: body.billing === 'annual' ? 'annual' : 'monthly' }; if (cr.onboarding !== 'done') cr.onboarding = 'welcome'; return out({ trialEnds: cr.plan.trialEnds }) }
+  if (p === '/creator/plan-demo') { if (!TIERS.includes(body.tier)) throw err('plano'); cr.plan = { ...cr.plan, ...planView(body.tier) }; return out({ ok: true }) }
   if (p === '/creator/billing') { cr.plan = { ...cr.plan, billing: body.billing === 'annual' ? 'annual' : 'monthly' }; return out({ billing: cr.plan.billing }) }
   if (p === '/creator/account' && method === 'PUT') { const n = String(body.displayName || '').trim().slice(0, 60); if (!n) throw err('nome'); cr.displayName = n; return out({ displayName: n }) }
   if (p === '/creator/account' && method === 'DELETE') { demoReset(); demoLeave(); return { ok: true } }
@@ -201,7 +203,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const live = s.places.filter((x) => x.status === 'confirmed' && x.geoStatus === 'found' && x.lat != null && !x.hidden)
     const ids = new Set(live.map((x) => x.id))
     return {
-      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
+      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
       places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length),
     }
   }

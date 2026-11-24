@@ -158,7 +158,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
             : <div className="ms-list">{shown.map(row)}</div>}</>}
-          {!preview && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
+          {!preview && creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </div>
       </section>
       {panel === 'bairros' && (
@@ -185,7 +185,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="ms-sec">Neste aparelho ({places.filter((p) => isSaved(p.id)).length})</div>
           {places.filter((p) => isSaved(p.id)).map((p) => <button key={p.id} type="button" className="ms-opt" onClick={() => { setPanel(null); openFicha?.(p.id) }}><PlacePhoto place={p} theme={theme} size={40} /><span className="sp">{p.name}</span></button>)}
           {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}
-          <div className="pfoot">Mapa feito com <b>wagli</b></div>
+          {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </Panel>)}
       {tabs && <PubTabs navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
     </div>

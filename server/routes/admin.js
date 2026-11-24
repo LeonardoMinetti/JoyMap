@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { DEFAULT_THEME } from '../theme.js'
+import { TIERS } from '../plans.js'
 import { j } from '../lib.js'
 
 const SLA_DAYS = 5 // prazo interno de resposta a denúncias (premissa, ajustável)
@@ -19,7 +20,7 @@ export default function adminRoutes(app, x) {
       minFollowers: min,
       creators: all('SELECT c.*, u.email FROM creators c JOIN users u ON u.id=c.user_id ORDER BY c.id DESC').map((r) => ({
         id: r.id, handle: r.handle, tiktok: r.tiktok, email: r.email, followers: r.followers, verified: !!r.verified, status: r.status, published: !!r.published, createdAt: r.created_at, decidedAt: r.decided_at,
-        criterion: r.followers > 0 ? (r.followers >= min ? 'met' : 'below') : 'unknown',
+        tier: r.plan_tier, criterion: r.followers > 0 ? (r.followers >= min ? 'met' : 'below') : 'unknown',
         places: one("SELECT COUNT(*) n FROM places WHERE creator_id=? AND status!='removed'", r.id).n,
       })),
     })
@@ -110,6 +111,12 @@ export default function adminRoutes(app, x) {
       setStatus('review')
     } else return c.json({ error: 'acao' }, 400)
     return c.json({ ok: true })
+  })
+  ad.post('/creators/:id/plan', async (c) => {
+    const { tier } = await c.req.json().catch(() => ({}))
+    if (!TIERS.includes(tier)) return c.json({ error: 'plano' }, 400)
+    const r = db.prepare('UPDATE creators SET plan_tier=? WHERE id=?').run(tier, Number(c.req.param('id')))
+    return r.changes ? c.json({ ok: true, tier }) : c.json({ error: 'nao_encontrado' }, 404)
   })
   ad.post('/creators/:id/unpause', (c) => {
     const id = Number(c.req.param('id'))

@@ -85,6 +85,7 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
   ensureColumn(db, 'places', 'hidden', 'INTEGER NOT NULL DEFAULT 0')
   ensureColumn(db, 'places', 'snippet', 'TEXT')
   ensureColumn(db, 'places', 'reviewed', 'INTEGER NOT NULL DEFAULT 0')
+  ensureColumn(db, 'creators', 'plan_tier', "TEXT NOT NULL DEFAULT 'creator'") // free | creator | pro
   ensureColumn(db, 'routes', 'color', 'TEXT')
   ensureColumn(db, 'routes', 'stops', 'TEXT')
   ensureColumn(db, 'places', 'coupon_code', 'TEXT')

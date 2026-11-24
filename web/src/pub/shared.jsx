@@ -142,7 +142,7 @@ export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, 
     <>
       {theme.layout.cover && creator.cover && <div className="pcover" style={{ backgroundImage: `url(${creator.coverUrl || `/api/public/${creator.slug}/cover`}?v=${coverVer || 0})` }} />}
       <div className="pbody">{blocks.map((b) => body[b.id]).filter(Boolean)}</div>
-      <div className="pfoot">Mapa feito com <b>wagli</b></div>
+      {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
     </>
   )
 }

@@ -6,6 +6,7 @@ import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
+import { can, minTier } from '../plans.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
 const CATEGORY = /^[a-z0-9_-]{1,20}$/
@@ -272,6 +273,7 @@ export default function creatorRoutes(app, x) {
   cr.put('/domain', async (c) => {
     const { domain } = await c.req.json().catch(() => ({}))
     const d = String(domain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+    if (d && !can(fresh(c).plan_tier, 'customDomain')) return c.json({ error: 'plano', need: minTier('customDomain') }, 403)
     if (!d) { db.prepare("UPDATE creators SET domain=NULL, domain_status='none' WHERE id=?").run(me(c).id); return c.json({ domain: null }) }
     if (!DOMAIN.test(d) || d === new URL(cfg.baseUrl).hostname) return c.json({ error: 'dominio_invalido' }, 400)
     if (db.prepare('SELECT 1 FROM creators WHERE domain=? AND id!=?').get(d, me(c).id)) return c.json({ error: 'dominio_em_uso' }, 409)
