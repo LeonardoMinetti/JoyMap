@@ -5,6 +5,8 @@ import { useMe, homeFor } from './me.jsx'
 import { api } from '../api.js'
 import { initial } from '../theme.jsx'
 import logoUrl from '../brand/logo.svg'
+import FakeMap from '../FakeMap.jsx'
+import { withBase } from './base.js'
 
 export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="wagli"><img src={logoUrl} alt="wagli" style={{ height: size }} /></Link>
 
@@ -66,7 +68,14 @@ export function Side({ active }) {
         <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(c?.displayName)}</div><div><div className="b sm">@{c?.handle}</div><div className="xs mut">{c?.plan?.trialEnds ? 'Teste grátis' : 'Sem plano ativo'}</div></div></div>
         {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}{dot(k)}</Link>)}
         {me?.user?.role === 'admin' && <Link className="it" to="/admin"><Icon n="shield" s={18} c="#404040" />Administração</Link>}
-        <button className="it" style={{ background: 'none', border: 0, textAlign: 'left', marginTop: 'auto' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button>
+        {c?.slug && c.published !== false && (
+          <a className="mapbn" href={withBase(`/@${c.slug}`)} target="_blank" rel="noopener noreferrer" style={{ marginTop: 'auto' }} aria-label="Ver meu mapa como um seguidor (abre em outra aba)">
+            <span className="mapbn-pv"><FakeMap h={104} tone={c.theme?.tone || 'light'} shape={c.theme?.shape || 'drop'} acc={c.theme?.accent || '#ff4b2b'} n={6} lab={false} /></span>
+            <span className="mapbn-tx"><b className="sm">Ver meu mapa</b><span className="xs">Como um seguidor vê</span></span>
+            <Icon n="next" s={16} c="currentColor" />
+          </a>
+        )}
+        <button className="it" style={{ background: 'none', border: 0, textAlign: 'left', marginTop: c?.slug ? 0 : 'auto' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button>
       </div>
       {/* celular: barra superior enxuta + abas fixas embaixo + folha "Mais" */}
       <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}><div className="b xs">@{c?.handle}</div><div className="av">{initial(c?.displayName)}</div></div></div>

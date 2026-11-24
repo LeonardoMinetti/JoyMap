@@ -428,3 +428,12 @@ body{background:var(--cream)}.page{background:var(--cream)}
 /* janela (modal) */
 .mdl-back{position:fixed;inset:0;z-index:70;background:rgba(23,23,19,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 .mdl{background:#fff;border-radius:24px;width:min(760px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:24px;display:grid;gap:16px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+
+/* banner do menu: prévia do mapa que leva à visão do seguidor */
+.mapbn{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 8px;margin:8px 0;border-radius:18px;background:var(--soft);color:var(--ink);overflow:hidden;text-decoration:none;transition:box-shadow .2s,transform .2s;box-shadow:0 0 0 1px rgba(23,23,19,.08)}
+.mapbn:hover{box-shadow:0 0 0 2px var(--ink)}
+.mapbn-pv{grid-column:1/-1;display:block;line-height:0}
+.mapbn-tx{display:grid;padding:10px 0 12px 14px;gap:2px}.mapbn-tx .xs{color:var(--ink2);opacity:.8}
+.mapbn>svg{margin-right:12px}
+.studio .side .mapbn,.mtabs~.mapbn{display:none}
+@media (max-width:900px){.side .mapbn{display:none}}
