@@ -4,12 +4,12 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark } from './shared.jsx'
 import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
 // inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
-export const HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
+export const BRAND = 28, HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
 export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
@@ -45,6 +45,8 @@ function Panel({ title, onClose, children, tall, bottom = TAB }) {
 
 export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, onShare, onRequest, requested, near }) {
   const { creator } = data
+  const brand = creator.showBrand !== false
+  const head = HEAD + (brand ? BRAND : 0) // com a marca, o cabeçalho ganha uma linha
   const theme = creator.theme
   const places = data.places
   const colors = useMemoColors(theme)
@@ -62,7 +64,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const route = routeId != null ? data.routes?.find((r) => r.id === routeId) : null
   const shown = route ? shown0.filter((p) => route.placeIds.includes(p.id)) : shown0
   const sel = shown.find((p) => p.id === selectedId)
-  const hs = Math.max(200, hc - HEAD - (tabs ? tabH : 0))
+  const hs = Math.max(200, hc - head - (tabs ? tabH : 0))
   const offs = { full: 0, half: Math.round(hs * 0.5), low: Math.round(hs * 0.64), peek: hs - PEEK }
 
   useEffect(() => {
@@ -108,7 +110,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
   const visible = hs - y
-  const fitPad = { top: CHIPS_BOTTOM, bottom: Math.max(40, hc - HEAD - (drag ? y : offs[snap])) }
+  const fitPad = { top: CHIPS_BOTTOM + head - HEAD, bottom: Math.max(40, hc - head - (drag ? y : offs[snap])) }
   const isSaved = (id) => saved?.ids.includes(id)
   const row = (p) => {
     const cat = catOf(theme, p.category)
@@ -132,7 +134,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
           : <MapCanvas places={shown} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
       </div>
-      <header className="ms-top">
+      <header className={'ms-top' + (brand ? ' has-brand' : '')}>
+        {brand && <BrandMark preview={preview} />}
         {searchOpen
           ? <><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button type="button" className="ms-ib" aria-label="Fechar busca" onClick={() => { setSearchOpen(false); f.setQ?.('') }}><Icon n="close" s={20} c="currentColor" /></button></>
           : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}<div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>
@@ -141,7 +144,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
             <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button>
             <AccountBtn slug={creator.slug} preview={preview} /></>}
       </header>
-      <div className="ms-chips" role="group" aria-label="Filtros">
+      <div style={brand ? { top: 66 + BRAND } : undefined} className="ms-chips" role="group" aria-label="Filtros">
         {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
         {hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>}
         {city && <button type="button" className="ms-chip on" onClick={() => f.setCities([])} aria-label={`Remover a cidade ${city}`}><Icon n="globe" s={14} c="currentColor" />{city}<Icon n="close" s={14} c="currentColor" /></button>}
@@ -157,7 +160,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="sp"><b className="ms-n">{sel.name}</b><span className="ms-s">{sub(sel, theme)}</span></div>
           <button type="button" className={'ms-bm solo' + (isSaved(sel.id) ? ' on' : '')} aria-label={isSaved(sel.id) ? 'Remover dos salvos' : 'Salvar'} onClick={(e) => { e.stopPropagation(); !preview && saved?.toggle(sel.id) }}><Icon n="heart" s={18} c="currentColor" /></button>
         </div>)}
-      <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: HEAD, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
+      <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: head, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
         <div className="ms-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="button" tabIndex={preview ? -1 : 0} aria-label="Arrastar para abrir ou fechar a lista" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek') }}>
           <i className="ms-bar" />
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>

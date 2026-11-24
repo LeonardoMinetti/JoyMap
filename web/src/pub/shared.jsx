@@ -7,6 +7,7 @@ import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
+import logoUrl from '../brand/logo.svg'
 import { cityOf, openState, openLabel } from './extras.js'
 import { DAY_LONG } from '../../../server/hours.js'
 import { FONTS, catOf, fmtDate, initial, onAccent, symOf } from '../theme.jsx'
@@ -126,6 +127,12 @@ export function AccountBtn({ slug, preview }) {
   const to = out ? `/entrar?como=explorador&voltar=${encodeURIComponent(`/@${slug}`)}` : me.creator ? '/painel' : '/salvos'
   const label = out ? 'Entrar como explorador' : me.creator ? 'Meu painel' : 'Meus salvos de todos os mapas'
   return <Link className="ms-ib" to={to} aria-label={label} title={label} tabIndex={preview ? -1 : 0} onClick={preview ? (e) => e.preventDefault() : undefined}>{out ? <Icon n="user" s={20} c="currentColor" /> : <span className="ms-me">{initial(me.user.email)}</span>}</Link>
+}
+
+// Marca JoyMap no topo do mapa (como no Viver SP). Some no plano Pro (showBrand false). A cor segue o texto do tema do criador.
+export function BrandMark({ preview }) {
+  const mask = `url("${logoUrl}") left center / contain no-repeat`
+  return <Link className="jm-brand" to="/" aria-label="Mapa feito com JoyMap" tabIndex={preview ? -1 : 0} onClick={preview ? (e) => e.preventDefault() : undefined}><span style={{ WebkitMask: mask, mask }} /></Link>
 }
 
 export const NoneOpen = ({ onClear }) => (

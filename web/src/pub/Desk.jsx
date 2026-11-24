@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
-import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, sub } from './shared.jsx'
+import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, sub } from './shared.jsx'
 import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
@@ -132,6 +132,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
     <div className="dkroot" style={{ '--dw': `${dw}px` }}>
       <section className="dk-side" aria-label="Lugares do mapa">
         <header className="dk-head">
+          {creator.showBrand !== false && <BrandMark />}
           <div className="dk-id">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}
             <div className="sp"><h1 className="pt" style={{ '--fs': '28px' }}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle} · {places.length} lugares</span></div>
             <button type="button" className="ms-ib" aria-label="Salvos" onClick={() => nav('salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
