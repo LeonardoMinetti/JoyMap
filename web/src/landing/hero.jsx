@@ -110,6 +110,7 @@ function HeroInner({ compact, rm, paused }) {
 export function Hero() {
   return (
     <div className="hero2">
+      <div className="hero2-mark" aria-hidden="true" />
       <div className="w split hero2-in">
         <div className="col hero2-tx">
           <span className="tag hero2-eb">Feito para criadores</span>
