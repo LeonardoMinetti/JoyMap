@@ -94,9 +94,9 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
     const key = `${places.length}:${theme.start}:${theme.startView?.lat}`
     if (fitted.current === key) return
     fitted.current = key
-    if (theme.start === 'pick' && theme.startView) { m.setView([theme.startView.lat, theme.startView.lon], theme.startView.zoom); if (fitPad) m.panBy([0, (fitPad.bottom - fitPad.top) / 2], { animate: false }) }
+    if (theme.start === 'pick' && theme.startView) { m.setView([theme.startView.lat, theme.startView.lon], theme.startView.zoom); if (fitPad) m.panBy([-(fitPad.left || 0) / 2, (fitPad.bottom - fitPad.top) / 2], { animate: false }) }
     else if (theme.start === 'hood') m.setView([median(places.map((p) => p.lat)), median(places.map((p) => p.lon))], 14)
-    else m.fitBounds(L.latLngBounds(places.map((p) => [p.lat, p.lon])), fitPad ? { paddingTopLeft: [40, fitPad.top], paddingBottomRight: [40, fitPad.bottom], maxZoom: 14 } : { padding: [40, 40], maxZoom: 14 })
+    else m.fitBounds(L.latLngBounds(places.map((p) => [p.lat, p.lon])), fitPad ? { paddingTopLeft: [fitPad.left ?? 40, fitPad.top], paddingBottomRight: [40, fitPad.bottom], maxZoom: 14 } : { padding: [40, 40], maxZoom: 14 })
   }, [places, theme.start, theme.startView])
 
   useEffect(() => {

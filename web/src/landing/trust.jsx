@@ -76,7 +76,7 @@ export function Monetize() {
 const T = {
   recent: 'O mapa mostra os lugares dos posts mais recentes. O histórico completo é dos planos pagos.',
   manual: 'Você cola o link e a legenda de cada post, ou busca o lugar, e revisa tudo antes de publicar.',
-  brand: 'Um selo "Mapa feito com wagli" aparece no rodapé da sua página pública.',
+  brand: 'Nos planos Grátis e Criador, um selo "Mapa feito com wagli" aparece no rodapé da sua página pública. No Pro, ele some.',
   full: 'Todos os lugares que você já indicou entram no mapa, não só os dos posts recentes.',
   auto: 'Seus posts novos entram sozinhos no mapa, depois que você conecta a conta. Depende das integrações oficiais das plataformas, que ainda estão sendo liberadas.',
   studio: 'Cores, fonte, pins e símbolos do seu mapa. O visual básico tem menos opções.',
@@ -89,9 +89,9 @@ const T = {
 }
 const PLANS = [
   { k: 'free', icon: 'round-pushpin', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
-    items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Visual básico', T.studio], ['Visitas totais no painel', T.visits], ['Marca wagli na página', T.brand], ['Exportar seus dados', T.export]] },
+    items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Visual básico', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
   { k: 'creator', icon: 'trophy', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
-    items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Marca wagli na página', T.brand], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro]] },
+    items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro]] },
   { k: 'pro', icon: 'crown', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
     items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca wagli na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Produtos nos seus roteiros, com link e sempre com a marca de publi', T.produto], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
 ].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
@@ -102,7 +102,7 @@ const COMPARE = [
   ['Para quem', 'Engajar o público, sem vender nada', 'Mapa completo, sempre em dia', 'Vender roteiros e ter a marca própria'],
   ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico', T.recent],
   ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', T.auto],
-  ['Marca wagli na página', Y, Y, N, T.brand],
+  ['Sem a marca wagli na página', N, N, Y, T.brand],
   ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo', T.studio],
   ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior', T.panel],
   ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', 'O restaurante pode mostrar uma promoção ou o cardápio na ficha do lugar dele, sempre identificado como do restaurante.'],

@@ -130,3 +130,19 @@
 .tl-ph{border:0;padding:0;background:none;border-radius:14px;overflow:hidden;cursor:pointer;display:block;width:100%}
 .tl-pl{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(128,128,128,.14);border:0;cursor:pointer;color:inherit;text-align:left;font:inherit;width:100%}
 .tl-tip{font-size:13px;padding:10px 12px;border-radius:12px;background:rgba(128,128,128,.14)}.tl-tip b{margin-right:6px}
+
+/* computador: o mesmo design do celular, com o painel à esquerda e o mapa ocupando o resto */
+.ms-desk{--dw:440px}
+.ms-desk::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--dw);background:var(--bg);box-shadow:0 0 32px rgba(0,0,0,.2);z-index:680}
+.ms-desk .ms-top,.ms-desk .ms-chips,.ms-desk .ms-sheet,.ms-desk .ms-tabs,.ms-desk .ms-panel{left:0;right:auto;width:var(--dw)}
+.ms-desk .ms-chips{top:60px;padding:0 14px 6px}
+.ms-desk .ms-chip{box-shadow:none;border:1.5px solid var(--line)}.ms-desk .ms-chip.on{border-color:transparent}
+.ms-desk .ms-sheet{border-radius:0;box-shadow:none;transition:none;transform:none!important}
+.ms-desk .ms-grab{display:none}.ms-desk .ms-ovl{display:none}
+.ms-desk .ms-sheet .ms-scroll{padding-top:14px}
+.ms-desk .ms-panel{border-radius:0;box-shadow:0 -8px 24px rgba(0,0,0,.16);border-top:1px solid var(--line)}
+.ms-desk .ms-map .leaflet-top.leaflet-right{top:16px}
+.ms-desk .ms-card{display:none}
+.ms-deskfi{position:absolute;left:0;top:0;bottom:0;width:440px;z-index:800;background:var(--bg);color:var(--fg);overflow-y:auto;box-shadow:0 0 32px rgba(0,0,0,.2)}
+.ms-deskfi-h{padding:14px 16px 0}
+.ms-deskroot{position:relative;overflow:hidden}

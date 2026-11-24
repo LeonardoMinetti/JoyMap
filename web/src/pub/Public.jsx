@@ -177,28 +177,12 @@ export default function Public({ slug, embed }) {
       {sel && <div className="sheetfull"><PlaceRow p={sel} theme={theme} onClick={() => window.open(url, '_blank')} right={<a className="pb sm" href={`https://www.google.com/maps/dir/?api=1&destination=${sel.lat},${sel.lon}`} target="_blank" rel="noopener noreferrer">Rota</a>} /></div>}</div>
   )
 
-  // E12 · computador: lista ao lado do mapa
+  // E12 · computador: o mesmo design do celular, com o painel à esquerda e o mapa ocupando o resto
   if (desk) {
-    const tab = rel.startsWith('/roteiros') ? 'roteiros' : rel.startsWith('/salvos') ? 'salvos' : 'lugares'
-    const shownIds = tab === 'roteiros' && route ? route.placeIds : null
-    const mapPlaces = shownIds ? places.filter((p) => shownIds.includes(p.id)) : f.shown
     return (
-      <div className="pub desk" style={wrapStyle}>
-        <div className="left">
-          <div className="phead"><div className="pav" style={{ width: 56, height: 56, fontSize: 26 }}>{initial(creator.displayName)}</div><div className="sp"><h1 className="pt" style={{ '--fs': '32px' }}>{creator.displayName}</h1><div className="sm mut">@{creator.handle} · {places.length} lugares</div></div><button className="picon" aria-label="Compartilhar" onClick={() => setOverlay({ kind: 'share' })}><Icon n="share" s={18} c="currentColor" /></button></div>
-          {theme.bio && <p className="sm" style={{ margin: 0 }}>{theme.bio}</p>}
-          <div className="pchips"><button className={'pchip' + (!f.cats.length ? ' on' : '')} onClick={() => f.setCats([])}>Todos</button>{usedCats.map((c) => <button key={c.id} className={'pchip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => f.setCats([c.id])}>{c.name}</button>)}</div>
-          <div className="prow"><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input value={f.q} onChange={(e) => f.setQ(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button className="pb sec" aria-label="Filtros" onClick={() => setOverlay({ kind: 'filters' })}><Icon n="filter" s={18} c="currentColor" /></button></div>
-          <div className="prow" style={{ gap: 6 }}>{[['lugares', '/', 'Lugares'], ['roteiros', '/roteiros', 'Roteiros'], ['salvos', '/salvos', 'Salvos']].map(([k, p, l]) => <Link key={k} to={href(p)} className={'pchip' + (tab === k ? ' on' : '')} style={{ borderColor: 'var(--line)' }}>{l}</Link>)}</div>
-          {fichaPlace ? <div><Link to={href('/')} className="pb sm sec" style={{ marginBottom: 10 }}><Icon n="back" s={14} c="currentColor" />Voltar à lista</Link><Ficha place={fichaPlace} data={data} ctx={ctx} /></div>
-            : tab === 'roteiros' ? (route ? <div className="col" style={{ gap: 8 }}><Link to={href('/roteiros')} className="pb sm sec" style={{ alignSelf: 'flex-start' }}><Icon n="back" s={14} c="currentColor" />Roteiros</Link><h2 className="pt" style={{ '--fs': '26px' }}>{route.name}</h2><RouteBody route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => <div className="col" style={{ gap: 8 }}>{mapPlaces.map((p) => <PlaceRow key={p.id} p={p} theme={theme} onClick={() => openFicha(p.id)} />)}</div>} /></div>
-              : <div className="col" style={{ gap: 8 }}>{data.routes.map((r) => <Link key={r.id} className="pin" to={href(`/roteiros/${r.id}`)}><span className="sp"><b className="pt" style={{ '--fs': '20px' }}>{r.name}</b><span className="xs mut">{r.placeIds.length} lugares{r.note ? ` · ${r.note}` : ''}</span></span><Icon n="next" s={18} c="currentColor" /></Link>)}{!data.routes.length && <p className="mut sm">Este criador ainda não montou roteiros.</p>}</div>)
-              : tab === 'salvos' ? <div className="col" style={{ gap: 8 }}><div className="box xs mut">Seus salvos ficam só neste aparelho.</div>{places.filter((p) => saved.ids.includes(p.id)).map((p) => <PlaceRow key={p.id} p={p} theme={theme} onClick={() => openFicha(p.id)} />)}{!saved.ids.length && <p className="mut sm">Nada salvo ainda.</p>}</div>
-                : f.shown.length === 0 ? <NoResult term={f.q.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q.trim() ? request : null} requested={requested} />
-                  : <div className="pgrid">{f.shown.map((p) => <button key={p.id} className="pcard wide" onClick={() => openFicha(p.id)}><PlacePhoto place={p} theme={theme} /><b className="pt" style={{ '--fs': '20px' }}>{p.name}</b><span className="tag2" style={{ alignSelf: 'flex-start' }}>{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div>}
-          <div className="pfoot">Mapa feito com <b>wagli</b></div>
-        </div>
-        <div className="right"><MapCanvas places={mapPlaces} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={(id) => openFicha(id)} extra={f.near} style={{ height: '100%', position: 'absolute', inset: 0 }} /></div>
+      <div className="pub msroot ms-deskroot" style={{ ...wrapStyle, width: '100%', height: '100dvh' }}>
+        <MapSheet desk data={data} shown={f.shown} f={f} selectedId={fichaPlace ? fichaPlace.id : selectedId} onSelect={(id) => openFicha(id)} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap="full" openPanel={['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
+        {fichaPlace && <aside className="ms-deskfi" aria-label={fichaPlace.name}><div className="ms-deskfi-h"><Link to={href('/')} className="pb sm sec"><Icon n="back" s={14} c="currentColor" />Voltar ao mapa</Link></div><Ficha place={fichaPlace} data={data} ctx={ctx} /></aside>}
         {overlays}
       </div>
     )
