@@ -23,19 +23,21 @@ const proj = (lat, lon, z) => { const sc = 256 * 2 ** z, sin = Math.sin((lat * M
 const RUA = DEMO_IDENTITIES[1] // Grão & Pausa: modelo Doce do estúdio, com nome e foto de perfil do criador
 
 function useHeroSeq({ on, rm, paused }) {
-  const [s, setS] = useState({ cards: rm, lines: false, placed: rm ? 6 : 0, flown: -1, ident: 0 })
+  const [s, setS] = useState({ cards: rm, lines: false, placed: rm ? 6 : 0, flown: -1, ident: 0, big: false })
   useEffect(() => {
-    if (rm) { setS({ cards: true, lines: false, placed: 6, flown: -1, ident: 0 }); return }
+    if (rm) { setS({ cards: true, lines: false, placed: 6, flown: -1, ident: 0, big: false }); return }
     if (!on || paused) return
     let dead = false
     const hs = []
     const at = (ms, f) => hs.push(setTimeout(() => !dead && f(), ms))
     const run = () => {
-      setS({ cards: false, lines: false, placed: 0, flown: -1, ident: 0 })
+      setS({ cards: false, lines: false, placed: 0, flown: -1, ident: 0, big: false })
       at(400, () => setS((x) => ({ ...x, cards: true })))
       for (let i = 0; i < 6; i++) { at(2600 + i * 760, () => setS((x) => ({ ...x, flown: i }))); at(2600 + i * 760 + 640, () => setS((x) => ({ ...x, placed: i + 1 }))) }
       at(9000, () => setS((x) => ({ ...x, ident: 1 })))
-      at(13800, run)
+      at(10200, () => setS((x) => ({ ...x, big: true }))) // o celular cresce para mostrar o mapa
+      at(13800, () => setS((x) => ({ ...x, big: false }))) // e volta ao tamanho inicial antes de recomeçar
+      at(15000, run)
     }
     run()
     return () => { dead = true; hs.forEach(clearTimeout) }
@@ -90,7 +92,7 @@ function HeroInner({ compact, rm, paused }) {
   const ident = q.ident === 1
   return (
     <div ref={ref} className="hs-in" style={compact ? undefined : { width: W, height: H }}>
-      <div className="hs-ph" style={compact ? undefined : { left: PX, top: PY }}>
+      <div className={'hs-ph' + (q.big ? ' big' : '')} style={compact ? undefined : { left: PX, top: PY }}>
         <Phone h={PH} label="Tela pública do mapa de um criador, com pins aparecendo conforme as publicações são identificadas">
           <Native h={PH} theme={ident ? T1 : T0}><PubPreview name={ident ? RUA.name : 'Mapa de demonstração'} handle={ident ? RUA.handle : 'mapa_demo'} avatarUrl={ident ? ph(RUA.avatar) : undefined} theme={ident ? T1 : T0} places={PLACES6} shown={shown} snap="low" /></Native>
           <div className={'hs-badge' + (ident ? ' on' : '')} aria-hidden="true"><i />Identidade do criador</div>
