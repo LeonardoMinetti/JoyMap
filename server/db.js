@@ -90,6 +90,7 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
   ensureColumn(db, 'routes', 'stops', 'TEXT')
   ensureColumn(db, 'routes', 'price', 'INTEGER')
   ensureColumn(db, 'routes', 'products', 'TEXT')
+  ensureColumn(db, 'routes', 'sponsor', 'TEXT')
   ensureColumn(db, 'places', 'coupon_code', 'TEXT')
   ensureColumn(db, 'places', 'coupon_note', 'TEXT')
   ensureColumn(db, 'places', 'google_url', 'TEXT')

@@ -181,6 +181,9 @@ export function RouteTimeline({ route, places, theme, openFicha, preview }) {
     </ol>
   )
 }
+// Roteiro patrocinado: etiqueta e logo da marca parceira, sempre visíveis no cartão
+export const SponsorMark = ({ s }) => s ? <span className="sp-logo" title={`Patrocinado por ${s.brand}`}>{s.logo ? <img src={s.logo} alt={s.brand} /> : <b>{s.brand}</b>}</span> : null
+export const SponsorTag = ({ s }) => s ? <span className="sp-tag">Roteiro patrocinado</span> : null
 // Roteiro pago: o seguidor vê só as primeiras paradas. A cobrança ainda não existe; na demonstração a compra é simulada.
 function RouteLock({ route, preview }) {
   const [busy, setBusy] = useState(false)
@@ -214,6 +217,7 @@ export function RouteBody({ route, places, theme, openFicha, renderList, onMap, 
   const opts = [['timeline', 'Linha do tempo'], ['list', 'Lista'], ...(onMap ? [['map', 'Mapa']] : [])]
   return (
     <>
+      {route.sponsor && <div className="sp-bar"><SponsorTag s={route.sponsor} /><span>Em parceria com <b>{route.sponsor.brand}</b></span><SponsorMark s={route.sponsor} /></div>}
       {route.note && <p className="ms-bio">{route.note}</p>}
       <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
       {view === 'timeline' ? <RouteTimeline route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} /> : renderList()}

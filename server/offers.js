@@ -20,10 +20,20 @@ export function cleanProducts(input) {
   return out
 }
 
+// Roteiro patrocinado (Pro): marca parceira com nome e, se quiser, logo (imagem pequena, enviada como data URI). Sempre identificado como patrocinado.
+const LOGO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+export function cleanSponsor(v) {
+  const brand = txt(v?.brand, 40)
+  if (!brand) return null
+  const logo = typeof v?.logo === 'string' && v.logo.length <= 60000 && LOGO.test(v.logo) ? v.logo : null
+  return { brand, logo }
+}
+
 // o que o plano permite: sem permissão, preço e produtos simplesmente não valem
 export const cleanOffer = (r, tier) => ({
   price: can(tier, 'sellRoteiros') ? cleanPrice(r?.price) : null,
   products: can(tier, 'products') ? cleanProducts(r?.products) : [],
+  sponsor: can(tier, 'sponsoredRoteiros') ? cleanSponsor(r?.sponsor) : null,
 })
 
 // quanto fica para o criador depois da taxa do plano

@@ -4,7 +4,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag } from './shared.jsx'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
 // inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
@@ -175,8 +175,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <Panel bottom={tabs ? tabH : 0} title="Roteiros" onClose={() => setPanel(null)}>
           {(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}
           {(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
-            <button key={r.id} type="button" className="ms-route" style={r.color ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
-              <b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
+            <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
+              <SponsorMark s={r.sponsor} /><SponsorTag s={r.sponsor} /><b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
               <span className="ms-stack">{rp.slice(0, 3).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 3 && <em>+{rp.length - 3}</em>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
             </button>) })}
         </Panel>)}

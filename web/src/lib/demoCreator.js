@@ -52,7 +52,7 @@ function seed(d) {
       settings: { autoConfirmHigh: false, bioLinkIg: false, bioLinkTiktok: false, paused: false, adminPaused: false },
       domain: { name: null, status: 'none' }, hasCover: false, symbols: [], meta: { instagramReady: false, tiktokReady: false },
     },
-    places, photo, routes: DEMO_ROUTES.map((r) => ({ ...r, price: r.id === 1 ? 19 : null, products: r.id === 1 ? [{ title: 'Guia de bolso: Liberdade', url: 'https://example.com/guia-liberdade', price: 'R$ 29' }, { title: 'Kit de hashis de viagem', url: 'https://example.com/hashis', price: '' }] : [] })), unlocked: [], interest: false, consentLog: [], notices: [],
+    places, photo, routes: DEMO_ROUTES.map((r) => ({ ...r, price: r.id === 1 ? 19 : null, sponsor: r.id === 3 ? { brand: 'Marca Exemplo', logo: null } : null, products: r.id === 1 ? [{ title: 'Guia de bolso: Liberdade', url: 'https://example.com/guia-liberdade', price: 'R$ 29' }, { title: 'Kit de hashis de viagem', url: 'https://example.com/hashis', price: '' }] : [] })), unlocked: [], interest: false, consentLog: [], notices: [],
   }
 }
 async function S() {
@@ -211,7 +211,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const ids = new Set(live.map((x) => x.id))
     return {
       creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
-      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
+      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], sponsor: can(cr.plan.tier, 'sponsoredRoteiros') ? r.sponsor || null : null, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
     }
   }
   // compra simulada: na demonstração não existe cobrança, só o efeito de desbloquear o roteiro

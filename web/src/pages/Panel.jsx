@@ -6,7 +6,7 @@ import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle } from '../lib/
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
-import { PlacePhoto, RouteTimeline, pubVars } from '../pub/shared.jsx'
+import { PlacePhoto, RouteTimeline, SponsorMark, SponsorTag, pubVars } from '../pub/shared.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 
 const ACCOUNT_TABS = [['conta', 'Perfil', 'user', '/painel/conta'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'], ['plano', 'Plano e cobrança', 'card', '/painel/plano']]
@@ -20,6 +20,7 @@ const AccountPage = ({ tab, children }) => (
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
+import { resizeLogo } from '../lib/image.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
 import { demoExport } from '../lib/demoCreator.js'
 const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
@@ -293,8 +294,8 @@ function RoutePreview({ route, places, theme }) {
   const rp = route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean)
   return (
     <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
-      <div className="ms-route" style={{ cursor: 'default', marginTop: 0, ...(route.color ? { background: route.color, color: onColor(route.color) } : {}) }}>
-        <b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
+      <div className={'ms-route' + (route.sponsor?.brand ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color ? { background: route.color, color: onColor(route.color) } : {}) }}>
+        <SponsorMark s={route.sponsor?.brand ? route.sponsor : null} /><SponsorTag s={route.sponsor?.brand ? route.sponsor : null} /><b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
         <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
       </div>
     </div>
@@ -411,7 +412,7 @@ export function Roteiros() {
               </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Vender roteiros está disponível a partir do plano Criador (taxa de 8%, 5% no Pro).</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>
             <div className="card col" style={{ gap: 12 }}>
-              <div className="row jb wrap"><div><b>Produtos do roteiro</b><div className="xs mut">Links de produtos que combinam com o roteiro, mostrados no fim dele.</div></div>{!can.products && <span className="tag">Plano Pro</span>}</div>
+              <div className="row jb wrap"><div><b>Produtos do roteiro</b><div className="xs mut">Links de produtos que combinam com o roteiro, mostrados no fim dele.</div></div>{!can.products && <span className="tag">Plano Criador</span>}</div>
               {can.products ? <>
                 {(r.products || []).map((pr, k) => { const sp = (patch) => set({ products: r.products.map((v, j) => (j === k ? { ...v, ...patch } : v)) }); return (
                   <div key={k} className="card soft col" style={{ padding: 12, gap: 8 }}>
@@ -421,7 +422,24 @@ export function Roteiros() {
                   </div>) })}
                 <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={(r.products || []).length >= MAX_PRODUCTS} onClick={() => set({ products: [...(r.products || []), { title: '', url: '', price: '' }] })}><Icon n="plus" s={14} />Adicionar produto</button>
                 <div className="xs mut">Até {MAX_PRODUCTS} produtos. Só entram os que têm nome e um link http(s) válido.</div>
-              </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Mostrar produtos no roteiro está disponível no plano Pro.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
+              </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Mostrar produtos no roteiro está disponível a partir do plano Criador.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
+            </div>
+            <div className="card col" style={{ gap: 12 }}>
+              <div className="row jb wrap"><div><b>Roteiro patrocinado</b><div className="xs mut">Um roteiro feito em parceria com uma marca. Aparece com a etiqueta "Roteiro patrocinado" e o logo da marca no cartão.</div></div>{!can.sponsoredRoteiros && <span className="tag">Plano Pro</span>}</div>
+              {can.sponsoredRoteiros ? <>
+                <div className="row" role="group" aria-label="Patrocínio"><button className={'chip' + (!r.sponsor ? ' on' : '')} aria-pressed={!r.sponsor} onClick={() => set({ sponsor: null })}>Sem patrocínio</button><button className={'chip' + (r.sponsor ? ' on' : '')} aria-pressed={!!r.sponsor} onClick={() => set({ sponsor: r.sponsor || { brand: '', logo: null } })}>Patrocinado por uma marca</button></div>
+                {r.sponsor && <>
+                  <div className="g2" style={{ alignItems: 'end' }}>
+                    <Field label="Nome da marca parceira" id="sb"><div className="in"><input id="sb" value={r.sponsor.brand} maxLength="40" placeholder="Ex.: nome da marca" onChange={(e) => set({ sponsor: { ...r.sponsor, brand: e.target.value } })} /></div></Field>
+                    <div className="col" style={{ gap: 6 }}><span className="lb">Logo da marca (opcional)</span>
+                      <div className="row" style={{ gap: 8 }}>
+                        <label className="btn ln sm" style={{ cursor: 'pointer' }}>{r.sponsor.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { set({ sponsor: { ...r.sponsor, logo: await resizeLogo(f) } }) } catch { toast('Use uma imagem PNG, JPG ou WebP.') } }} /></label>
+                        {r.sponsor.logo && <><img src={r.sponsor.logo} alt="Logo enviado" style={{ height: 36, maxWidth: 90, objectFit: 'contain', background: '#fff', borderRadius: 8, padding: 3, border: '1px solid #ddd' }} /><button className="btn ln sm" onClick={() => set({ sponsor: { ...r.sponsor, logo: null } })}>Tirar</button></>}
+                      </div></div>
+                  </div>
+                  <div className="xs mut">Só use a marca de quem você tem acordo. O seguidor sempre vê "Roteiro patrocinado", e sem o nome da marca o patrocínio não vai ao ar.</div>
+                </>}
+              </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Roteiros patrocinados com marcas parceiras estão disponíveis no plano Pro.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>
             <div className="row jb wrap"><span className="xs mut">Roteiros e produtos só vão ao ar depois de salvar.</span><button className="btn bd2 sm" onClick={remove}><Icon n="trash" s={14} />Remover roteiro</button></div>
           </div>

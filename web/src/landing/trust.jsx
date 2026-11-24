@@ -82,7 +82,8 @@ const T = {
   studio: 'Cores, fonte, pins e símbolos do seu mapa. O visual básico tem menos opções.',
   panel: 'Mostra o que o seu público busca no mapa, inclusive o que não encontrou, e quais lugares são abertos e geram pedido de rota. Sempre em números agregados, sem identificar pessoas.',
   roteiro: 'Você cria roteiros com paradas e história. Cada um pode ficar grátis ou ser vendido, e a wagli cobra uma taxa só sobre as vendas.',
-  produto: 'Coloque o link de um produto, como uma mochila de uma marca, dentro de um roteiro. Ele aparece com a marca "Publi", para o seguidor saber que é parceria.',
+  produto: 'Coloque o link de um produto, como uma mochila ou um guia, dentro de um roteiro, para o seguidor ver e abrir.',
+  patrocinado: 'Faça um roteiro em parceria com uma marca. Ele aparece com a etiqueta "Roteiro patrocinado" e o logo da marca no cartão, para o seguidor saber que é parceria.',
   dominio: 'O endereço do seu mapa usa o seu nome, como maps.wagli/natalia-souza. Nos outros planos o endereço leva um código, como maps.wagli/k7x2p.',
   export: 'Baixe seus lugares e roteiros em JSON ou CSV quando quiser.',
   visits: 'Total de visitas ao seu mapa, sem o detalhe de buscas e cliques.',
@@ -91,9 +92,9 @@ const PLANS = [
   { k: 'free', icon: 'round-pushpin', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
     items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Visual básico', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
   { k: 'creator', icon: 'trophy', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
-    items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro]] },
+    items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro], ['Produtos nos seus roteiros', T.produto]] },
   { k: 'pro', icon: 'crown', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
-    items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca wagli na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Produtos nos seus roteiros, com link e sempre com a marca de publi', T.produto], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
+    items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca wagli na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Criação de roteiros patrocinados com marcas parceiras', T.patrocinado], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
 ].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
 const Y = 'Sim', N = 'Não'
 // [item, Grátis, Criador, Pro, explicação, oculto?]
@@ -111,7 +112,8 @@ const COMPARE = [
   ['Pin em destaque para restaurante com publi', N, N, Y, null, true],
   ['Domínio personalizado', N, N, Y, T.dominio],
   ['Roteiros que podem ser vendidos', 'Só roteiros gratuitos', 'Sim, com taxa de 8% por venda', 'Sim, com taxa de 5% por venda', T.roteiro],
-  ['Produtos nos roteiros, com link e marca de publi', N, N, Y, T.produto],
+  ['Produtos nos roteiros', N, Y, Y, T.produto],
+  ['Roteiros patrocinados com marcas parceiras', N, N, Y, T.patrocinado],
   ['Exportar dados (JSON e CSV)', Y, Y, Y, T.export],
 ].filter((r) => !r[5])
 // Ícone "?" com explicação ao passar o mouse ou focar (teclado e toque)
