@@ -42,16 +42,14 @@ function Panel({ title, onClose, children, tall, bottom = TAB }) {
   )
 }
 
-export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, onShare, onRequest, requested, near, desk = false }) {
+export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, onShare, onRequest, requested, near }) {
   const { creator } = data
   const theme = creator.theme
   const places = data.places
   const colors = useMemoColors(theme)
   const root = useRef(null)
   const [hc, setHc] = useState(preview ? 840 : 700)
-  const [snap, setSnapRaw] = useState(desk ? 'full' : snap0)
-  const setSnap = (v) => setSnapRaw(desk ? 'full' : v) // no computador o painel fica sempre aberto
-  const topY = HEAD + (desk ? 52 : 0) // no computador os filtros ficam dentro do painel, acima da lista
+  const [snap, setSnap] = useState(snap0)
   const [y, setY] = useState(0)
   const [ready, setReady] = useState(false)
   const [drag, setDrag] = useState(false)
@@ -63,7 +61,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const route = routeId != null ? data.routes?.find((r) => r.id === routeId) : null
   const shown = route ? shown0.filter((p) => route.placeIds.includes(p.id)) : shown0
   const sel = shown.find((p) => p.id === selectedId)
-  const hs = Math.max(200, hc - topY - (tabs ? tabH : 0))
+  const hs = Math.max(200, hc - HEAD - (tabs ? tabH : 0))
   const offs = { full: 0, half: Math.round(hs * 0.5), low: Math.round(hs * 0.64), peek: hs - PEEK }
 
   useEffect(() => {
@@ -88,7 +86,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
 
   // arrastar a folha pela alça
   const grab = useRef(null)
-  const down = (e) => { if (preview || desk) return; grab.current = { y0: y, p0: e.clientY, moved: false }; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId) }
+  const down = (e) => { if (preview) return; grab.current = { y0: y, p0: e.clientY, moved: false }; setDrag(true); e.currentTarget.setPointerCapture(e.pointerId) }
   const move = (e) => { const g = grab.current; if (!g) return; const dy = e.clientY - g.p0; if (Math.abs(dy) > 4) g.moved = true; setY(clamp(g.y0 + dy, 0, offs.peek)) }
   const up = (e) => {
     const g = grab.current; if (!g) return
@@ -104,7 +102,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
   const visible = hs - y
-  const fitPad = desk ? { top: 40, bottom: 40, left: 440 + 40 } : { top: CHIPS_BOTTOM, bottom: Math.max(40, hc - HEAD - (drag ? y : offs[snap])) }
+  const fitPad = { top: CHIPS_BOTTOM, bottom: Math.max(40, hc - HEAD - (drag ? y : offs[snap])) }
   const isSaved = (id) => saved?.ids.includes(id)
   const row = (p) => {
     const cat = catOf(theme, p.category)
@@ -122,7 +120,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
     )
   }
   return (
-    <div className={'ms' + (preview ? ' ms-prev' : '') + (desk ? ' ms-desk' : '')} ref={root}>
+    <div className={'ms' + (preview ? ' ms-prev' : '')} ref={root}>
       <div className="ms-map">
         {!ready ? null : fake || !places.length
           ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
@@ -149,13 +147,13 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="sp"><b className="ms-n">{sel.name}</b><span className="ms-s">{sub(sel, theme)}</span></div>
           <button type="button" className={'ms-bm solo' + (isSaved(sel.id) ? ' on' : '')} aria-label={isSaved(sel.id) ? 'Remover dos salvos' : 'Salvar'} onClick={(e) => { e.stopPropagation(); !preview && saved?.toggle(sel.id) }}><Icon n="heart" s={18} c="currentColor" /></button>
         </div>)}
-      <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: topY, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
+      <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: HEAD, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
         <div className="ms-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="button" tabIndex={preview ? -1 : 0} aria-label="Arrastar para abrir ou fechar a lista" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek') }}>
           <i className="ms-bar" />
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
-          {route ? <RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={desk ? undefined : () => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
+          {route ? <RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />

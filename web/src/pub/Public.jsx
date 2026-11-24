@@ -1,6 +1,7 @@
 import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
+import DeskMap from './Desk.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
 import { api, track } from '../api.js'
@@ -177,12 +178,12 @@ export default function Public({ slug, embed }) {
       {sel && <div className="sheetfull"><PlaceRow p={sel} theme={theme} onClick={() => window.open(url, '_blank')} right={<a className="pb sm" href={`https://www.google.com/maps/dir/?api=1&destination=${sel.lat},${sel.lon}`} target="_blank" rel="noopener noreferrer">Rota</a>} /></div>}</div>
   )
 
-  // E12 · computador: o mesmo design do celular, com o painel à esquerda e o mapa ocupando o resto
+  // E12 · computador: painel largo à esquerda e mapa à direita (organização de guia), com o design do celular
   if (desk) {
+    const initialView = rel.startsWith('/salvos') ? 'salvos' : rel.startsWith('/roteiros') ? 'roteiros' : ['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : 'home'
     return (
-      <div className="pub msroot ms-deskroot" style={{ ...wrapStyle, width: '100%', height: '100dvh' }}>
-        <MapSheet desk data={data} shown={f.shown} f={f} selectedId={fichaPlace ? fichaPlace.id : selectedId} onSelect={(id) => openFicha(id)} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap="full" openPanel={['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
-        {fichaPlace && <aside className="ms-deskfi" aria-label={fichaPlace.name}><div className="ms-deskfi-h"><Link to={href('/')} className="pb sm sec"><Icon n="back" s={14} c="currentColor" />Voltar ao mapa</Link></div><Ficha place={fichaPlace} data={data} ctx={ctx} /></aside>}
+      <div className="pub" style={{ ...wrapStyle, width: '100%' }}>
+        <DeskMap data={data} f={f} shown={f.shown} openFicha={openFicha} go={go} saved={saved} ctx={ctx} fichaPlace={fichaPlace} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} initialView={initialView} initialRouteId={route ? route.id : null} />
         {overlays}
       </div>
     )
