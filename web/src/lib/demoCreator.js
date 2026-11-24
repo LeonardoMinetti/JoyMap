@@ -7,7 +7,8 @@ import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js
 import { cleanStops } from '../../../server/stops.js'
 import { planView, TIERS, can, limitStats, roomFor } from '../../../server/plans.js'
 import { cleanOffer, lockRoute } from '../../../server/offers.js'
-import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
+import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG, DEMO_HOURS } from '../demoData.js'
+import { cleanHours } from '../../../server/hours.js'
 import { BASE, withBase } from './base.js'
 
 const KEY = 'wagli_creator_demo_v1'
@@ -36,7 +37,7 @@ const mk = (o) => ({ name: null, address: null, municipality: 'São Paulo', neig
 function seed(d) {
   const photo = {}
   d.places.forEach((p) => { photo[p.id] = withBase(p.photo) })
-  const places = DEMO_PLACES.map((p, i) => mk({ id: p.id, name: p.name, category: p.category, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, address: 'Endereço ilustrativo (demonstração)', geoStatus: 'found', geoQuality: i % 3 === 2 ? 'street_approx' : 'address_exact', postedOn: iso(-12 - i * 9), snippet: `Post de exemplo sobre ${p.name} (fictício).` }))
+  const places = DEMO_PLACES.map((p, i) => mk({ id: p.id, name: p.name, category: p.category, neighborhood: p.neighborhood, municipality: p.municipality || 'São Paulo', hours: DEMO_HOURS[p.id] || null, lat: p.lat, lon: p.lon, address: 'Endereço ilustrativo (demonstração)', geoStatus: 'found', geoQuality: i % 3 === 2 ? 'street_approx' : 'address_exact', postedOn: iso(-12 - i * 9), snippet: `Post de exemplo sobre ${p.name} (fictício).` }))
   places.push(
     mk({ id: 13, name: 'Sushi Exemplo', category: 'rest', neighborhood: 'Aclimação', address: 'Rua Exemplo, 100', lat: -23.5731, lon: -46.6342, geoStatus: 'found', geoQuality: 'street_approx', confidence: 'medium', status: 'pending', postedOn: iso(-3), snippet: 'Rodízio novo na Aclimação, vale a visita (post fictício).' }),
     mk({ id: 14, name: 'Hamburgueria Exemplo', category: 'burger', neighborhood: 'Pinheiros', address: 'Rua Exemplo, 250', lat: -23.5663, lon: -46.6838, geoStatus: 'found', geoQuality: 'address_exact', confidence: 'high', status: 'pending', postedOn: iso(-2), snippet: 'Smash burger com batata na brasa (post fictício).' }),
@@ -62,7 +63,7 @@ async function S() {
 }
 const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(mem)) } catch { /* ok */ } }
 const out = (v) => { save(); return v }
-const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, couponCode: p.couponCode || null, couponNote: p.couponNote || null, googleUrl: p.googleUrl || null, instagramUrl: p.instagramUrl || null, photo: undefined })
+const pub = (p) => ({ id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geoQuality, category: p.category, postUrl: p.postUrl, postedOn: p.postedOn, ad: p.ad, tiktokId: p.tiktokId, couponCode: p.couponCode || null, couponNote: p.couponNote || null, googleUrl: p.googleUrl || null, instagramUrl: p.instagramUrl || null, hours: p.hours || null, photo: undefined })
 
 // ---------- estatísticas ilustrativas ----------
 function stats(s, days) {
@@ -175,6 +176,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     if (iUrl === undefined) throw err('instagram_invalido')
     x.googleUrl = gUrl; x.instagramUrl = iUrl
     if ('couponCode' in body) x.couponCode = String(body.couponCode || '').trim().slice(0, 30) || null
+    if ('hours' in body) x.hours = cleanHours(body.hours)
     if ('couponNote' in body) x.couponNote = String(body.couponNote || '').trim().slice(0, 140) || null
     Object.assign(x, { name, status }, 'address' in body ? { address: String(body.address || '').slice(0, 200) || null } : {}, 'category' in body ? { category: body.category } : {}, 'note' in body ? { note: String(body.note || '').slice(0, 200) } : {}, 'ad' in body ? { ad: !!body.ad } : {}, 'postUrl' in body ? { postUrl: String(body.postUrl || '').slice(0, 300) || null } : {})
     return out({ place: x })

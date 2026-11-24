@@ -10,7 +10,7 @@ import { Link, navigate, toast, useLocation } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial } from '../theme.jsx'
-import { Home, NoResult, PlacePhoto, RouteBody, pubVars, sub, useFilters, usePubData, useSaved, NEAR_KM } from './shared.jsx'
+import { Home, NoResult, PlacePhoto, RouteBody, HoursBlock, SavedNote, pubVars, sub, useFilters, usePubData, useSaved, NEAR_KM } from './shared.jsx'
 
 const useMedia = (q) => { const [m, setM] = useState(() => matchMedia(q).matches); useEffect(() => { const l = matchMedia(q); const f = () => setM(l.matches); l.addEventListener('change', f); return () => l.removeEventListener('change', f) }, [q]); return m }
 const Sw = ({ on, onChange, label }) => <button type="button" role="switch" aria-checked={on} aria-label={label} className={'psw' + (on ? ' on' : '')} onClick={() => onChange(!on)} />
@@ -101,6 +101,7 @@ function Ficha({ place, data, ctx }) {
       <div className="pchips" style={{ gap: 6 }}><span className="tag2 acc">@{creator.handle}</span><span className="tag2">{cat.name}</span>{(place.neighborhood || place.municipality) && <span className="tag2">{place.neighborhood || place.municipality}</span>}</div>
       <div className="box" style={{ flexDirection: 'row', alignItems: 'center' }}><Icon n="pin" s={20} c="var(--acc)" /><div className="sp"><b className="sm">{place.address || 'Endereço não informado'}</b><div className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</div></div></div>
       <div className="prow"><a className="pb sp" href={route} target="_blank" rel="noopener noreferrer" onClick={() => ctx.track('route_click', { placeId: place.id })}><Icon n="route" s={18} c="currentColor" />Abrir rota</a><button className="pb sec" aria-label="Compartilhar" onClick={() => ctx.share(place)}><Icon n="share" s={18} c="currentColor" /></button></div>
+      <HoursBlock place={place} />
       {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><span className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cupom ou desconto</span>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
       <div className="prow"><a className="pb sm sec sp" href={place.googleUrl || googleSearchUrl(place)} target="_blank" rel="noopener noreferrer"><Icon n="ext" s={14} c="currentColor" />{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</a>{place.instagramUrl && <a className="pb sm sec sp" href={place.instagramUrl} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={14} c="currentColor" />Instagram do lugar</a>}</div>
       <div className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Quem indicou</div>
@@ -219,7 +220,7 @@ export default function Public({ slug, embed }) {
   if (rel === '/salvos') {
     const mine = places.filter((p) => saved.ids.includes(p.id))
     return page(<><Header title="Salvos" right={<span className="tag2">{mine.length} lugares</span>} /><div className="pbody" style={{ flex: 1 }}>
-      <div className="box xs" style={{ background: '#fff6cc', color: '#7a4a05', borderColor: 'transparent' }}>Seus salvos ficam só neste aparelho. Entrar com e-mail para levar para outros aparelhos ainda não está disponível.</div>
+      <SavedNote saved={saved} slug={creator.slug} />
       {mine.map((p) => <PlaceRow key={p.id} p={p} theme={theme} onClick={() => openFicha(p.id)} right={<button className="picon" style={{ border: 0 }} aria-label="Remover dos salvos" onClick={(e) => { e.stopPropagation(); saved.toggle(p.id) }}><Icon n="heart" s={22} c="#d93a1c" /></button>} />)}
       {!mine.length && <p className="mut sm c">Nada salvo ainda. Toque no coração de um lugar.</p>}
       <button className="pb line" disabled style={{ borderColor: 'var(--line)', color: 'var(--mut)' }}>Entrar para sincronizar (em breve)</button>

@@ -10,6 +10,7 @@ import FakeMap from '../FakeMap.jsx'
 import { catOf, fmtDate, symOf } from '../theme.jsx'
 import { resizeImage } from '../lib/image.js'
 import { findGroups, hasCoords, isReliable, issueOf, normName } from '../lib/places.js'
+import { DAY_LONG } from '../../../server/hours.js'
 
 // Carrega os lugares do criador (com recarga manual)
 export function usePlaces(poll) {
@@ -198,6 +199,27 @@ export function Review() {
 }
 
 // C4 · Editar lugar
+// Horário de funcionamento: aparece na página do lugar e liga o filtro "Abertos agora" do mapa
+function HoursEditor({ value, onChange }) {
+  const days = value || Array(7).fill(null)
+  const setDay = (i, v) => { const n = days.map((d, j) => (j === i ? v : d)); onChange(n.some(Boolean) ? n : null) }
+  const firstOpen = days.find(Boolean)
+  return (
+    <div className="card col" style={{ gap: 10 }}>
+      <div><b>Horário de funcionamento (opcional)</b><div className="xs mut">Aparece na página do lugar e no filtro "Abertos agora". Se fechar depois da meia-noite, ponha o horário do dia seguinte (ex.: 18:00 às 02:00).</div></div>
+      {DAY_LONG.map((name, i) => { const d = days[i]; return (
+        <div key={i} className="row" style={{ gap: 10, minHeight: 40 }}>
+          <label className="row" style={{ gap: 8, width: 130, cursor: 'pointer' }}><input type="checkbox" checked={!!d} onChange={(e) => setDay(i, e.target.checked ? (firstOpen || ['09:00', '18:00']) : null)} /><span className="sm">{name}</span></label>
+          {d ? <><div className="in" style={{ width: 120 }}><input type="time" aria-label={`${name}: abre`} value={d[0]} onChange={(e) => e.target.value && setDay(i, [e.target.value, d[1]])} /></div><span className="sm mut">às</span><div className="in" style={{ width: 120 }}><input type="time" aria-label={`${name}: fecha`} value={d[1]} onChange={(e) => e.target.value && setDay(i, [d[0], e.target.value])} /></div>{d[1] <= d[0] && <span className="xs mut">fecha no dia seguinte</span>}</> : <span className="sm mut">Fechado</span>}
+        </div>) })}
+      <div className="row wrap">
+        <button type="button" className="btn ln sm" disabled={!firstOpen} onClick={() => onChange(Array(7).fill(firstOpen))}>Copiar o primeiro dia para todos</button>
+        <button type="button" className="btn ln sm" disabled={!value} onClick={() => onChange(null)}>Limpar horários</button>
+      </div>
+    </div>
+  )
+}
+
 export function EditPlace({ id }) {
   useTitle('Editar lugar')
   const { me } = useMe()
@@ -207,7 +229,7 @@ export function EditPlace({ id }) {
   const [photo, setPhoto] = useState(null)
   const pick = useRef(null)
   const p = places?.find((x) => x.id === Number(id))
-  useEffect(() => { if (p && !f) { setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad, googleUrl: p.googleUrl || '', instagramUrl: p.instagramUrl || '', couponNote: p.couponNote || '', couponCode: p.couponCode || '' }); setPhoto(p.photo || null) } }, [p, f])
+  useEffect(() => { if (p && !f) { setF({ name: p.name || '', address: p.address || '', category: p.category, note: p.note || '', postUrl: p.postUrl || '', ad: !!p.ad, googleUrl: p.googleUrl || '', instagramUrl: p.instagramUrl || '', couponNote: p.couponNote || '', couponCode: p.couponCode || '', hours: p.hours || null }); setPhoto(p.photo || null) } }, [p, f])
   if (!places || !f) return places ? <FlowShell><FlowHead back="/painel/lugares" backLabel="Lugares" title="Editar lugar" /><p className="mut">Lugar não encontrado.</p></FlowShell> : <Guard need="approved"><Loading /></Guard>
   const theme = me.creator.theme
   const save = async () => {
@@ -253,6 +275,7 @@ export function EditPlace({ id }) {
           <b>Sua indicação</b>
           <Field label="Sua nota (opcional)" id="n3"><div className="in"><input id="n3" value={f.note} onChange={set('note')} placeholder="Peça o pão de queijo…" maxLength="200" /></div></Field>
         </div>
+        <HoursEditor value={f.hours} onChange={(hours) => setF({ ...f, hours })} />
         <div className="card col">
           <div><b>Cupom ou desconto</b><div className="xs mut">Se o lugar oferece algo a quem vem pela sua indicação, conte aqui. Aparece na página do lugar.</div></div>
           <Field label="O que o seguidor ganha" id="c1"><div className="in"><input id="c1" value={f.couponNote} onChange={set('couponNote')} placeholder="Ex.: 10% de desconto dizendo que veio pelo meu mapa" maxLength="140" /></div></Field>

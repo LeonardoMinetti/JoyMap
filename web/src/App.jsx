@@ -10,6 +10,7 @@ import * as Pn from './pages/Panel.jsx'
 import * as Net from './pages/Network.jsx'
 import * as Ad from './pages/Admin.jsx'
 import { Voo } from './pages/Voo.jsx'
+import Saved from './pages/Saved.jsx'
 import { RestaurantsLanding } from './landing/restaurants.jsx'
 import Public from './pub/Public.jsx'
 import { STATIC } from './lib/base.js'
@@ -17,11 +18,11 @@ import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/salvos', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
-  '/': <Site.Landing />, '/voo': <Voo />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
+  '/': <Site.Landing />, '/voo': <Voo />, '/salvos': <Saved />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
   '/candidatura': <On.Apply />, '/candidatura/enviada': <On.ApplyStatus sent />, '/candidatura/status': <On.ApplyStatus />, '/candidatura/aprovado': <On.Approved />, '/entrar': <On.Login />,
   '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,

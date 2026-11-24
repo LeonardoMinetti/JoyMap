@@ -117,7 +117,11 @@ export function Login() {
   const [err, setErr] = useState('')
   const [wait, setWait] = useState(0)
   const [igMsg, setIgMsg] = useState(false)
-  useEffect(() => { if (me?.user) navigate(homeFor(me), { replace: true }) }, [me])
+  // espectador: quem não tem mapa e só quer guardar lugares entra por aqui (/entrar?leitor=1&voltar=/@criador)
+  const qs = new URLSearchParams(location.search)
+  const leitor = qs.get('leitor') === '1'
+  const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
+  useEffect(() => { if (me?.user) navigate(leitor ? voltar : homeFor(me), { replace: true }) }, [me])
   useEffect(() => { if (wait <= 0) return; const h = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(h) }, [wait])
   // quando o link é aberto em outra aba, esta tela percebe o login
   useEffect(() => { if (!sent) return; const h = setInterval(() => reload(), 3500); return () => clearInterval(h) }, [sent, reload])
@@ -125,7 +129,7 @@ export function Login() {
   const igLogin = async () => { try { await api('/auth/demo', { method: 'POST' }); await reload() } catch { setIgMsg(true) } }
   const send = async (e) => {
     e?.preventDefault(); setErr('')
-    try { setSent(await api('/auth/request', { method: 'POST', body: { email } })); setWait(30) } catch (x) { setErr(x.message === 'email_invalido' ? 'Digite um e-mail válido.' : 'Não foi possível enviar. Tente de novo.') }
+    try { setSent(await api('/auth/request', { method: 'POST', body: leitor ? { email, next: 'viewer', back: voltar } : { email } })); setWait(30) } catch (x) { setErr(x.message === 'email_invalido' ? 'Digite um e-mail válido.' : 'Não foi possível enviar. Tente de novo.') }
   }
   if (sent) return (
     <Stage>
@@ -157,17 +161,18 @@ export function Login() {
         <Hd back="/" title="Entrar" />
         <div className="bd" style={{ justifyContent: 'center' }}>
           <Logo />
-          <h1 className="d s44">Acesse sem senha</h1>
+          <h1 className="d s44">{leitor ? 'Entre para guardar seus lugares' : 'Acesse sem senha'}</h1>
+          {leitor && <p className="mut">Com uma conta você salva lugares de qualquer mapa e os encontra em todos os seus aparelhos. Não precisa de senha nem de criar um mapa.</p>}
           {location.search.includes('erro=link') && <Note>Este link expirou ou já foi usado. Peça outro.</Note>}
           <p className="mut">Enviamos um link de acesso para o seu e-mail. Ele vale por 15 minutos e só funciona uma vez.</p>
           <Field label="E-mail" id="m"><div className="in f"><input id="m" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
           {err && <p className="err" role="alert">{err}</p>}
           <button className="btn blk">Enviar link de acesso</button>
-          <div className="row"><div className="sep sp" /><span className="xs mut">ou</span><div className="sep sp" /></div>
+          {!leitor && <><div className="row"><div className="sep sp" /><span className="xs mut">ou</span><div className="sep sp" /></div>
           <button type="button" className="btn ln blk" onClick={igLogin}><Icon n="insta" s={18} />Entrar com Instagram</button>
-          {igMsg && <Note>O login pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo. Use o link por e-mail.</Note>}
+          {igMsg && <Note>O login pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo. Use o link por e-mail.</Note>}</>}
         </div>
-        <div className="ft"><span className="xs mut c">Ainda não tem mapa? <b><Link to="/candidatura">Peça o seu</Link></b></span></div>
+        <div className="ft">{leitor ? <span className="xs mut c">Seus salvos são só seus: o criador não sabe quem salvou.</span> : <span className="xs mut c">Ainda não tem mapa? <b><Link to="/candidatura">Peça o seu</Link></b></span>}</div>
       </form>
     </Stage>
   )

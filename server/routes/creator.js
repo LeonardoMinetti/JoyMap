@@ -7,6 +7,7 @@ import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
 import { cleanOffer } from '../offers.js'
+import { cleanHours } from '../hours.js'
 import { can, minTier, limitStats, roomFor, CAPS, tierOf } from '../plans.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
@@ -151,8 +152,8 @@ export default function creatorRoutes(app, x) {
     const tid = 'postUrl' in b ? tiktokId(postUrl) : p.post_id
     // corrigir o nome já resolve a dúvida sobre ele
     const nameSrc = 'name' in b && name !== p.name ? 'manual' : p.name_src
-    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=?, google_url=?, instagram_url=?, coupon_code=?, coupon_note=? WHERE id=?')
-      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, gUrl, iUrl, cCode, cNote, id)
+    db.prepare('UPDATE places SET name=?, address=?, category=?, note=?, ad=?, status=?, post_url=?, post_id=?, posted_on=COALESCE(?, posted_on), name_src=?, google_url=?, instagram_url=?, coupon_code=?, coupon_note=?, hours=? WHERE id=?')
+      .run(name, address || null, category, 'note' in b ? String(b.note || '').slice(0, 200) : p.note, 'ad' in b ? (b.ad ? 1 : 0) : p.ad, status, postUrl, tid, 'postUrl' in b && tid ? dateFromTiktokId(tid) : null, nameSrc, gUrl, iUrl, cCode, cNote, 'hours' in b ? (cleanHours(b.hours) ? JSON.stringify(cleanHours(b.hours)) : null) : p.hours, id)
     if (address && address !== p.address && cfg.geocode) {
       db.prepare("UPDATE places SET geo_status='pending', lat=NULL, lon=NULL, reviewed=0 WHERE id=?").run(id)
       enqueueGeocode(db, id, cfg.fetchImpl)

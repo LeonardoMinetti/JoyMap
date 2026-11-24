@@ -4,7 +4,8 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote } from './shared.jsx'
+import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
 // inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
@@ -97,7 +98,12 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   }
 
   const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
-  const hoods = Object.entries(places.reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const hoods = Object.entries(places.filter((p) => !f.cities?.length || f.cities.includes(cityOf(p))).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  const cities = citiesOf(places)
+  const multiCity = cities.length > 1
+  const city = f.cities?.length === 1 ? f.cities[0] : null
+  const anyHours = hasHours(places)
+  const news = !f.active && !route ? newest(places) : []
   const catCount = (id) => places.filter((p) => p.category === id).length
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
@@ -112,7 +118,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <div className="sp">
           <b className="ms-n">{p.name}</b>
           <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span>
-          <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.neighborhood || p.municipality) && <i>{p.neighborhood || p.municipality}</i>}</span>
+          <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.neighborhood || p.municipality) && <i>{p.neighborhood || p.municipality}</i>}<OpenTag place={p} /></span>
         </div>
         <span className="ms-th"><PlacePhoto place={p} theme={theme} size={88} />
           <button type="button" className={'ms-bm' + (isSaved(p.id) ? ' on' : '')} aria-label={isSaved(p.id) ? 'Remover dos salvos' : 'Salvar'} aria-pressed={!!isSaved(p.id)} tabIndex={preview ? -1 : 0} onClick={(e) => { e.stopPropagation(); !preview && saved?.toggle(p.id) }}><Icon n="heart" s={16} c="currentColor" /></button></span>
@@ -137,6 +143,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <div className="ms-chips" role="group" aria-label="Filtros">
         {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
         {hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>}
+        {city && <button type="button" className="ms-chip on" onClick={() => f.setCities([])} aria-label={`Remover a cidade ${city}`}><Icon n="globe" s={14} c="currentColor" />{city}<Icon n="close" s={14} c="currentColor" /></button>}
+        {multiCity && !city && <button type="button" className="ms-chip" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel('cidades')}><Icon n="globe" s={14} c="currentColor" />Cidades</button>}
+        {anyHours && <button type="button" className={'ms-chip' + (f.openNow ? ' on' : '')} aria-pressed={!!f.openNow} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.setOpenNow(!f.openNow)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>}
         {f.toggleNear && <button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button>}
         <button type="button" className={'ms-chip' + (!f.cats.length ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([])}>Todos</button>
         {usedCats.map((c) => <button key={c.id} type="button" className={'ms-chip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([c.id])}><span className="ms-dot" style={{ background: c.color }} />{c.name}</button>)}
@@ -155,7 +164,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <div className="ms-scroll">
           {route ? <RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
-          {shown.length === 0 && !preview
+          {news.length > 0 && <section className="ms-new" aria-label="Novidades"><div className="ms-sec" style={{ marginTop: 0 }}>Novidades</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
+          {shown.length === 0 && !preview && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
             : <div className="ms-list">{shown.map(row)}</div>}</>}
           {!preview && creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
@@ -165,6 +175,11 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <Panel bottom={tabs ? tabH : 0} title="Bairros" onClose={() => setPanel(null)}>
           <button type="button" className={'ms-opt' + (!hood ? ' on' : '')} onClick={() => pick(() => f.setHoods([]))}><span className="sp">Todos os bairros</span><i>{places.length}</i></button>
           {hoods.map(([h, n]) => <button key={h} type="button" className={'ms-opt' + (hood === h ? ' on' : '')} onClick={() => pick(() => f.setHoods([h]))}><span className="sp">{h}</span><i>{n}</i></button>)}
+        </Panel>)}
+      {panel === 'cidades' && (
+        <Panel bottom={tabs ? tabH : 0} title="Cidades" onClose={() => setPanel(null)}>
+          <button type="button" className={'ms-opt' + (!city ? ' on' : '')} onClick={() => pick(() => f.setCities([]))}><span className="sp">Todas as cidades</span><i>{places.length}</i></button>
+          {cities.map(([c, n]) => <button key={c} type="button" className={'ms-opt' + (city === c ? ' on' : '')} onClick={() => pick(() => { f.setCities([c]); f.setHoods?.([]) })}><span className="sp">{c}</span><i>{n}</i></button>)}
         </Panel>)}
       {panel === 'categorias' && (
         <Panel bottom={tabs ? tabH : 0} title="Categorias" onClose={() => setPanel(null)}>
@@ -183,9 +198,10 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         </Panel>)}
       {panel === 'salvos' && (
         <Panel bottom={tabs ? tabH : 0} title="Salvos" onClose={() => setPanel(null)} tall>
-          <div className="ms-sec">Neste aparelho ({places.filter((p) => isSaved(p.id)).length})</div>
+          <div className="ms-sec">{saved?.logged ? 'Na sua conta' : 'Neste aparelho'} ({places.filter((p) => isSaved(p.id)).length})</div>
           {places.filter((p) => isSaved(p.id)).map((p) => <button key={p.id} type="button" className="ms-opt" onClick={() => { setPanel(null); openFicha?.(p.id) }}><PlacePhoto place={p} theme={theme} size={40} /><span className="sp">{p.name}</span></button>)}
-          {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}
+          {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}
+          {saved && <SavedNote saved={saved} slug={creator.slug} />}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </Panel>)}
       {tabs && <PubTabs noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}

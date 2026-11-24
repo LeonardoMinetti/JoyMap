@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { api, track } from '../api.js'
-import { toast } from '../lib/router.jsx'
+import { toast, Link } from '../lib/router.jsx'
+import { useMe } from '../lib/me.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
+import { cityOf, openState, openLabel } from './extras.js'
+import { DAY_LONG } from '../../../server/hours.js'
 import { FONTS, catOf, fmtDate, onAccent, symOf } from '../theme.jsx'
 
 export const pubVars = (theme) => {
@@ -44,12 +47,16 @@ export function useFilters(places, { slug, preview } = {}) {
   const [hoods, setHoods] = useState([])
   const [video, setVideo] = useState(false)
   const [near, setNear] = useState(null)
+  const [cities, setCities] = useState([])
+  const [openNow, setOpenNow] = useState(false)
+  const [clock, setClock] = useState(0)
+  useEffect(() => { if (!openNow) return; const h = setInterval(() => setClock((n) => n + 1), 60000); return () => clearInterval(h) }, [openNow])
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase()
-    let list = places.filter((p) => (!cats.length || cats.includes(p.category)) && (!hoods.length || hoods.includes(p.neighborhood || p.municipality)) && (!video || p.tiktokId) && (!t || `${p.name} ${p.address || ''} ${p.neighborhood || ''} ${p.municipality || ''}`.toLowerCase().includes(t)))
+    let list = places.filter((p) => (!cats.length || cats.includes(p.category)) && (!cities.length || cities.includes(cityOf(p))) && (!openNow || openState(p.hours)?.open) && (!hoods.length || hoods.includes(p.neighborhood || p.municipality)) && (!video || p.tiktokId) && (!t || `${p.name} ${p.address || ''} ${p.neighborhood || ''} ${p.municipality || ''}`.toLowerCase().includes(t)))
     if (near) list = list.map((p) => ({ ...p, km: hav(near, p) })).filter((p) => p.km <= NEAR_KM).sort((a, b) => a.km - b.km)
     return list
-  }, [places, q, cats, hoods, video, near])
+  }, [places, q, cats, hoods, video, near, cities, openNow, clock])
   useEffect(() => {
     if (preview || !slug || !q.trim()) return
     const h = setTimeout(() => track(slug, 'search', { term: q.trim(), results: shown.length }), 900)
@@ -60,22 +67,59 @@ export function useFilters(places, { slug, preview } = {}) {
     if (!navigator.geolocation) return toast('Seu navegador não informa a localização.')
     navigator.geolocation.getCurrentPosition((g) => setNear({ lat: g.coords.latitude, lon: g.coords.longitude }), () => toast('Não foi possível usar a sua localização.'), { timeout: 8000 })
   }
-  const active = !!(q.trim() || cats.length || hoods.length || video || near)
-  const clear = () => { setQ(''); setCats([]); setHoods([]); setVideo(false); setNear(null) }
-  return { q, setQ, cats, setCats, hoods, setHoods, video, setVideo, near, toggleNear, shown, active, clear }
+  const active = !!(q.trim() || cats.length || hoods.length || video || near || cities.length || openNow)
+  const clear = () => { setQ(''); setCats([]); setHoods([]); setVideo(false); setNear(null); setCities([]); setOpenNow(false) }
+  return { q, setQ, cats, setCats, hoods, setHoods, video, setVideo, near, toggleNear, cities, setCities, openNow, setOpenNow, shown, active, clear }
 }
 
+// Salvos: sem conta ficam neste aparelho; com conta (e-mail) ficam na conta e valem em qualquer aparelho e em todos os mapas.
 export function useSaved(slug) {
+  const { me } = useMe()
+  const logged = !!me?.user && !STATIC
   const key = `wagli_saved_${slug}`
-  const [ids, setIds] = useState(() => { try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] } })
-  const toggle = (id) => setIds((cur) => {
-    const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
-    try { localStorage.setItem(key, JSON.stringify(next)) } catch { toast('Não foi possível guardar neste aparelho.') }
-    return next
-  })
-  return { ids, toggle }
+  const read = () => { try { return JSON.parse(localStorage.getItem(key) || '[]') } catch { return [] } }
+  const [local, setLocal] = useState(read)
+  const [remote, setRemote] = useState(null)
+  useEffect(() => {
+    if (!logged) { setRemote(null); return }
+    let on = true
+    ;(async () => {
+      const mine = read()
+      if (mine.length) { try { await api('/saved/merge', { method: 'POST', body: { slug, ids: mine } }); localStorage.removeItem(key); setLocal([]) } catch { /* mantém neste aparelho */ } }
+      api(`/saved/${slug}`).then((d) => on && setRemote(d.ids)).catch(() => on && setRemote([]))
+    })()
+    return () => { on = false }
+  }, [logged, slug])
+  const toggle = (id) => {
+    if (logged && remote) {
+      const has = remote.includes(id)
+      setRemote((cur) => (has ? cur.filter((x) => x !== id) : [...cur, id]))
+      api('/saved', { method: 'POST', body: { slug, placeId: id, saved: !has } }).catch(() => { setRemote((cur) => (has ? [...cur, id] : cur.filter((x) => x !== id))); toast('Não foi possível salvar agora.') })
+      return
+    }
+    setLocal((cur) => {
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+      try { localStorage.setItem(key, JSON.stringify(next)) } catch { toast('Não foi possível guardar neste aparelho.') }
+      return next
+    })
+  }
+  return { ids: logged && remote ? remote : local, toggle, logged }
+}
+// Aviso sobre onde os salvos ficam (e como levar para a conta)
+export function SavedNote({ saved, slug }) {
+  if (saved.logged) return <div className="box xs">Seus salvos ficam na sua conta, em qualquer aparelho. <Link to="/salvos" style={{ fontWeight: 700 }}>Ver salvos de todos os mapas</Link></div>
+  if (STATIC) return <div className="box xs">Seus salvos ficam só neste aparelho. Entrar com e-mail para guardar na conta e ver os salvos de todos os mapas ainda não está disponível na demonstração.</div>
+  return <div className="box xs">Seus salvos ficam só neste aparelho. <Link to={`/entrar?leitor=1&voltar=${encodeURIComponent(`/@${slug}`)}`} style={{ fontWeight: 700 }}>Entre com e-mail</Link> para guardá-los na conta e ver os salvos de todos os mapas.</div>
 }
 
+export const NoneOpen = ({ onClear }) => (
+  <div className="pstate" style={{ padding: '36px 8px' }}>
+    <div className="pcircle"><Icon n="clock" s={30} c="currentColor" /></div>
+    <h2 className="pt" style={{ '--fs': '28px' }}>Nada aberto agora</h2>
+    <p className="mut sm" style={{ maxWidth: 280 }}>Nenhum lugar com horário informado está aberto neste momento.</p>
+    <button className="pb sec" onClick={onClear}>Ver todos os lugares</button>
+  </div>
+)
 // E10 · Sem resultado
 export function NoResult({ term, cats, onPick, onRequest, requested }) {
   return (
@@ -179,6 +223,22 @@ export function RouteTimeline({ route, places, theme, openFicha, preview }) {
           </li>)
       })}
     </ol>
+  )
+}
+// Aberto agora (só para lugares com horário informado)
+export const OpenTag = ({ place }) => (openState(place.hours)?.open ? <span className="opn"><i aria-hidden="true" />Aberto agora</span> : null)
+export function HoursBlock({ place }) {
+  if (!place.hours) return null
+  const open = openState(place.hours)?.open
+  const today = new Date().getDay()
+  return (
+    <div className="box">
+      <span className="ms-sec" style={{ marginTop: 0 }}>Horário de funcionamento</span>
+      <b className="sm" style={{ color: open ? '#0a7c4a' : 'inherit' }}>{openLabel(place.hours)}</b>
+      <details><summary className="xs mut" style={{ cursor: 'pointer' }}>Ver todos os dias</summary>
+        <ul className="hrs">{place.hours.map((h, i) => <li key={i} className={i === today ? 'on' : ''}><span>{DAY_LONG[i]}</span><span>{h ? `${h[0]} às ${h[1]}` : 'Fechado'}</span></li>)}</ul>
+      </details>
+    </div>
   )
 }
 // Roteiro patrocinado: etiqueta e logo da marca parceira, sempre visíveis no cartão

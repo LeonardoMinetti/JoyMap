@@ -14,10 +14,21 @@ export const DEMO_PLACES = [
   { id: 10, name: 'Tapioca Exemplo', category: 'rest', neighborhood: 'Santa Cecília', lat: -23.537, lon: -46.649 },
   { id: 11, name: 'Ramen Exemplo', category: 'rest', neighborhood: 'Liberdade', lat: -23.5615, lon: -46.6339 },
   { id: 12, name: 'Cafeteria Exemplo', category: 'cafe', neighborhood: 'Paulista', lat: -23.5614, lon: -46.6559 },
+  // outras cidades: mostram o filtro de cidades (ids altos para não colidir com os lugares extras do painel de demonstração)
+  { id: 21, name: 'Peixaria Exemplo', category: 'rest', neighborhood: 'Gonzaga', municipality: 'Santos', lat: -23.9655, lon: -46.3292 },
+  { id: 22, name: 'Doceria da Praia Exemplo', category: 'cake', neighborhood: 'Boqueirão', municipality: 'Santos', lat: -23.9697, lon: -46.3258 },
+  { id: 23, name: 'Cafeteria Cambuí Exemplo', category: 'cafe', neighborhood: 'Cambuí', municipality: 'Campinas', lat: -22.8985, lon: -47.0524 },
 ]
-const PHOTO = { 1: 'sushi', 2: 'brunch', 3: 'massa', 4: 'latte', 5: 'burger', 6: 'bolo', 7: 'drink', 8: 'croissant', 9: 'pizza', 10: 'petisco', 11: 'ramen', 12: 'espresso' }
+// Horário de funcionamento de exemplo (domingo primeiro). Alguns lugares abrem à noite.
+const H = (o, c, ...off) => Array.from({ length: 7 }, (_, d) => (off.includes(d) ? null : [o, c]))
+export const DEMO_HOURS = {
+  1: H('11:30', '15:00', 1), 2: H('08:00', '17:00'), 3: H('11:00', '23:00'), 4: H('08:00', '19:00', 0), 5: H('11:00', '23:30'),
+  6: H('10:00', '20:00'), 7: H('18:00', '02:00', 0, 1), 8: H('06:00', '20:00'), 9: H('18:00', '23:30', 1), 10: H('17:00', '01:00'),
+  11: H('11:00', '22:00'), 12: H('07:00', '21:00'), 21: H('11:30', '22:00', 1), 22: H('10:00', '21:00'), 23: H('08:00', '19:00', 0),
+}
+const PHOTO = { 1: 'sushi', 2: 'brunch', 3: 'massa', 4: 'latte', 5: 'burger', 6: 'bolo', 7: 'drink', 8: 'croissant', 9: 'pizza', 10: 'petisco', 11: 'ramen', 12: 'espresso', 21: 'ostras', 22: 'sobremesa', 23: 'cafe' }
 export const demoPlaces = () => DEMO_PLACES.map((p) => ({
-  ...p, photo: `${(typeof globalThis !== 'undefined' && globalThis.__WAGLI_BASE__) || ''}/photos/${PHOTO[p.id]}.jpg`, address: 'Endereço ilustrativo (demonstração)', municipality: 'São Paulo', geoQuality: 'approx', postUrl: null, postedOn: null, ad: false, tiktokId: null,
+  ...p, photo: `${(typeof globalThis !== 'undefined' && globalThis.__WAGLI_BASE__) || ''}/photos/${PHOTO[p.id]}.jpg`, address: 'Endereço ilustrativo (demonstração)', municipality: p.municipality || 'São Paulo', hours: DEMO_HOURS[p.id] || null, geoQuality: 'approx', postUrl: null, postedOn: null, ad: false, tiktokId: null,
 }))
 // Três identidades de demonstração (comida de rua, cafeterias e alta gastronomia).
 const cat = (id, name, color, icon) => ({ id, name, color, icon })

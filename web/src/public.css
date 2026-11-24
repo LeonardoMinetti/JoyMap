@@ -209,3 +209,14 @@
 .dk-routes .ms-route.has-sp{grid-column:1/-1;padding:24px 28px}
 .dk-routes .ms-route.has-sp .pt{font-size:34px}
 .dk-routes .ms-route.has-sp .sp-logo{height:32px;max-width:140px}
+
+/* aberto agora, cidades, horários */
+.opn{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.opn i{width:9px;height:9px;border-radius:50%;background:#12b76a;box-shadow:0 0 0 3px rgba(18,183,106,.2);display:inline-block;flex:none}
+.ms-tags .opn{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(18,183,106,.14);color:#0a7c4a;text-transform:uppercase;letter-spacing:.04em}
+.dk-cities{position:absolute;top:12px;left:12px;z-index:5}
+.dk-citypop{top:44px;left:0;min-width:200px}
+.hrs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:13px}.hrs li{display:flex;justify-content:space-between;gap:12px;padding:4px 0}.hrs li.on{font-weight:700}
+.dk-cities{z-index:900}.dk-citypop{right:auto;width:max-content;max-width:300px}
+.ms-new{margin:4px 0 14px}.ms-newrow{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}.ms-newrow::-webkit-scrollbar{display:none}
+.ms-nc{flex:none;width:148px;text-align:left;border:0;background:none;color:inherit;font-family:var(--pf);cursor:pointer;display:grid;gap:6px;padding:0}.ms-nc b{font-size:14px;line-height:1.2}.ms-nc .ms-s{font-size:12px}

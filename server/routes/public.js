@@ -16,7 +16,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '
 export default function publicRoutes(app, x) {
   const { db, cfg } = x
   const live = (slug) => db.prepare("SELECT * FROM creators WHERE slug=? AND status='approved' AND published=1").get(String(slug || '').toLowerCase())
-  const pubPlace = (p, slug) => ({ photo: p.photo_v && slug ? `/api/public/${slug}/places/${p.id}/photo?v=${p.photo_v}` : null, id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geo_quality, category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, tiktokId: p.post_id, couponCode: p.coupon_code || null, couponNote: p.coupon_note || null, googleUrl: p.google_url || null, instagramUrl: p.instagram_url || null })
+  const pubPlace = (p, slug) => ({ photo: p.photo_v && slug ? `/api/public/${slug}/places/${p.id}/photo?v=${p.photo_v}` : null, id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geo_quality, category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, tiktokId: p.post_id, couponCode: p.coupon_code || null, couponNote: p.coupon_note || null, googleUrl: p.google_url || null, instagramUrl: p.instagram_url || null, hours: j(p.hours, null) })
   const livePlaces = (id) => db.prepare("SELECT * FROM places WHERE creator_id=? AND status='confirmed' AND geo_status='found' AND lat IS NOT NULL AND hidden=0 ORDER BY id").all(id)
 
   // ---------- mapa de um criador ----------

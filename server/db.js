@@ -34,6 +34,7 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
       status TEXT NOT NULL DEFAULT 'pending',          -- pending | confirmed | removed | unresolved
       created_at TEXT NOT NULL DEFAULT (datetime('now')));
     CREATE INDEX IF NOT EXISTS places_creator ON places(creator_id);
+    CREATE TABLE IF NOT EXISTS saved_places (user_id INTEGER NOT NULL, creator_id INTEGER NOT NULL, place_id INTEGER NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (user_id, place_id));
     CREATE TABLE IF NOT EXISTS geocache (key TEXT PRIMARY KEY, json TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY, creator_id INTEGER NOT NULL, type TEXT NOT NULL, term TEXT, place_id INTEGER,
@@ -91,6 +92,7 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
   ensureColumn(db, 'routes', 'price', 'INTEGER')
   ensureColumn(db, 'routes', 'products', 'TEXT')
   ensureColumn(db, 'routes', 'sponsor', 'TEXT')
+  ensureColumn(db, 'places', 'hours', 'TEXT')
   ensureColumn(db, 'places', 'coupon_code', 'TEXT')
   ensureColumn(db, 'places', 'coupon_note', 'TEXT')
   ensureColumn(db, 'places', 'google_url', 'TEXT')

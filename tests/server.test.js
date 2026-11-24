@@ -416,3 +416,55 @@ test('plano Grátis: até 20 lugares e sem roteiros', async () => {
   assert.equal(roomFor('creator', 500), Infinity); assert.equal(roomFor('pro', 500), Infinity)
   assert.equal(can('free', 'roteiros'), false); assert.equal(can('creator', 'roteiros'), true)
 })
+
+test('horário: aberto agora (com virada de meia-noite) e rótulos', async () => {
+  const { cleanHours, openState, openLabel } = await import('../server/hours.js')
+  assert.equal(cleanHours([null, null, null, null, null, null, null]), null)
+  assert.equal(cleanHours([['09:00', '09:00'], null, null, null, null, null, null]), null)
+  assert.equal(cleanHours('x'), null)
+  const h = [null, ['09:00', '18:00'], ['09:00', '18:00'], ['09:00', '18:00'], ['09:00', '18:00'], ['18:00', '02:00'], ['18:00', '02:00']]
+  const at = (iso) => new Date(iso) // UTC-3 em São Paulo
+  assert.equal(openState(h, at('2026-11-25T15:00:00Z')).open, true) // quarta 12h
+  assert.equal(openState(h, at('2026-11-24T23:00:00Z')).open, false) // terça 20h
+  assert.equal(openState(h, at('2026-11-28T04:00:00Z')).open, true) // sábado 01h, ainda no turno de sexta
+  assert.equal(openState(null), null)
+  assert.equal(openLabel(h, at('2026-11-25T15:00:00Z')), 'Aberto agora · fecha às 18h')
+  assert.equal(openLabel(h, at('2026-11-24T23:00:00Z')), 'Fechado · abre amanhã às 9h')
+})
+
+test('espectador: entra com e-mail, salva lugares de um mapa e os vê em todos os mapas', async () => {
+  const db = openDb(':memory:')
+  const app = createApp(db, { minFollowers: 0, adminEmail: 'admin@x.com', fetchImpl: nominatim })
+  const adm = await login(app, 'admin@x.com')
+  await post(app, '/api/apply', { handle: 'criadora', email: 'c@x.com', acceptTerms: true })
+  const c = await login(app, 'c@x.com')
+  const id = (await (await call(app, c.cookie, '/api/me')).json()).creator.id
+  await call(app, adm.cookie, `/api/admin/creators/${id}/decision`, 'POST', { status: 'approved', followers: 10 })
+  await call(app, c.cookie, '/api/creator/posts', 'POST', { posts: [{ caption: 'Amamos o @casa.mare 📍Rua Fernando de Albuquerque, 77 - Consolação' }] })
+  await waitGeo(app, c.cookie)
+  await call(app, c.cookie, '/api/creator/places/confirm-high', 'POST')
+  await call(app, c.cookie, '/api/creator/publish', 'POST', { published: true })
+  const slug = (await (await call(app, c.cookie, '/api/me')).json()).creator.slug
+  const placeId = (await (await app.request(`/api/public/${slug}`)).json()).places[0].id
+
+  assert.equal((await app.request('/api/saved')).status, 401) // sem conta não há salvos no servidor
+  // login de espectador: volta só para páginas do site (nada de link externo)
+  const r = await (await post(app, '/api/auth/request', { email: 'leitor@x.com', next: 'viewer', back: 'https://evil.com' })).json()
+  assert.ok(!r.devLink.includes('evil'))
+  const token = new URL(r.devLink).searchParams.get('token')
+  const v = await app.request(`/api/auth/verify?token=${token}&next=viewer`)
+  assert.equal(v.headers.get('location'), '/salvos')
+  const cookie = v.headers.get('set-cookie').split(';')[0]
+  assert.equal(db.prepare("SELECT role FROM users WHERE email='leitor@x.com'").get().role, 'viewer')
+
+  assert.equal((await (await call(app, cookie, '/api/saved', 'POST', { slug, placeId, saved: true })).json()).ok, true)
+  assert.equal((await call(app, cookie, '/api/saved', 'POST', { slug, placeId: 99999, saved: true })).status, 404)
+  assert.deepEqual((await (await call(app, cookie, `/api/saved/${slug}`)).json()).ids, [placeId])
+  const all = (await (await call(app, cookie, '/api/saved')).json()).saved
+  assert.equal(all.length, 1); assert.equal(all[0].slug, slug)
+  assert.equal((await (await call(app, cookie, '/api/saved/merge', 'POST', { slug, ids: [placeId, 123456] })).json()).merged, 1)
+  await call(app, cookie, '/api/saved', 'POST', { slug, placeId, saved: false })
+  assert.equal((await (await call(app, cookie, '/api/saved')).json()).saved.length, 0)
+  // o criador não vê quem salvou: a conta do leitor não abre o painel
+  assert.notEqual((await call(app, cookie, '/api/creator/places')).status, 200)
+})

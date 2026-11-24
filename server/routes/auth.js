@@ -5,6 +5,8 @@ import { DEFAULT_THEME } from '../theme.js'
 import { humanize } from '../extract.js'
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// volta só para páginas do próprio site: um mapa (/@criador...) ou a lista de salvos
+const safeBack = (b) => (typeof b === 'string' && /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(b) ? b : null)
 const HANDLE = /^[a-z0-9_.]{2,30}$/
 const clean = (h) => String(h || '').trim().replace(/^@/, '').toLowerCase()
 
@@ -40,12 +42,13 @@ export default function auth(app, x) {
 
   // Link mágico, sem senha
   app.post('/api/auth/request', async (c) => {
-    const { email, next } = await c.req.json().catch(() => ({}))
+    const { email, next, back } = await c.req.json().catch(() => ({}))
     const e = String(email || '').trim().toLowerCase()
     if (!EMAIL.test(e)) return c.json({ error: 'email_invalido' }, 400)
     const token = randomBytes(24).toString('hex')
     db.prepare('INSERT INTO login_tokens(hash,email,expires_at) VALUES (?,?,?)').run(sha(token), e, Date.now() + 15 * 60000)
-    const link = `${cfg.baseUrl}/api/auth/verify?token=${token}${next === '/voo' ? '&next=voo' : ''}`
+    const dest = next === 'viewer' ? `&next=viewer${safeBack(back) ? `&back=${encodeURIComponent(safeBack(back))}` : ''}` : next === '/voo' ? '&next=voo' : ''
+    const link = `${cfg.baseUrl}/api/auth/verify?token=${token}${dest}`
     if (await x.sendMail(e, 'Seu link de acesso', `Abra para entrar (vale 15 minutos, uso único):\n${link}`)) return c.json({ ok: true })
     return c.json({ ok: true, devLink: cfg.dev ? link : undefined })
   })
@@ -54,12 +57,15 @@ export default function auth(app, x) {
     const row = db.prepare('SELECT * FROM login_tokens WHERE hash=?').get(sha(token))
     if (!row || row.used || row.expires_at < Date.now()) return c.redirect('/entrar?erro=link')
     db.prepare('UPDATE login_tokens SET used=1 WHERE hash=?').run(row.hash)
-    db.prepare('INSERT OR IGNORE INTO users(email) VALUES (?)').run(row.email)
+    const viewer = c.req.query('next') === 'viewer'
+    if (viewer) db.prepare("INSERT OR IGNORE INTO users(email, role) VALUES (?, 'viewer')").run(row.email)
+    else db.prepare('INSERT OR IGNORE INTO users(email) VALUES (?)').run(row.email)
     const u = db.prepare('SELECT * FROM users WHERE email=?').get(row.email)
     if (cfg.adminEmail && row.email === cfg.adminEmail && u.role !== 'admin') db.prepare("UPDATE users SET role='admin' WHERE id=?").run(u.id)
     const sid = randomBytes(24).toString('hex')
     db.prepare('INSERT INTO sessions(hash,user_id,expires_at) VALUES (?,?,?)').run(sha(sid), u.id, Date.now() + 30 * 86400000)
     setCookie(c, 'sid', sid, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 30 * 86400, secure: !cfg.dev })
+    if (viewer) return c.redirect(safeBack(c.req.query('back')) || '/salvos')
     return c.redirect(c.req.query('next') === 'voo' ? '/voo' : '/painel')
   })
   // Só em desenvolvimento: "Entrar com Instagram" simulado, sem Meta e sem e-mail. Entra num criador de teste já aprovado.

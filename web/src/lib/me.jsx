@@ -15,6 +15,7 @@ export const STEP_PATH = { start: '/candidatura/aprovado', instagram: '/conectar
 export function homeFor(me) {
   const c = me?.creator
   try { if (me?.user && sessionStorage.getItem('claim_draft')) return '/restaurantes' } catch { /* ok */ }
+  if (!c && me?.user?.role === 'viewer') return '/salvos'
   if (!c) return me?.claims?.length ? '/restaurante' : '/candidatura'
   if (c.status !== 'approved') return '/candidatura/status'
   if (c.onboarding !== 'done') return STEP_PATH[c.onboarding] || '/painel'

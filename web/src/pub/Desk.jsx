@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
-import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, sub } from './shared.jsx'
+import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, sub } from './shared.jsx'
+import { cityOf, citiesOf, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 
@@ -21,7 +22,7 @@ function Card({ p, theme, saved, onOpen, preview }) {
       </div>
       <b className="pt dk-t">{p.name}</b>
       <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}{p.km != null ? ` · ${p.km.toFixed(1).replace('.', ',')} km` : ''}</span>
-      <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.couponNote || p.couponCode) && <i>Cupom</i>}</span>
+      <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.couponNote || p.couponCode) && <i>Cupom</i>}<OpenTag place={p} /></span>
     </article>
   )
 }
@@ -51,6 +52,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
           <div className="prow"><a className="pb sm sec sp" href={place.googleUrl || googleSearchUrl(place)} target="_blank" rel="noopener noreferrer"><Icon n="ext" s={14} c="currentColor" />{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</a>{place.instagramUrl && <a className="pb sm sec sp" href={place.instagramUrl} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={14} c="currentColor" />Instagram do lugar</a>}</div>
         </div>
       </div>
+      <HoursBlock place={place} />
       {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><span className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cupom ou desconto</span>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
       <div className="box">
         <span className="ms-sec" style={{ marginTop: 0 }}>Quem indicou</span>
@@ -83,7 +85,14 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const route = routeId != null ? data.routes.find((r) => r.id === routeId) : null
   const list = route && view === 'route' ? shown.filter((p) => route.placeIds.includes(p.id)) : shown
   const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
-  const hoods = useMemo(() => Object.entries(places.reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])), [places])
+  const cities = useMemo(() => citiesOf(places), [places])
+  const multiCity = cities.length > 1
+  const city = f.cities?.length === 1 ? f.cities[0] : null
+  const anyHours = hasHours(places)
+  const [cityMenu, setCityMenu] = useState(false)
+  const hoods = useMemo(() => Object.entries(places.filter((p) => !city || cityOf(p) === city).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])), [places, city])
+  const news = !f.active && view === 'home' ? newest(places) : []
+  const newIds = new Set(news.map((p) => p.id))
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const savedPlaces = places.filter((p) => saved.ids.includes(p.id))
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
@@ -100,7 +109,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
-  else if (view === 'salvos') body = <>{sechead('Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}</>
+  else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
   else body = (
     <>
       {theme.bio && <p className="dk-lead">{theme.bio}</p>}
@@ -109,8 +118,13 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           {usedCats.filter((c) => f.cats.includes(c.id)).map((c) => <button key={c.id} type="button" className="ms-chip on" aria-label={`Tirar filtro ${c.name}`} onClick={() => f.setCats([])}><span className="ms-dot" style={{ background: c.color }} />{c.name} ×</button>)}
         </div>
       )}
-      {sechead(hood || 'Lugares', list.length, hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>)}
-      {list.length === 0 ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} /> : grid(list)}
+      {news.length > 0 && <>
+        {sechead('Novidades', null, anyHours && <button type="button" className="ms-chip" aria-pressed={f.openNow} onClick={() => f.setOpenNow(true)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>)}
+        {grid(news)}
+      </>}
+      {f.openNow && <div className="dk-chips" role="group" aria-label="Filtro ativo"><button type="button" className="ms-chip on" onClick={() => f.setOpenNow(false)} aria-label="Tirar filtro Abertos agora"><span className="opn"><i aria-hidden="true" />Abertos agora</span> ×</button></div>}
+      {sechead(hood || city || (news.length ? 'Mais lugares' : 'Lugares'), list.length - (news.length ? news.length : 0), hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>)}
+      {list.length === 0 && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : list.length === 0 ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} /> : grid(news.length ? list.filter((p) => !newIds.has(p.id)) : list)}
     </>
   )
 
@@ -145,7 +159,18 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       </section>
       <div className="dk-map">
         <MapCanvas places={list} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
-        {f.toggleNear && <div className="dk-pills"><button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} onClick={() => f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button></div>}
+        {multiCity && (
+          <div className="dk-cities" onMouseLeave={() => setCityMenu(false)}>
+            <button type="button" className="ms-chip" aria-haspopup="true" aria-expanded={cityMenu} onClick={() => setCityMenu(!cityMenu)}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}</button>
+            {cityMenu && <div className="dk-pop dk-citypop" role="menu" aria-label="Cidades">
+              {cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { f.setCities([c]); f.setHoods?.([]); setCityMenu(false); setView('home'); setRouteId(null); if (fichaPlace) go('/') }}>{c}<i>{n}</i></button>)}
+              <button type="button" role="menuitem" className="all" onClick={() => { f.setCities([]); setCityMenu(false) }}>Todas as cidades</button>
+            </div>}
+          </div>)}
+        <div className="dk-pills">
+          {anyHours && <button type="button" className={'ms-chip' + (f.openNow ? ' on' : '')} aria-pressed={!!f.openNow} onClick={() => { f.setOpenNow(!f.openNow); setView('home'); setRouteId(null); if (fichaPlace) go('/') }}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>}
+          {f.toggleNear && <button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} onClick={() => f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button>}
+        </div>
       </div>
     </div>
   )
