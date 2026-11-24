@@ -213,3 +213,22 @@ export function Login() {
     </AuthFrame>
   )
 }
+
+// Atalhos de teste da demonstração publicada: entram direto no painel do criador ou no espaço do explorador (dados fictícios).
+// /painel-teste-usuario → painel do criador · /painel-teste-explorador → Salvos, Criadores e Conta
+export function TestEntry({ kind }) {
+  const { reload } = useMe()
+  useEffect(() => {
+    if (!STATIC) { navigate('/', { replace: true }); return }
+    ;(async () => {
+      await api('/auth/logout', { method: 'POST' })
+      if (kind === 'explorador') {
+        try { if (!localStorage.getItem('wagli_saved_demo')) localStorage.setItem('wagli_saved_demo', '[1,2,5,9]') } catch { /* ok */ }
+        await api('/auth/demo-explorador', { method: 'POST', body: { email: 'explorador@teste.wagli' } })
+      } else await api('/auth/demo', { method: 'POST' })
+      await reload()
+      navigate(kind === 'explorador' ? '/salvos' : '/painel', { replace: true })
+    })()
+  }, [])
+  return <div className="pad" style={{ padding: 32 }}>Abrindo o painel de teste…</div>
+}

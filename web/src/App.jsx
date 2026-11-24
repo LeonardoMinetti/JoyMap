@@ -19,11 +19,11 @@ import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/entrar', '/candidatura', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/entrar', '/candidatura', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
-  '/': <Site.Landing />, '/voo': <Voo />, '/salvos': <Saved />, '/salvos/criadores': <Saved tab="criadores" />, '/salvos/conta': <Saved tab="conta" />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
+  '/': <Site.Landing />, '/voo': <Voo />, '/salvos': <Saved />, '/painel-teste-usuario': <Au.TestEntry kind="criador" />, '/painel-teste-explorador': <Au.TestEntry kind="explorador" />, '/salvos/criadores': <Saved tab="criadores" />, '/salvos/conta': <Saved tab="conta" />, '/planos': <Site.Plans />, '/exemplos': <Site.Examples />, '/termos': <Site.Terms />, '/perguntas': <Site.Faq />, '/indisponivel': <Site.Unavailable />,
   '/candidatura': <Redirect to="/entrar?criar=1" />, '/candidatura/enviada': <On.ApplyStatus sent />, '/candidatura/status': <On.ApplyStatus />, '/candidatura/aprovado': <On.Approved />, '/entrar': <Au.Login />,
   '/conectar/instagram': <On.ConnectInstagram />, '/conectar/tiktok': <On.ConnectTikTok />, '/consentimentos': <On.Consents />, '/plano': <On.ChoosePlan />, '/pagamento': <On.Payment />, '/boas-vindas': <On.Welcome />,
   '/montando': <Build.Building />, '/previa': <Build.Preview />, '/revisar': <Build.Review />, '/adicionar': <Build.AddPlace />, '/sem-lugar': <Build.Unresolved />, '/unidades': <Build.Units />,
