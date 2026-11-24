@@ -70,7 +70,16 @@ function sanitizeLayout(input, legacy) {
   return { blocks, mapHeight: pick(HEIGHTS, l.mapHeight, 'md'), listStyle: pick(LISTS, l.listStyle, 'grid'), cover: !!l.cover }
 }
 
-export function sanitizeTheme(input = {}) {
+// Categorias próprias (só no plano Pro): id "x…", nome curto sem links, e um "tipo de base" (uma das 9 fixas) que define o símbolo nos pacotes.
+export const EXTRA_MAX = 6
+const EXTRA_ID = /^x[a-z0-9]{4,8}$/
+const EXTRA_NAME = /^[\p{L}\p{N}][\p{L}\p{N} &'’.,+-]{0,22}[\p{L}\p{N}.]$/u
+export const cleanCatName = (v) => String(v || '').normalize('NFC').replace(/\s+/g, ' ').trim()
+export const catNameOk = (v) => EXTRA_NAME.test(v) && !/https?|www\.|\.com|@/i.test(v)
+
+// opts.extraMax: quantas categorias próprias cabem; opts.only: se dado, só aceita ids que já existiam (plano acabou: mantém, não cria)
+export function sanitizeTheme(input = {}, opts = {}) {
+  const extraMax = opts.extraMax ?? EXTRA_MAX
   const t = { ...DEFAULT_THEME, ...(input || {}) }
   const out = {
     accent: HEX.test(t.accent) ? t.accent : DEFAULT_THEME.accent, bg: HEX.test(t.bg) ? t.bg : DEFAULT_THEME.bg, fg: DEFAULT_THEME.fg,
@@ -86,6 +95,19 @@ export function sanitizeTheme(input = {}) {
   const given = new Map((Array.isArray(t.categories) ? t.categories : []).map((c) => [String(c?.id), c || {}]))
   const okIcon = (i) => ICONS.includes(i) || /^custom:\d{1,9}$/.test(String(i)) || /^lib:(fluent3d|noto|lucide):[a-z0-9-]{1,48}$/.test(String(i))
   out.categories = CATEGORIES.map((d) => { const g = given.get(d.id) || {}; return { ...d, color: HEX.test(g.color) ? g.color : d.color, icon: okIcon(g.icon) ? g.icon : d.icon } })
+  const fixed = new Set(CATEGORIES.map((d) => d.id))
+  const names = new Set(CATEGORIES.map((d) => d.name.toLowerCase()))
+  for (const g of (Array.isArray(t.categories) ? t.categories : [])) {
+    if (out.categories.length >= CATEGORIES.length + extraMax) break
+    const id = String(g?.id || '')
+    const name = cleanCatName(g?.name)
+    if (!EXTRA_ID.test(id) || fixed.has(id) || out.categories.some((x) => x.id === id)) continue
+    if (opts.only && !opts.only.has(id)) continue
+    if (!catNameOk(name) || names.has(name.toLowerCase())) continue
+    names.add(name.toLowerCase())
+    const base = CATEGORIES.find((d) => d.id === g.base) || CATEGORIES.find((d) => d.id === 'rest')
+    out.categories.push({ id, name, base: base.id, custom: true, color: HEX.test(g.color) ? g.color : base.color, icon: okIcon(g.icon) ? g.icon : base.icon })
+  }
   out.fg = textOn(out.bg) // texto sempre legível sobre o fundo escolhido
   return out
 }

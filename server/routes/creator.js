@@ -176,10 +176,16 @@ export default function creatorRoutes(app, x) {
 
   // ---------- estúdio ----------
   cr.put('/theme', async (c) => {
-    const theme = sanitizeTheme(await c.req.json().catch(() => ({})))
+    const cur = fresh(c)
+    const prev = (x.view(cur).theme.categories || []).filter((k) => k.custom)
+    const allow = can(cur.plan_tier, 'customCategories')
+    const body = await c.req.json().catch(() => ({}))
+    const theme = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) return c.json({ error: 'plano', need: minTier('customCategories') }, 403)
     const problem = accentProblem(theme)
     if (problem) return c.json({ error: problem }, 400)
     db.prepare('UPDATE creators SET theme=? WHERE id=?').run(JSON.stringify(theme), me(c).id)
+    for (const k of prev) if (!theme.categories.some((n) => n.id === k.id)) db.prepare('UPDATE places SET category=? WHERE creator_id=? AND category=?').run(k.base || 'rest', me(c).id, k.id) // categoria removida: os lugares voltam para o tipo de base
     return c.json({ theme: x.view(fresh(c)).theme })
   })
   cr.put('/links', async (c) => {

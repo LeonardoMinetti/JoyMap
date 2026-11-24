@@ -9,7 +9,7 @@ import MapCanvas from '../MapCanvas.jsx'
 import MapSheet from '../pub/MapSheet.jsx'
 import { pubVars } from '../pub/shared.jsx'
 import { LIBS, SAMPLE_ICON } from '../iconcat.js'
-import { CATEGORIES } from '../../../server/theme.js'
+import { CATEGORIES, EXTRA_MAX, catNameOk, cleanCatName } from '../../../server/theme.js'
 import { demoPlaces } from '../demoData.js'
 import { Phone, Native } from '../landing/device.jsx'
 import { ACCENTS, CAT_COLORS, FONTS, RADIUS_MODES, SHAPES, SYMBOL_LIBRARY, TEMPLATES, TONES, applyTemplate, catOf, contrast, onAccent, onColor, radiusMode, symOf } from '../theme.jsx'
@@ -238,19 +238,44 @@ export function StudioCategories() {
   const { theme: T, setTheme, places, c: cr } = useStudio()
   const count = (id) => places.filter((p) => p.category === id && (p.status === 'confirmed' || p.status === 'pending')).length
   const setCat = (i, patch) => setTheme((t) => ({ categories: t.categories.map((x, j) => (j === i ? { ...x, ...patch } : x)) }))
+  const can = !!cr.plan?.can?.customCategories
+  const extras = T.categories.filter((k) => k.custom).length
+  const full = extras >= EXTRA_MAX
+  const [nn, setNn] = useState(''); const [nb, setNb] = useState('rest')
+  const nameBad = nn.trim().length < 2 || !catNameOk(cleanCatName(nn)) || T.categories.some((k) => k.name.toLowerCase() === cleanCatName(nn).toLowerCase())
+  const addCat = () => {
+    const base = CATEGORIES.find((d) => d.id === nb)
+    const id = 'x' + Math.random().toString(36).slice(2, 8)
+    setTheme((t) => ({ categories: [...t.categories, { id, name: cleanCatName(nn), base: base.id, custom: true, color: base.color, icon: t.categories.find((k) => k.id === base.id)?.icon || base.icon }] }))
+    setNn(''); toast('Categoria criada. Publique as alterações para ela ir ao ar.')
+  }
+  const removeCat = (i) => { const k = T.categories[i]; if (count(k.id) && !confirm(`${count(k.id)} lugar(es) voltam para ${CATEGORIES.find((d) => d.id === k.base)?.name || 'Restaurante'}. Remover?`)) return; setTheme((t) => ({ categories: t.categories.filter((_, j) => j !== i) })) }
   const palette = [...new Set([...CAT_COLORS, ...ACCENTS, '#a16207', '#7c3aed', '#0e9f8e'])].slice(0, 10)
   return (
     <Shell active="categorias" title="Categorias">
-      <div><h1 className="d s32">Categorias</h1><p className="sm mut">São as mesmas para todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor de cada uma; os símbolos vêm do pacote em Pins e símbolos.</p></div>
+      <div><h1 className="d s32">Categorias</h1><p className="sm mut">As {CATEGORIES.length} categorias fixas são as mesmas em todos os mapas, para os seguidores acharem tudo do mesmo jeito. Você escolhe a cor de cada uma; os símbolos vêm do pacote em Pins e símbolos.</p></div>
       <div className="g2" style={{ gap: 12 }}>{T.categories.map((cat, i) => {
         const { n, sym } = symOf(cat, cr.symbols)
         return (
           <div key={cat.id} className="card col" style={{ gap: 12, padding: 14 }}>
-            <div className="row"><span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span><div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugar{count(cat.id) === 1 ? '' : 'es'}</div></div></div>
+            <div className="row"><span className="catico" style={{ background: cat.color }}><Icon n={n} sym={sym} s={18} c="#fff" /></span><div className="sp"><b className="sm">{cat.name}</b><div className="xs mut">{count(cat.id)} lugar{count(cat.id) === 1 ? '' : 'es'}{cat.custom ? ' · própria · ' : ''}{cat.custom && <button type="button" className="link" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }} aria-label={`Remover ${cat.name}`} onClick={() => removeCat(i)}>Remover</button>}</div></div></div>
             <div className="row wrap" style={{ gap: 6 }}>{[cat.color, ...palette.filter((x) => x.toLowerCase() !== cat.color.toLowerCase())].slice(0, 7).map((col, k) => <button key={col} aria-label={`Cor ${col} em ${cat.name}`} aria-pressed={k === 0} className={'dotsw sm' + (k === 0 ? ' on' : '')} style={{ background: col }} onClick={() => setCat(i, { color: col })} />)}
               <label className="dotsw sm" style={{ position: 'relative', background: 'conic-gradient(#ff4b2b,#ffc400,#12b76a,#2d7ff9,#9b5cff,#ff4b2b)', display: 'block' }} title="Outra cor"><input type="color" className="sr" value={cat.color} onChange={(e) => setCat(i, { color: e.target.value })} aria-label={`Outra cor para ${cat.name}`} /></label></div>
           </div>)
       })}</div>
+      {can ? (
+        <div className="card col" style={{ gap: 12, padding: 14 }}>
+          <div><b>Nova categoria</b><div className="xs mut">Plano Pro. Até {EXTRA_MAX} categorias próprias, além das {CATEGORIES.length} fixas. O tipo de base define o símbolo nos pacotes.</div></div>
+          <div className="row wrap" style={{ gap: 8 }}>
+            <input className="inp" style={{ flex: '1 1 180px', minWidth: 0 }} maxLength={24} placeholder="Nome (ex.: Comida de rua)" aria-label="Nome da nova categoria" value={nn} onChange={(e) => setNn(e.target.value)} disabled={full} />
+            <select className="inp" aria-label="Tipo de base" value={nb} onChange={(e) => setNb(e.target.value)} disabled={full}>{CATEGORIES.map((d) => <option key={d.id} value={d.id}>Base: {d.name}</option>)}</select>
+            <button type="button" className="btn" disabled={full || nameBad} onClick={addCat}>Criar categoria</button>
+          </div>
+          <div className="xs mut">{full ? `Você usou as ${EXTRA_MAX} categorias próprias.` : 'Nomes curtos, sem links. Depois de criar, mude a cor e mova os lugares para ela em Lugares.'}</div>
+        </div>
+      ) : (
+        <div className="card row" style={{ gap: 12, padding: 14 }}><span className="catico" style={{ background: '#e5e5e5' }}><Icon n="lock" s={18} c="#555" /></span><div className="sp"><b className="sm">Categorias próprias</b><div className="xs mut">Crie categorias além das {CATEGORIES.length} fixas. Disponível no plano Pro.</div></div><Link to="/planos" className="btn ghost sm">Ver planos</Link></div>
+      )}
     </Shell>
   )
 }
@@ -258,7 +283,7 @@ export function StudioCategories() {
 // D4 · biblioteca de símbolos
 // Pacote de símbolos: vale para todas as categorias de uma vez (o criador não escolhe símbolo por categoria)
 const PACKS = [['base', 'Básicos', 'Ícones simples do wagli'], ...Object.entries(LIBS).map(([k, v]) => [k, v.label, v.long])]
-const packIcon = (pack, cat) => (pack === 'base' ? CATEGORIES.find((c) => c.id === cat.id).icon : `lib:${pack}:${SAMPLE_ICON[pack][cat.id]}`)
+const packIcon = (pack, cat) => { const b = cat.base || cat.id; return pack === 'base' ? CATEGORIES.find((c) => c.id === b).icon : `lib:${pack}:${SAMPLE_ICON[pack][b]}` }
 function SymbolPicker() {
   const { theme: T, setTheme, c: cr } = useStudio()
   const current = PACKS.find(([k]) => T.categories.every((c) => c.icon === packIcon(k, c)))?.[0] || null

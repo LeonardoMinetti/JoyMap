@@ -4,7 +4,7 @@ export const TIERS = ['free', 'creator', 'pro']
 export const TIER_NAMES = { free: 'Grátis', creator: 'Criador', pro: 'Pro' }
 export const CAPS = {
   free: { customCategories: false, maxCategories: 9, customDomain: false, removeBrand: false, fullHistory: false, autoUpdate: false, sellRoteiros: false, roteiroFee: null, products: false },
-  creator: { customCategories: true, maxCategories: 15, customDomain: false, removeBrand: false, fullHistory: true, autoUpdate: true, sellRoteiros: true, roteiroFee: 8, products: false },
+  creator: { customCategories: false, maxCategories: 9, customDomain: false, removeBrand: false, fullHistory: true, autoUpdate: true, sellRoteiros: true, roteiroFee: 8, products: false },
   pro: { customCategories: true, maxCategories: 15, customDomain: true, removeBrand: true, fullHistory: true, autoUpdate: true, sellRoteiros: true, roteiroFee: 5, products: true },
 }
 // quem já existia antes dos planos (e quem está no teste) fica no Criador

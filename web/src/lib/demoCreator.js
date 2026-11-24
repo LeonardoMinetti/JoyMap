@@ -176,7 +176,13 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   }
 
   // estúdio
-  if (p === '/creator/theme') { const t = sanitizeTheme(body); const bad = accentProblem(t); if (bad) throw err(bad); cr.theme = t; return out({ theme: cr.theme }) }
+  if (p === '/creator/theme') {
+    const prev = (cr.theme.categories || []).filter((k) => k.custom); const allow = !!cr.plan.can.customCategories
+    const t = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
+    if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) throw err('plano', 403)
+    for (const k of prev) if (!t.categories.some((n) => n.id === k.id)) s.places.forEach((x) => { if (x.category === k.id) x.category = k.base || 'rest' })
+    const bad = accentProblem(t); if (bad) throw err(bad); cr.theme = t; return out({ theme: cr.theme })
+  }
   if (p === '/creator/links') { cr.links = (Array.isArray(body.links) ? body.links : []).slice(0, 8).map((l) => ({ title: String(l.title || '').slice(0, 40), url: String(l.url || '').slice(0, 300), on: l.on !== false })).filter((l) => l.title && /^https?:\/\//i.test(l.url)); return out({ links: cr.links }) }
   // o endereço do mapa de demonstração é fixo: o endereço público é o único que existe nesta versão
   if (p === '/creator/slug-available') return { available: String(q.get('slug') || '').toLowerCase() === cr.slug, reason: String(q.get('slug') || '').toLowerCase() === cr.slug ? null : 'em_uso' }
