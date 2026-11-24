@@ -35,7 +35,7 @@ export function AuthFrame({ kind = 'criador', children }) {
     <div className={`page lp au fl-host ${cr ? 'au-criador' : 'au-explorador'}`}>
       <DoodleDefs />
       <Top active={-1} overlay dark={cr} />
-      <Floaters set={cr ? 'g' : 'q'} outline />
+      <Floaters set={cr ? 'g' : 'q'} />
       <main className="w au-w">
         <section className="au-card">{children}</section>
         {wide && <Scene className="au-mo">{cr ? <MapMotion /> : <SaveMotion />}</Scene>}

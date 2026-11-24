@@ -469,11 +469,6 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .am-it.am-in{animation:amIn .6s .45s both cubic-bezier(.2,.7,.2,1)}
 @keyframes amIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.am-heart.pop,.am-it.am-in{animation:none}}
-/* elementos flutuantes só em contorno: brancos no fundo preto, pretos no amarelo */
-.au-criador .fl-layer{color:#fff}.au-explorador .fl-layer{color:var(--ink)}
-.dd-out *{fill:none!important;stroke:currentColor!important;stroke-width:2.2px!important;stroke-linecap:round;stroke-linejoin:round;opacity:1!important;filter:none!important}
-.dd-out [fill="#c9c9c1"]{display:none}
-.dd-out{filter:none!important}
 .au-soc{display:grid;grid-template-columns:1fr 1fr;gap:10px}.au-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:520px){.au-two{grid-template-columns:1fr}}
 /* mesma altura em todos os cenários de entrar e criar conta (computador): o cartão tem altura fixa e o rodapé de links fica embaixo */
