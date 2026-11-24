@@ -1,7 +1,7 @@
 // Painel do criador de demonstração (versão estática / GitHub Pages): sem servidor, sem dados reais.
 // Um criador fictício já aprovado, com lugares fictícios. O que a pessoa muda fica só na aba do navegador
 // (sessionStorage): fechar a aba, ou tocar em "Recomeçar", volta ao início. Nada é enviado a lugar nenhum.
-import { sanitizeTheme, sanitizeSvg, accentProblem, lockStudio } from '../../../server/theme.js'
+import { sanitizeTheme, sanitizeSvg, accentProblem, freeTheme } from '../../../server/theme.js'
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { cleanStops } from '../../../server/stops.js'
@@ -99,7 +99,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/connect/instagram' || p === '/creator/connect/tiktok') throw err('nao_configurado', 501)
   if (p === '/creator/accounts') { cr.accounts[body.network] = body.state; return out({ ok: true }) }
   if (p === '/creator/trial') { cr.plan = { ...cr.plan, billing: body.billing === 'annual' ? 'annual' : 'monthly' }; if (cr.onboarding !== 'done') cr.onboarding = 'welcome'; return out({ trialEnds: cr.plan.trialEnds }) }
-  if (p === '/creator/plan-demo') { if (!TIERS.includes(body.tier)) throw err('plano'); cr.plan = { ...cr.plan, ...planView(body.tier) }; return out({ ok: true }) }
+  if (p === '/creator/plan-demo') { if (!TIERS.includes(body.tier)) throw err('plano'); cr.plan = { ...cr.plan, ...planView(body.tier) }; if (!cr.plan.can.studioFull) { if (!cr.savedTheme) cr.savedTheme = cr.theme; cr.theme = freeTheme(cr.theme) } else if (cr.savedTheme) { cr.theme = cr.savedTheme; cr.savedTheme = null } return out({ ok: true }) }
   if (p === '/creator/billing') { cr.plan = { ...cr.plan, billing: body.billing === 'annual' ? 'annual' : 'monthly' }; return out({ billing: cr.plan.billing }) }
   if (p === '/creator/account' && method === 'PUT') { const n = String(body.displayName || '').trim().slice(0, 60); if (!n) throw err('nome'); cr.displayName = n; return out({ displayName: n }) }
   if (p === '/creator/account' && method === 'DELETE') { demoReset(); demoLeave(); return { ok: true } }
@@ -179,8 +179,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   // estúdio
   if (p === '/creator/theme') {
     const prev = (cr.theme.categories || []).filter((k) => k.custom); const allow = !!cr.plan.can.customCategories
-    let t = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
-    if (!cr.plan.can.studioFull) t = lockStudio(t, cr.theme)
+    if (!cr.plan.can.studioFull) throw err('plano', 403)
+    const t = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
     if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) throw err('plano', 403)
     for (const k of prev) if (!t.categories.some((n) => n.id === k.id)) s.places.forEach((x) => { if (x.category === k.id) x.category = k.base || 'rest' })
     const bad = accentProblem(t); if (bad) throw err(bad); cr.theme = t; return out({ theme: cr.theme })

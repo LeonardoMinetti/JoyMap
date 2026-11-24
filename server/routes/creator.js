@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { randomBytes } from 'node:crypto'
 import { extract, tiktokId, dateFromTiktokId } from '../extract.js'
 import { enqueueGeocode, searchPlaces } from '../geocode.js'
-import { sanitizeTheme, sanitizeSvg, accentProblem, lockStudio } from '../theme.js'
+import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
@@ -181,8 +181,8 @@ export default function creatorRoutes(app, x) {
     const prev = (x.view(cur).theme.categories || []).filter((k) => k.custom)
     const allow = can(cur.plan_tier, 'customCategories')
     const body = await c.req.json().catch(() => ({}))
-    let theme = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
-    if (!can(cur.plan_tier, 'studioFull')) theme = lockStudio(theme, x.view(cur).theme)
+    if (!can(cur.plan_tier, 'studioFull')) return c.json({ error: 'plano', need: minTier('studioFull') }, 403)
+    const theme = sanitizeTheme(body, allow ? {} : { only: new Set(prev.map((k) => k.id)) })
     if (!allow && sanitizeTheme(body).categories.some((k) => k.custom && !prev.some((o) => o.id === k.id))) return c.json({ error: 'plano', need: minTier('customCategories') }, 403)
     const problem = accentProblem(theme)
     if (problem) return c.json({ error: problem }, 400)

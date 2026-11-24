@@ -1,8 +1,8 @@
-import { planView } from './plans.js'
+import { planView, can } from './plans.js'
 import { getCookie } from 'hono/cookie'
 import { createHash } from 'node:crypto'
 import { normalizeAddress, strip } from './extract.js'
-import { sanitizeTheme } from './theme.js'
+import { sanitizeTheme, freeTheme } from './theme.js'
 
 export const TERMS_VERSION = '0.1'
 export const sha = (s) => createHash('sha256').update(s).digest('hex')
@@ -47,7 +47,8 @@ export function makeCtx(db, opts = {}) {
     if (!cr) return null
     const s = j(cr.settings, {})
     const hasCover = !!db.prepare('SELECT 1 FROM media WHERE creator_id=?').get(cr.id)
-    const theme = sanitizeTheme(j(cr.theme, {}))
+    let theme = sanitizeTheme(j(cr.theme, {}))
+    if (!can(cr.plan_tier, 'studioFull')) theme = freeTheme(theme)
     theme.layout.cover = theme.layout.cover && hasCover
     return {
       id: cr.id, handle: cr.handle, tiktok: cr.tiktok, slug: cr.slug, displayName: cr.display_name, followers: cr.followers, status: cr.status, verified: !!cr.verified,

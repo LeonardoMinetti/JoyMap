@@ -260,7 +260,7 @@ export function ChoosePlan() {
         <p className="mut sm">Nada é cobrado agora. Você confirma antes do primeiro pagamento.</p>
         <Toggle><button className={'chip' + (billing === 'monthly' ? ' on' : '')} style={billing !== 'monthly' ? { borderColor: 'transparent', background: 'transparent' } : undefined} onClick={() => setBilling('monthly')}>Mensal</button><button className={'chip' + (billing === 'annual' ? ' on' : '')} style={billing !== 'annual' ? { borderColor: 'transparent', background: 'transparent' } : undefined} onClick={() => setBilling('annual')}>Anual</button></Toggle>
         <div className="card sel col" style={{ gap: 8, background: 'var(--accs)' }}><div className="row jb"><b className="d s26">Criador</b><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Selecionado</span></div><div className="d s32">R$ [preço]<span className="s16">/{billing === 'annual' ? 'ano' : 'mês'}</span></div><span className="sm">Mapa completo, estúdio de estilo, painel e endereço próprio.</span></div>
-        <div className="card col" style={{ gap: 8 }}><div className="row jb"><b className="d s26">Teste</b><span className="tag">30 dias</span></div><span className="sm mut">Posts recentes, visual básico e marca wagli.</span></div>
+        <div className="card col" style={{ gap: 8 }}><div className="row jb"><b className="d s26">Teste</b><span className="tag">30 dias</span></div><span className="sm mut">Posts recentes, tema padrão do wagli e marca wagli.</span></div>
         <Note>Valores e limites dos planos estão em definição.</Note>
       </div>
       <div className="ft"><button className="btn blk" onClick={go}>Continuar</button></div>

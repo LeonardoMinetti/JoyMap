@@ -79,7 +79,7 @@ const T = {
   brand: 'Nos planos Grátis e Criador, um selo "Mapa feito com wagli" aparece no rodapé da sua página pública. No Pro, ele some.',
   full: 'Todos os lugares que você já indicou entram no mapa, não só os dos posts recentes.',
   auto: 'Seus posts novos entram sozinhos no mapa, depois que você conecta a conta. Depende das integrações oficiais das plataformas, que ainda estão sendo liberadas.',
-  studio: 'Cores, fonte, pins e símbolos do seu mapa. O visual básico tem menos opções.',
+  studio: 'Cores, fonte, categorias, pins e símbolos do seu mapa. No plano Grátis, o mapa usa o tema padrão do wagli (Solar, com cor principal preta).',
   panel: 'Mostra o que o seu público busca no mapa, inclusive o que não encontrou, e quais lugares são abertos e geram pedido de rota. Sempre em números agregados, sem identificar pessoas.',
   roteiro: 'Você cria roteiros com paradas e história. Cada um pode ficar grátis ou ser vendido, e a wagli cobra uma taxa só sobre as vendas.',
   produto: 'Coloque o link de um produto, como uma mochila ou um guia, dentro de um roteiro, para o seguidor ver e abrir.',
@@ -90,7 +90,7 @@ const T = {
 }
 const PLANS = [
   { k: 'free', icon: 'round-pushpin', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
-    items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Visual básico', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
+    items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Tema padrão do wagli, sem Estúdio de estilo', T.studio], ['Visitas totais no painel', T.visits], ['Exportar seus dados', T.export]] },
   { k: 'creator', icon: 'trophy', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
     items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro], ['Produtos nos seus roteiros', T.produto]] },
   { k: 'pro', icon: 'crown', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
@@ -104,7 +104,7 @@ const COMPARE = [
   ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico', T.recent],
   ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', T.auto],
   ['Sem a marca wagli na página', N, N, Y, T.brand],
-  ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo', T.studio],
+  ['Estúdio de estilo', 'Não, usa o tema padrão', 'Completo', 'Completo', T.studio],
   ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior', T.panel],
   ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', 'O restaurante pode mostrar uma promoção ou o cardápio na ficha do lugar dele, sempre identificado como do restaurante.'],
   ['Relatório de publi para marcas', N, N, Y, null, true],

@@ -130,10 +130,6 @@ export function sanitizeSvg(src) {
   return { d, vb, mode }
 }
 
-// Plano Grátis: "visual básico" (modelos, cores e fonte). Símbolos, pins, rótulos e agrupamento do mapa ficam como estavam.
-export function lockStudio(theme, prev) {
-  const p = sanitizeTheme(prev || {})
-  const icons = new Map(p.categories.map((c) => [c.id, c.icon]))
-  return { ...theme, pinBorder: p.pinBorder, cluster: p.cluster, selected: p.selected, mapLabels: p.mapLabels, labelDensity: p.labelDensity,
-    categories: theme.categories.map((c) => ({ ...c, icon: icons.get(c.id) ?? c.icon })) }
-}
+// Plano Grátis: sem Estúdio. O mapa usa o tema Solar com cor principal preta; só a bio é mantida. O estilo salvo volta se o plano subir.
+export const FREE_ACCENT = '#171717'
+export const freeTheme = (theme) => ({ ...sanitizeTheme({ ...DEFAULT_THEME, accent: FREE_ACCENT }), bio: theme?.bio || '', social: theme?.social || DEFAULT_THEME.social })
