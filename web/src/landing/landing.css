@@ -621,3 +621,24 @@
 @media (prefers-reduced-motion:reduce){.pn-cmp-p,.pn-cmp-btn i{transition:none}}
 .pn-ul{align-content:start}
 .pn-price{flex-wrap:wrap}.pn-price b{white-space:nowrap;font-size:clamp(32px,3.3vw,46px)}
+
+/* planos: cartões no estilo do resto do site + ajuda (?) */
+.pn-c{box-shadow:9px 9px 0 var(--sh,#E4E4E4),0 18px 40px rgba(23,23,19,.1)}
+.pn-c.pn-free{--sh:#A5DFCA}.pn-c.pn-pro{--sh:#FF5C8A;background:var(--ink);color:#fff}
+.pn-c.pn-main{box-shadow:9px 9px 0 #2D7FF9,0 18px 40px rgba(23,23,19,.14)}
+.pn-head{display:flex;align-items:center;gap:12px}
+.pn-em{width:56px;height:56px;border-radius:50%;background:var(--cream);display:grid;place-items:center;flex:none}
+.pn-c.pn-main .pn-em,.pn-c.pn-pro .pn-em{background:#fff}
+.pn-c.pn-pro .pn-who,.pn-c.pn-pro .pn-note,.pn-c.pn-pro .pn-price span{color:#fff}
+.pn-c.pn-pro .pn-ul i{background:var(--acc)}
+.pn-c.pn-pro .pn-cta{background:var(--acc);color:var(--ink)}
+.tip{position:relative;display:inline-flex;vertical-align:middle;margin-left:6px}
+.tip-b{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;background:none;color:inherit;font:700 11px var(--body);padding:0;display:grid;place-items:center;opacity:.55;cursor:help}
+.tip-b:hover,.tip-b:focus-visible{opacity:1;outline:0;background:var(--acc);color:var(--ink);border-color:var(--ink)}
+.tip-t{position:absolute;z-index:30;bottom:calc(100% + 9px);left:-10px;width:max-content;max-width:min(250px,72vw);background:var(--ink);color:#fff;font:500 12.5px/1.45 var(--body);text-transform:none;letter-spacing:0;text-align:left;padding:10px 12px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.3);outline:1px solid rgba(255,255,255,.18);opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s;pointer-events:none}
+.tip-t::after{content:'';position:absolute;top:100%;left:16px;border:6px solid transparent;border-top-color:var(--ink)}
+.tip:hover .tip-t,.tip-b:focus-visible+.tip-t{opacity:1;visibility:visible;transform:none}
+.pn-c:nth-child(3) .tip-t{left:auto;right:-10px}.pn-c:nth-child(3) .tip-t::after{left:auto;right:16px}
+.pn-tbl .tip-t{white-space:normal}
+@media (prefers-reduced-motion:reduce){.tip-t{transition:none}}
+.pn-pro .tip-t{background:#fff;color:var(--ink);outline:0}.pn-pro .tip-t::after{border-top-color:#fff}.pn-pro .tip-b:hover,.pn-pro .tip-b:focus-visible{border-color:var(--acc)}

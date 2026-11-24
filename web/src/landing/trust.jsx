@@ -72,34 +72,58 @@ export function Monetize() {
 
 // Seção 11 · Planos e condições de entrada
 // Valores do plano de negócio: hipóteses a validar no período de testes. Nenhuma cobrança está ativa.
-const SOON = 'Em desenvolvimento'
-// `hide: true` oculta o item da página (fica aqui para voltar quando fizer sentido), sem apagar.
+// Cada item é [texto, explicação opcional (ícone ?), oculto?]. `oculto` tira da página sem apagar.
+const T = {
+  recent: 'O mapa mostra os lugares dos posts mais recentes. O histórico completo é dos planos pagos.',
+  manual: 'Você cola o link e a legenda de cada post, ou busca o lugar, e revisa tudo antes de publicar.',
+  brand: 'Um selo "Mapa feito com wagli" aparece no rodapé da sua página pública.',
+  full: 'Todos os lugares que você já indicou entram no mapa, não só os dos posts recentes.',
+  auto: 'Seus posts novos entram sozinhos no mapa, depois que você conecta a conta. Depende das integrações oficiais das plataformas, que ainda estão sendo liberadas.',
+  studio: 'Cores, fonte, pins e símbolos do seu mapa. O visual básico tem menos opções.',
+  panel: 'Mostra o que o seu público busca no mapa, inclusive o que não encontrou, e quais lugares são abertos e geram pedido de rota. Sempre em números agregados, sem identificar pessoas.',
+  roteiro: 'Você cria roteiros com paradas e história. Cada um pode ficar grátis ou ser vendido, e a wagli cobra uma taxa só sobre as vendas.',
+  produto: 'Coloque o link de um produto, como uma mochila de uma marca, dentro de um roteiro. Ele aparece com a marca "Publi", para o seguidor saber que é parceria.',
+  dominio: 'O endereço do seu mapa usa o seu nome, como maps.wagli/natalia-souza. Nos outros planos o endereço leva um código, como maps.wagli/k7x2p.',
+  export: 'Baixe seus lugares e roteiros em JSON ou CSV quando quiser.',
+  visits: 'Total de visitas ao seu mapa, sem o detalhe de buscas e cliques.',
+}
 const PLANS = [
-  { k: 'free', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
-    items: [['Posts recentes no mapa'], ['Você adiciona e atualiza os lugares manualmente'], ['Visual básico'], ['Visitas totais no painel'], ['Marca wagli na página'], ['Exportar seus dados']] },
-  { k: 'creator', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
-    items: [['Mapa completo, com todo o histórico'], ['Atualização automática do mapa, a partir dos seus posts', SOON], ['Estúdio de estilo completo'], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota'], ['Marca wagli na página'], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', SOON]] },
-  { k: 'pro', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
-    items: [['Tudo do plano Criador, com histórico maior no painel'], ['Sem a marca wagli na página'], ['Domínio próprio'], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', SOON], ['Produtos nos seus roteiros, com link e sempre com a marca de publi', SOON], ['Fechar publi direto com restaurantes', SOON, true], ['Pin em destaque, sempre com a marca de publi', SOON, true], ['Relatório de publi para marcas', SOON, true]] },
+  { k: 'free', icon: 'round-pushpin', name: 'Grátis', price: ['R$ 0', 'R$ 0'], per: 'para sempre', who: 'Para quem quer engajar o público, sem vender nada.', trial: false,
+    items: [['Posts recentes no mapa', T.recent], ['Você adiciona e atualiza os lugares manualmente', T.manual], ['Visual básico', T.studio], ['Visitas totais no painel', T.visits], ['Marca wagli na página', T.brand], ['Exportar seus dados', T.export]] },
+  { k: 'creator', icon: 'trophy', name: 'Criador', price: ['R$ 39,90', 'R$ 399'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem quer o mapa completo, sempre em dia.', trial: true, main: true,
+    items: [['Mapa completo, com todo o histórico', T.full], ['Atualização automática do mapa, a partir dos seus posts', T.auto], ['Estúdio de estilo completo', T.studio], ['Painel com buscas, buscas sem resultado, lugares abertos e cliques em rota', T.panel], ['Marca wagli na página', T.brand], ['Criação de roteiros que podem ser vendidos, com taxa de 8% por venda', T.roteiro]] },
+  { k: 'pro', icon: 'crown', name: 'Pro', price: ['R$ 79', 'R$ 790'], per: ['por mês', 'por ano'], note: 'No anual, 2 meses grátis.', who: 'Para quem vende roteiros e quer a marca própria.', trial: true,
+    items: [['Tudo do plano Criador, com histórico maior no painel', T.panel], ['Sem a marca wagli na página', T.brand], ['Domínio personalizado', T.dominio], ['Criação de roteiros que podem ser vendidos, com taxa de 5% por venda', T.roteiro], ['Produtos nos seus roteiros, com link e sempre com a marca de publi', T.produto], ['Fechar publi direto com restaurantes', null, true], ['Pin em destaque, sempre com a marca de publi', null, true], ['Relatório de publi para marcas', null, true]] },
 ].map((p) => ({ ...p, items: p.items.filter((it) => !it[2]) }))
 const Y = 'Sim', N = 'Não'
+// [item, Grátis, Criador, Pro, explicação, oculto?]
 const COMPARE = [
   ['Preço', 'R$ 0', 'R$ 39,90 por mês ou R$ 399 por ano', 'R$ 79 por mês ou R$ 790 por ano'],
   ['Para quem', 'Engajar o público, sem vender nada', 'Mapa completo, sempre em dia', 'Vender roteiros e ter a marca própria'],
-  ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico'],
-  ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', true],
-  ['Marca wagli na página', Y, Y, N],
-  ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo'],
-  ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior'],
-  ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', true],
-  ['Relatório de publi para marcas', N, N, Y, true, true],
-  ['Fechar publi direto com restaurantes', N, N, Y, true, true],
-  ['Pin em destaque para restaurante com publi', N, N, Y, true, true],
-  ['Domínio próprio', N, N, Y],
-  ['Roteiros que podem ser vendidos', 'Só roteiros gratuitos', 'Sim, com taxa de 8% por venda', 'Sim, com taxa de 5% por venda', true],
-  ['Produtos nos roteiros, com link e marca de publi', N, N, Y, true],
-  ['Exportar dados (JSON e CSV)', Y, Y, Y],
+  ['Lugares no mapa', 'Posts recentes', 'Mapa completo, com todo o histórico', 'Mapa completo, com todo o histórico', T.recent],
+  ['Atualização do mapa', 'Manual: você adiciona e atualiza os lugares', 'Automática, a partir dos seus posts', 'Automática, a partir dos seus posts', T.auto],
+  ['Marca wagli na página', Y, Y, N, T.brand],
+  ['Estúdio de estilo', 'Visual básico', 'Completo', 'Completo', T.studio],
+  ['Painel de audiência', 'Visitas totais', 'Buscas, buscas sem resultado, lugares abertos e cliques em rota', 'Tudo do Criador, com histórico maior', T.panel],
+  ['Banner do restaurante na ficha do lugar', 'Liberado', 'Liberado', 'Liberado', 'O restaurante pode mostrar uma promoção ou o cardápio na ficha do lugar dele, sempre identificado como do restaurante.'],
+  ['Relatório de publi para marcas', N, N, Y, null, true],
+  ['Fechar publi direto com restaurantes', N, N, Y, null, true],
+  ['Pin em destaque para restaurante com publi', N, N, Y, null, true],
+  ['Domínio personalizado', N, N, Y, T.dominio],
+  ['Roteiros que podem ser vendidos', 'Só roteiros gratuitos', 'Sim, com taxa de 8% por venda', 'Sim, com taxa de 5% por venda', T.roteiro],
+  ['Produtos nos roteiros, com link e marca de publi', N, N, Y, T.produto],
+  ['Exportar dados (JSON e CSV)', Y, Y, Y, T.export],
 ].filter((r) => !r[5])
+// Ícone "?" com explicação ao passar o mouse ou focar (teclado e toque)
+function Tip({ text }) {
+  const id = React.useId()
+  return (
+    <span className="tip">
+      <button type="button" className="tip-b" aria-describedby={id} aria-label="Saiba mais"><span aria-hidden="true">?</span></button>
+      <span id={id} role="tooltip" className="tip-t">{text}</span>
+    </span>
+  )
+}
 function Compare({ open, setOpen }) {
   return (
     <div className="pn-cmp">
@@ -112,8 +136,8 @@ function Compare({ open, setOpen }) {
           <table className="pn-tbl">
             <caption className="sr">Comparativo dos planos Grátis, Criador e Pro</caption>
             <thead><tr><th scope="col">Item</th><th scope="col">Grátis</th><th scope="col" className="pn-hl">Criador</th><th scope="col">Pro</th></tr></thead>
-            <tbody>{COMPARE.map(([l, a, b, c, soon]) => (
-              <tr key={l}><th scope="row">{l}{soon && <span className="tag wn pn-soon">{SOON}</span>}</th>{[a, b, c].map((v, i) => <td key={i} className={i === 1 ? 'pn-hl' : ''}>{v === Y ? <><Icon n="check" s={16} c="#067647" /><span className="sr">Sim</span></> : v === N ? <span className="pn-no" aria-label="Não">—</span> : v}</td>)}</tr>))}</tbody>
+            <tbody>{COMPARE.map(([l, a, b, c, tip]) => (
+              <tr key={l}><th scope="row">{l}{tip && <Tip text={tip} />}</th>{[a, b, c].map((v, i) => <td key={i} className={i === 1 ? 'pn-hl' : ''}>{v === Y ? <><Icon n="check" s={16} c="#067647" /><span className="sr">Sim</span></> : v === N ? <span className="pn-no" aria-label="Não">—</span> : v}</td>)}</tr>))}</tbody>
           </table>
         </div>
       </div></div>
@@ -139,19 +163,19 @@ export function PlansBlock({ min, compact }) {
         </div>
         <div className="pn">
           {PLANS.map((p) => (
-            <article key={p.k} className={'pn-c' + (p.main ? ' pn-main' : '')}>
+            <article key={p.k} className={'pn-c pn-' + p.k + (p.main ? ' pn-main' : '')}>
               {p.main && <span className="tag pn-badge">Plano principal</span>}
-              <b className="d s26">{p.name}</b>
+              <div className="pn-head"><span className="pn-em" aria-hidden="true"><Icon s={40} sym={em(p.icon)} /></span><b className="d s26">{p.name}</b></div>
               <p className="pn-who">{p.who}</p>
               <div className="pn-price"><b className="d">{p.price[i]}</b><span>{Array.isArray(p.per) ? p.per[i] : p.per}</span></div>
               {p.note && annual ? <span className="xs pn-note">{p.note}</span> : <span className="xs pn-note">{p.trial ? '30 dias grátis após aprovação e lançamento' : 'Sem prazo e sem cartão'}</span>}
-              <ul className="pn-ul">{p.items.map(([t, soon]) => <li key={t}><i aria-hidden="true"><Icon n="check" s={12} c="#171713" /></i><span>{t}{soon && <em className="pn-soon-i">{soon}</em>}</span></li>)}</ul>
-              <Link className={'btn btn-lg ' + (p.main ? 'dk' : 'ln')} to="/candidatura">Quero meu mapa</Link>
+              <ul className="pn-ul">{p.items.map(([t, tip]) => <li key={t}><i aria-hidden="true"><Icon n="check" s={12} c="#171713" /></i><span>{t}{tip && <Tip text={tip} />}</span></li>)}</ul>
+              <Link className={'btn btn-lg pn-cta ' + (p.main ? 'dk' : p.k === 'pro' ? '' : 'ln')} to="/candidatura">Quero meu mapa</Link>
             </article>))}
         </div>
         <Compare open={open} setOpen={setOpen} />
         <div className="pn-foot">
-          <p className="xs mut">Valores previstos, ainda em validação durante o período de testes: nenhuma cobrança está ativa. Itens marcados como "{SOON}" ainda não estão disponíveis.</p>
+          <p className="xs mut">Valores previstos, ainda em validação durante o período de testes: nenhuma cobrança está ativa e alguns recursos ainda estão sendo liberados.</p>
           <p className="xs mut">Entrada mediante análise de perfil{min != null ? `, com mínimo de ${num(min)} seguidores (hoje)` : ''}, ainda em definição. Plano Agência, para quem administra vários criadores (R$ 19 por mapa por mês, mínimo de 10 mapas), sob consulta.</p>
           <Link className="link sm" to="/perguntas">Ver as perguntas frequentes</Link>
         </div>

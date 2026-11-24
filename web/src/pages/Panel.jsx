@@ -213,7 +213,7 @@ export function UpdateMap() {
 }
 
 // F6 · divulgar: o link do mapa e o código para incorporar
-// Endereço do mapa e domínio próprio (antes ficavam no Estúdio)
+// Endereço do mapa e domínio personalizado (antes ficavam no Estúdio)
 function AddressCard() {
   const { me, reload } = useMe()
   const cr = me.creator
@@ -237,8 +237,8 @@ function AddressCard() {
       {STATIC && <Note>Na demonstração o endereço do mapa e o domínio ficam fixos.</Note>}
       <div><label className="lb" htmlFor="s1">Endereço do mapa</label><div className="row"><div className="in f sp"><span className="mut nowrap">{location.host}/@</span><input id="s1" value={slug} disabled={STATIC} onChange={(e) => setSlug(e.target.value.toLowerCase())} />{slug === cr.slug ? <span className="tag ok">Seu endereço</span> : avail && <span className={'tag ' + (avail.available ? 'ok' : 'bd2')}>{avail.available ? 'Disponível' : avail.reason === 'em_uso' ? 'Em uso' : 'Inválido'}</span>}</div><button className="btn" disabled={STATIC || slug === cr.slug || !avail?.available} onClick={saveSlug}>Salvar</button></div>
         <span className="xs mut">Ao trocar o endereço, o link antigo para de funcionar. Atualize a bio.</span></div>
-      <div className="card col" style={{ gap: 10 }}><div className="row jb"><b>Domínio próprio</b><span className="tag ax">Plano Criador</span></div>
-        <div className="row"><div className="in sp"><input value={dom} disabled={STATIC} onChange={(e) => setDom(e.target.value)} placeholder="mapa.dudacome.com.br" aria-label="Domínio próprio" /></div><button className="btn" disabled={STATIC} onClick={saveDom}>{cr.domain.name ? 'Atualizar' : 'Salvar'}</button></div>
+      <div className="card col" style={{ gap: 10 }}><div className="row jb"><b>Domínio personalizado</b><span className="tag ax">Plano Pro</span></div>
+        <div className="row"><div className="in sp"><input value={dom} disabled={STATIC} onChange={(e) => setDom(e.target.value)} placeholder="mapa.dudacome.com.br" aria-label="Domínio personalizado" /></div><button className="btn" disabled={STATIC} onClick={saveDom}>{cr.domain.name ? 'Atualizar' : 'Salvar'}</button></div>
         {cr.domain.name && <><div className="g2"><div className="card soft col" style={{ gap: 4 }}><span className="eb">Tipo</span><b className="sm">CNAME</b></div><div className="card soft col" style={{ gap: 4 }}><span className="eb">Valor</span><b className="sm">{target}</b></div></div>
           <div className="row"><span className={'tag ' + (cr.domain.status === 'active' ? 'ok' : 'wn')}>{cr.domain.status === 'active' ? 'Ativo' : 'Aguardando DNS'}</span><span className="xs mut sp">Pode levar algumas horas para o DNS propagar. O certificado HTTPS do domínio é configurado no servidor.</span><button className="btn sec sm" onClick={check}>Verificar agora</button></div></>}</div>
     </div>
