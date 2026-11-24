@@ -14,11 +14,11 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
 const KEY = { '/': 'inicio', '/roteiros': 'roteiros' }
 // Abas inferiores (Início, Bairros, Categorias, Roteiros). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
-export function PubTabs({ cur, href, onOpen, preview, navRef }) {
+export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes }) {
   const c = KEY[cur] || cur
   return (
     <nav ref={navRef} className="ms-tabs" aria-label="Navegação do mapa">
-      {NAV_TABS.map(([k, l, ic]) => {
+      {NAV_TABS.filter(([k]) => !(noRoutes && k === 'roteiros')).map(([k, l, ic]) => {
         const inner = <><Icon n={ic} s={22} c="currentColor" />{l}</>
         const on = c === k
         if (onOpen || preview) return <button key={k} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} tabIndex={preview ? -1 : 0} onClick={() => onOpen?.(k)}>{inner}</button>
@@ -187,7 +187,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {!places.some((p) => isSaved(p.id)) && <p className="ms-empty">Toque no coração de um lugar para salvar. Os salvos ficam só neste aparelho.</p>}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </Panel>)}
-      {tabs && <PubTabs navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
+      {tabs && <PubTabs noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
     </div>
   )
 }

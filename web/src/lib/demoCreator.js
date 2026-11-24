@@ -5,7 +5,7 @@ import { sanitizeTheme, sanitizeSvg, accentProblem, freeTheme } from '../../../s
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
 import { cleanStops } from '../../../server/stops.js'
-import { planView, TIERS, can, limitStats } from '../../../server/plans.js'
+import { planView, TIERS, can, limitStats, roomFor } from '../../../server/plans.js'
 import { cleanOffer, lockRoute } from '../../../server/offers.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
@@ -126,6 +126,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/posts') {
     const posts = Array.isArray(body.posts) ? body.posts : []
     if (!posts.length || posts.length > 30) throw err('posts_1_a_30')
+    const room = roomFor(cr.plan.tier, s.places.filter((x) => x.status !== 'removed').length)
+    if (room <= 0) throw err('plano', 403)
     let created = 0
     posts.forEach((post) => {
       const text = String(post.caption || '').slice(0, 4000)
@@ -133,14 +135,16 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
       const rows = e.name && e.units.length ? e.units : e.name ? [{ address: null }] : [{ address: e.units[0]?.address || null }]
       const url = String(post.url || '').slice(0, 300)
       for (const u of rows) {
+        if (created >= room) break
         s.places.push(mk({ id: s.nextId++, name: e.name || null, address: u.address, category: e.category, postUrl: url || null, tiktokId: tiktokId(url), ad: !!e.ad, rec: e.rec, confidence: e.confidence, status: e.name ? 'pending' : 'unresolved', nameSrc: e.nameSource, snippet: text.replace(/\s+/g, ' ').trim().slice(0, 140) || null, postedOn: /^\d{4}-\d{2}-\d{2}$/.test(post.date || '') ? post.date : null }))
         created++
       }
     })
-    return out({ created })
+    return out({ created, limited: room !== Infinity && created >= room })
   }
   if (p === '/creator/places' && method === 'POST') {
     const name = String(body.name || '').trim().slice(0, 80); if (!name) throw err('nome')
+    if (roomFor(cr.plan.tier, s.places.filter((x) => x.status !== 'removed').length) <= 0) throw err('plano', 403)
     const found = body.lat !== null && body.lat !== '' && Number.isFinite(Number(body.lat)) && Number.isFinite(Number(body.lon))
     const pl = mk({ id: s.nextId++, name, address: body.address ? String(body.address).slice(0, 200) : null, municipality: body.municipality || null, neighborhood: body.neighborhood || null, lat: found ? Number(body.lat) : null, lon: found ? Number(body.lon) : null, geoStatus: found ? 'found' : 'none', geoQuality: found ? 'street_approx' : null, category: body.category || 'rest', postUrl: body.postUrl || null, status: found ? 'confirmed' : 'pending', confidence: 'high', nameSrc: 'manual' })
     s.places.push(pl); return out({ place: pl })
@@ -198,6 +202,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/cover') throw err('estatico', 503)
   if (p === '/creator/routes' && method === 'GET') return { routes: s.routes }
   if (p === '/creator/routes' && method === 'PUT') {
+    if (!cr.plan.can.roteiros) throw err('plano', 403)
     const own = new Set(s.places.map((v) => v.id))
     s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops, ...cleanOffer(r, cr.plan.tier) } }).filter((r) => r.name)
     return out({ ok: true })
@@ -211,8 +216,8 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const live = s.places.filter((x) => x.status === 'confirmed' && x.geoStatus === 'found' && x.lat != null && !x.hidden)
     const ids = new Set(live.map((x) => x.id))
     return {
-      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
-      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], sponsor: can(cr.plan.tier, 'sponsoredRoteiros') ? r.sponsor || null : null, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
+      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, routesOn: cr.plan.can.roteiros, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
+      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], sponsor: can(cr.plan.tier, 'sponsoredRoteiros') ? r.sponsor || null : null, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => cr.plan.can.roteiros && (r.placeIds.length || r.stops.length)).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
     }
   }
   // compra simulada: na demonstração não existe cobrança, só o efeito de desbloquear o roteiro

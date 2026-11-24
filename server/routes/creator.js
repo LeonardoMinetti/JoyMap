@@ -7,7 +7,7 @@ import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
 import { cleanStops } from '../stops.js'
 import { cleanOffer } from '../offers.js'
-import { can, minTier, limitStats } from '../plans.js'
+import { can, minTier, limitStats, roomFor, CAPS, tierOf } from '../plans.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
 const CATEGORY = /^[a-z0-9_-]{1,20}$/
@@ -78,6 +78,8 @@ export default function creatorRoutes(app, x) {
     const creator = me(c)
     const { posts } = await c.req.json().catch(() => ({}))
     if (!Array.isArray(posts) || !posts.length || posts.length > 30) return c.json({ error: 'posts_1_a_30' }, 400)
+    const room = roomFor(fresh(c).plan_tier, db.prepare("SELECT COUNT(*) n FROM places WHERE creator_id=? AND status!='removed'").get(creator.id).n)
+    if (room <= 0) return c.json({ error: 'plano', limit: 'lugares', max: CAPS[tierOf(fresh(c).plan_tier)].maxPlaces, need: 'creator' }, 403)
     const batch = randomBytes(4).toString('hex')
     const auto = !!settingsOf(creator.id).autoConfirmHigh
     const created = []
@@ -90,6 +92,7 @@ export default function creatorRoutes(app, x) {
       const e = extract(text)
       const rows = e.name && e.units.length ? e.units : e.name ? [{ address: null, label: null }] : [{ address: e.units[0]?.address || null, label: null }]
       for (const u of rows) {
+        if (created.length >= room) break
         const status = e.name ? 'pending' : 'unresolved'
         const r = ins.run(creator.id, e.name || null, u.address, e.category, url, tid, date, e.ad ? 1 : 0, e.rec, e.confidence, status, u.address && cfg.geocode ? 'pending' : 'none', e.nameSource, `${batch}:${i}`, text.replace(/\s+/g, ' ').trim().slice(0, 140) || null)
         const id = Number(r.lastInsertRowid)
@@ -102,13 +105,14 @@ export default function creatorRoutes(app, x) {
         created.push(id)
       }
     })
-    return c.json({ created: created.length })
+    return c.json({ created: created.length, limited: created.length >= room && room !== Infinity })
   })
   // Adicionar lugar escolhido na busca (C5) ou informado manualmente
   cr.post('/places', async (c) => {
     const b = await c.req.json().catch(() => ({}))
     const name = String(b.name || '').trim().slice(0, 80)
     if (!name) return c.json({ error: 'nome' }, 400)
+    if (roomFor(fresh(c).plan_tier, db.prepare("SELECT COUNT(*) n FROM places WHERE creator_id=? AND status!='removed'").get(me(c).id).n) <= 0) return c.json({ error: 'plano', limit: 'lugares', max: CAPS[tierOf(fresh(c).plan_tier)].maxPlaces, need: 'creator' }, 403)
     const url = String(b.postUrl || '').slice(0, 300)
     const tid = tiktokId(url)
     const found = Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lon)) && b.lat !== null && b.lat !== ''
@@ -266,6 +270,7 @@ export default function creatorRoutes(app, x) {
   cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops, price, products, sponsor FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ sponsor: j(r.sponsor, null), id: r.id, name: r.name, note: r.note, color: r.color || null, price: r.price || null, products: j(r.products, []), placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
   cr.put('/routes', async (c) => {
     const { routes } = await c.req.json().catch(() => ({}))
+    if (!can(fresh(c).plan_tier, 'roteiros')) return c.json({ error: 'plano', need: minTier('roteiros') }, 403)
     const own = new Set(db.prepare("SELECT id FROM places WHERE creator_id=?").all(me(c).id).map((r) => r.id))
     const tier = fresh(c).plan_tier
     db.prepare('DELETE FROM routes WHERE creator_id=?').run(me(c).id)

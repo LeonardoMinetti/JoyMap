@@ -403,3 +403,10 @@ test('plano Grátis: painel só com visitas totais e estúdio com visual básico
   assert.equal(t.accent, '#171717'); assert.equal(t.bg, '#ffffff'); assert.equal(t.shape, 'drop'); assert.equal(t.bio, 'minha bio')
   assert.equal(can('free', 'studioFull'), false); assert.equal(can('creator', 'studioFull'), true)
 })
+
+test('plano Grátis: até 20 lugares e sem roteiros', async () => {
+  const { roomFor, can } = await import('../server/plans.js')
+  assert.equal(roomFor('free', 0), 20); assert.equal(roomFor('free', 18), 2); assert.equal(roomFor('free', 25), 0)
+  assert.equal(roomFor('creator', 500), Infinity); assert.equal(roomFor('pro', 500), Infinity)
+  assert.equal(can('free', 'roteiros'), false); assert.equal(can('creator', 'roteiros'), true)
+})

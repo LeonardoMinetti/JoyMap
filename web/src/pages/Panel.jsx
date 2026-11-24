@@ -144,9 +144,12 @@ export function PlacesPage() {
   list = [...list].sort((a, b) => sort === 'name' ? (a.name || '').localeCompare(b.name || '') : sort === 'opens' ? (perf.get(b.id)?.opens || 0) - (perf.get(a.id)?.opens || 0) : b.id - a.id)
   const cats = theme.categories.filter((c) => live.some((p) => p.category === c.id))
   const status = (p) => { const is = issueOf(p, places); return p.ad ? ['ax', 'Publi'] : [is.k, is.tag === 'Ver unidades' ? (p.status === 'confirmed' ? 'Confirmado' : 'Para revisar') : is.tag] }
+  const maxPlaces = me.creator.plan?.can?.maxPlaces ?? null
+  const used = places.filter((p) => p.status !== 'removed').length
   const confirm1 = async (e, p) => { e.stopPropagation(); await api(`/creator/places/${p.id}`, { method: 'PATCH', body: { status: 'confirmed' } }); toast('Lugar confirmado'); reload() }
   return (
     <PanelPage active="lugares">
+      {maxPlaces != null && <div className={'note row' + (used >= maxPlaces ? '' : ' soft')}><span className="sp"><b>{used} de {maxPlaces} lugares</b> no plano Grátis.{used >= maxPlaces ? ' Para adicionar mais, passe para o plano Criador.' : ''}</span><Link className="btn sm ln" to="/painel/plano">Ver planos</Link></div>}
       <Head title="Lugares" sub={`${live.length} lugares no seu mapa`} right={<div className="row wrap"><Link className="btn ln sm" to="/colar-posts?voltar=/painel/atualizar">Colar posts</Link><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></div>} />
       <section className="blk" aria-label="Lista de lugares">
       <div className="row wrap jb">
@@ -329,6 +332,16 @@ export function Roteiros() {
   const r = rows?.[sel]
   const can = me.creator.plan?.can || {}
   const stopSort = useReorder(r?.stops || [], (n) => setRows(rows.map((x, j) => (j === sel ? { ...x, stops: n } : x))))
+  if (!can.roteiros) return (
+    <PanelPage active="roteiros">
+      <Head title="Roteiros" sub="Monte roteiros com paradas e conte a história de cada lugar" />
+      <div className="card col" style={{ gap: 12, alignItems: 'flex-start' }}>
+        <div className="row" style={{ gap: 10 }}><Icon n="lock" s={18} /><b>Disponível a partir do plano Criador</b></div>
+        <span className="sm">Reúna seus lugares em roteiros com paradas e histórias, para seus seguidores abrirem no mapa ou numa linha do tempo. No Criador você também pode vender roteiros e mostrar produtos; no Pro, fazer roteiros patrocinados.</span>
+        <Link className="btn sm" to="/painel/plano">Ver planos</Link>
+      </div>
+    </PanelPage>
+  )
   if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
   const confirmed = places.filter((p) => p.status === 'confirmed')
   const byId = new Map(places.map((p) => [p.id, p]))

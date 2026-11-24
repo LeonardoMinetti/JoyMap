@@ -61,7 +61,7 @@ export function PastePosts() {
   const send = async () => {
     const posts = rows.filter((r) => r.url.trim() || r.caption.trim())
     if (!posts.length) return setErr('Cole pelo menos um post.')
-    try { await api('/creator/posts', { method: 'POST', body: { posts } }); navigate(back === '/painel/atualizar' ? '/painel/atualizar' : '/montando') } catch { setErr('Não foi possível ler os posts. Tente com menos de 30 por vez.') }
+    try { const r = await api('/creator/posts', { method: 'POST', body: { posts } }); if (r.limited) toast('Entraram só os posts que cabem nos 20 lugares do plano Grátis.'); navigate(back === '/painel/atualizar' ? '/painel/atualizar' : '/montando') } catch (e) { setErr(e.data?.error === 'plano' ? 'Você chegou ao limite de 20 lugares do plano Grátis. Passe para o plano Criador para adicionar mais.' : 'Não foi possível ler os posts. Tente com menos de 30 por vez.') }
   }
   return (
     <FlowShell>
@@ -293,7 +293,7 @@ export function AddPlace() {
       await api('/creator/places', { method: 'POST', body })
       if (old) await api(`/creator/places/${old.id}`, { method: 'PATCH', body: { status: 'removed' } })
       navigate(resolve ? '/sem-lugar' : '/painel/lugares')
-    } catch { setErr('Não foi possível adicionar.') }
+    } catch (e) { setErr(e.data?.error === 'plano' ? 'Você chegou ao limite de 20 lugares do plano Grátis. Passe para o plano Criador para adicionar mais.' : 'Não foi possível adicionar.') }
   }
   return (
     <FlowShell>

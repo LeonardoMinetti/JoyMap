@@ -124,7 +124,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
           <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
             <nav className="dk-nav" aria-label="Navegação do mapa">
-              {NAV.map(([k, l, ic, menu]) => menu
+              {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, l, ic, menu]) => menu
                 ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
                 : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k); if (k === 'home') { f.clear?.(); f.setHoods?.([]) } }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
               <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
