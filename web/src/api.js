@@ -1,15 +1,28 @@
 import { BASE, STATIC, withBase, stripBase } from './lib/base.js'
-import { demoCreatorApi, demoOn, demoEnter, isCreatorPath, viewerEmail, viewerEnter, viewerLeave } from './lib/demoCreator.js'
+import { demoExtrasApi, roleOn, roleEnter, roleLeave, roleMe } from './lib/demoExtras.js'
+import { demoCreatorApi, demoOn, demoEnter, demoLeave, isCreatorPath, viewerEmail, viewerEnter, viewerLeave } from './lib/demoCreator.js'
 
 // Versão estática (GitHub Pages): sem servidor. Só o mapa de demonstração existe, lido de um JSON gerado no build.
 const NO_SERVER = () => Object.assign(new Error('Disponível apenas na versão com servidor'), { status: 503, data: { error: 'estatico' } })
 async function staticApi(path, opts) {
   // painel do criador de demonstração (fictício, só no navegador): ver lib/demoCreator.js
   if (path === '/auth/demo-explorador') { viewerEnter(opts.body?.email); return { ok: true } }
-  if (path === '/auth/demo' || path === '/auth/logout') { if (path === '/auth/logout') viewerLeave(); return demoCreatorApi(path, opts) }
-  if (path === '/me' && !demoOn() && isCreatorPath(stripBase(location.pathname))) demoEnter()
+  if (path === '/auth/demo' || path === '/auth/logout') { roleLeave(); if (path === '/auth/logout') viewerLeave(); return demoCreatorApi(path, opts) }
+  if (path === '/me') {
+    // telas de administração, restaurante e voo: abrir o endereço direto já entra com um perfil fictício
+    const rp = stripBase(location.pathname)
+    const want = /^\/admin(\/|$)/.test(rp) ? 'admin' : /^\/restaurante/.test(rp) ? 'restaurante' : ''
+    if (want) { demoLeave(); roleEnter(want) }
+    else {
+      roleLeave()
+      if (/^\/voo/.test(rp) && !viewerEmail() && !demoOn()) viewerEnter('explorador@teste.wagli')
+      else if (!demoOn() && isCreatorPath(rp)) demoEnter()
+    }
+  }
   if (demoOn()) { const r = await demoCreatorApi(path, opts); if (r) return r }
+  if (path === '/me' && roleOn()) return roleMe(roleOn())
   if (path === '/me' && viewerEmail()) return { user: { id: 2, email: viewerEmail(), role: 'viewer' }, creator: null, claims: [], notices: [] }
+  { const r = await demoExtrasApi(path, opts); if (r) return r }
   if (path === '/me') return { user: null, creator: null, claims: [], notices: [] }
   if (path === '/public/demo') { const r = await fetch(`${BASE}/demo.json`); if (!r.ok) throw NO_SERVER(); const d = await r.json(); return { ...d, places: d.places.map((p) => (p.photo ? { ...p, photo: withBase(p.photo) } : p)) } }
   throw NO_SERVER()

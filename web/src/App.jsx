@@ -19,7 +19,7 @@ import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/entrar', '/candidatura', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/entrar', '/candidatura', '/rede', '/rede/lugar', '/restaurantes', '/restaurante', '/restaurante/percepcao', '/voo', '/admin', '/admin/mapas', '/admin/moderacao', '/admin/metricas', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {

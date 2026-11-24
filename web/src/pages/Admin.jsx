@@ -5,13 +5,14 @@ import { Icon } from '../lib/icons.jsx'
 import { Logo, Guard, Loading, Note, useTitle } from '../lib/ui.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { num } from '../theme.jsx'
+import { withBase } from '../lib/base.js'
 
 const DEF = { accent: '#d93a1c', tone: 'light', shape: 'circle', pinSize: 55, pinBorder: true, cluster: false, selected: 'outline', mapLabels: true, labelDensity: 40, start: 'all', startView: null, categories: [{ id: 'low', name: 'Baixa confiança', color: '#d93a1c', icon: 'alert' }] }
 function Shell({ active, children }) {
   const nav = [['candidaturas', 'Candidaturas', '/admin'], ['mapas', 'Mapas', '/admin/mapas'], ['moderacao', 'Moderação', '/admin/moderacao'], ['metricas', 'Métricas', '/admin/metricas']]
   return (
     <Guard need="admin"><div className="page"><div className="main" style={{ maxWidth: 1180, margin: '0 auto' }}>
-      <div className="row jb wrap"><div className="row"><Logo /><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Admin</span></div><div className="row wrap">{nav.map(([k, l, to]) => <Link key={k} className={'chip' + (active === k ? ' on' : '')} to={to}>{l}</Link>)}<Link className="chip" to="/painel">Sair do admin</Link></div></div>
+      <div className="row jb wrap"><div className="row"><Logo /><span className="tag" style={{ background: 'var(--ink)', color: '#fff' }}>Admin</span></div><div className="row wrap">{nav.map(([k, l, to]) => <Link key={k} className={'chip' + (active === k ? ' on' : '')} to={to}>{l}</Link>)}<a className="chip" href={withBase('/painel')}>Sair do admin</a></div></div>
       {children}
     </div></div></Guard>
   )

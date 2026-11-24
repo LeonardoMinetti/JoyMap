@@ -102,6 +102,35 @@ export function Side({ active }) {
   )
 }
 
+// Espaço do explorador: o mesmo layout do painel do criador (menu lateral no computador; barra superior e abas fixas no celular), com três áreas
+const EXP = [['salvos', 'Salvos', 'heart', '/salvos'], ['criadores', 'Criadores', 'map', '/salvos/criadores'], ['conta', 'Conta', 'user', '/salvos/conta']]
+export function ExplorerPage({ active, children }) {
+  const { me, reload } = useMe()
+  const u = me?.user
+  const out = async () => { await api('/auth/logout', { method: 'POST' }); await reload(); navigate('/') }
+  const name = u ? u.email : 'Visitante'
+  return (
+    <div className="page"><div className="app">
+      <div className="side">
+        <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
+        <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(name)}</div><div style={{ minWidth: 0 }}><div className="b sm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{name}</div><div className="xs mut">Explorador</div></div></div>
+        {EXP.map(([k, l, i, to]) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}</Link>)}
+        <Link className="mapbn" to="/@demo" style={{ marginTop: 'auto' }} aria-label="Explorar um mapa">
+          <span className="mapbn-pv"><FakeMap h={104} tone="light" shape="drop" acc="#ff4b2b" n={6} lab={false} /></span>
+          <span className="mapbn-tx"><b className="sm">Explorar um mapa</b><span className="xs">Descubra novos lugares</span></span>
+          <Icon n="next" s={16} c="currentColor" />
+        </Link>
+        {u ? <button className="it" style={{ background: 'none', border: 0, textAlign: 'left' }} onClick={out}><Icon n="back" s={18} c="#404040" />Sair</button> : <Link className="it" to="/entrar?como=explorador&voltar=%2Fsalvos"><Icon n="user" s={18} c="#404040" />Entrar</Link>}
+      </div>
+      <div className="mtop"><Logo /><span className="sp" /><div className="row" style={{ gap: 8 }}>{u ? <button type="button" className="link xs" onClick={out}>Sair</button> : <Link className="link xs" to="/entrar?como=explorador&voltar=%2Fsalvos">Entrar</Link>}<div className="av">{initial(name)}</div></div></div>
+      <nav className="mtabs" aria-label="Espaço do explorador">
+        {EXP.map(([k, l, i, to]) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c={k === active ? '#171713' : '#6b6b6b'} /><span>{l}</span></Link>)}
+      </nav>
+      <div className="main">{children}</div>
+    </div></div>
+  )
+}
+
 // Abas de navegação entre seções de uma mesma área (Estúdio, Minha conta). Padrão único do painel.
 export function Tabs({ items, active, label }) {
   const ref = React.useRef(null)

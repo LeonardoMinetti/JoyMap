@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Top, Tabs, Loading, useTitle } from '../lib/ui.jsx'
+import { ExplorerPage, Loading, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import { STATIC, withBase } from '../lib/base.js'
 import { initial } from '../theme.jsx'
@@ -37,25 +37,18 @@ export default function Saved({ tab = 'salvos' }) {
     return () => { on = false }
   }, [logged])
   const groups = Object.values((rows || []).reduce((m, r) => { (m[r.slug] = m[r.slug] || { slug: r.slug, creator: r.creator, handle: r.handle, avatarUrl: r.avatarUrl, items: [] }).items.push(r); return m }, {}))
+  const SUB = { salvos: logged ? 'Os lugares que você guardou na sua conta, de todos os mapas.' : 'Os lugares que você guardou neste aparelho, de todos os mapas.', criadores: 'Os criadores de quem você salvou lugares.', conta: 'Seus dados de acesso.' }
   return (
-    <div className="page lp">
-      <Top active={-1} />
-      <div className="w" style={{ paddingTop: 36, paddingBottom: 64, maxWidth: 760 }}>
-        <span className="eb">Explorador</span>
-        <h1 className="d s56" style={{ marginTop: 8 }}>{TITLE[tab]}</h1>
-        <div style={{ marginTop: 18 }}><Tabs items={TABS} active={tab} label="Seu espaço de explorador" /></div>
-        <div style={{ marginTop: 22 }}>
-          {tab === 'conta' ? <Account me={me} /> : !rows ? <Loading /> : tab === 'salvos' ? <Places groups={groups} logged={logged} me={me} /> : <Creators groups={groups} />}
-        </div>
-      </div>
-    </div>
+    <ExplorerPage active={tab}>
+      <div><h1 className="d s44">{TITLE[tab]}</h1><p className="mut sm" style={{ marginTop: 6 }}>{SUB[tab]}</p></div>
+      {tab === 'conta' ? <Account me={me} /> : !rows ? <Loading /> : tab === 'salvos' ? <Places groups={groups} me={me} /> : <Creators groups={groups} />}
+    </ExplorerPage>
   )
 }
 
-function Places({ groups, logged, me }) {
+function Places({ groups, me }) {
   return (
     <>
-      <p className="mut" style={{ marginBottom: 16 }}>{logged ? 'Os lugares que você guardou na sua conta, de todos os mapas.' : 'Os lugares que você guardou neste aparelho, de todos os mapas.'}</p>
       {!me?.user && <div className="note row" style={{ marginBottom: 20 }}><span className="sp">Entre como explorador para guardar seus salvos na conta e ver em qualquer aparelho.</span><Link className="btn sm" to="/entrar?como=explorador&voltar=%2Fsalvos">Entrar</Link></div>}
       {STATIC && me?.user && <div className="note" style={{ marginBottom: 20 }}>Na demonstração, os salvos ficam só neste aparelho.</div>}
       {!groups.length ? <p className="mut">Nada salvo ainda. Abra um mapa e toque no coração de um lugar.</p> : (
