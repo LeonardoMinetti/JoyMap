@@ -12,3 +12,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 004 | 2026-11-24 18:15 | mapa | Logo JoyMap no topo do mapa (some no plano Pro) | `deploy/mapa/004-logo-joymap-no-topo-do-mapa-some-no-plan` |
 | 005 | 2026-11-24 18:48 | site | Logo da marca ao fundo da hero | `deploy/site/005-logo-da-marca-ao-fundo-da-hero` |
 | 006 | 2026-11-24 18:54 | site | Logo da hero maior e mais discreto | `deploy/site/006-logo-da-hero-maior-e-mais-discreto` |
+| 007 | 2026-11-24 18:57 | site | Logo do cabecalho escrito na chegada | `deploy/site/007-logo-do-cabecalho-escrito-na-chegada` |

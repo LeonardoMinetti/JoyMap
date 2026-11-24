@@ -5,12 +5,13 @@ import { useMe, homeFor } from './me.jsx'
 import { api } from '../api.js'
 import { initial } from '../theme.jsx'
 import logoUrl from '../brand/logo.svg'
+import LogoWrite from './LogoWrite.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { withBase } from './base.js'
 
 // Para onde o botão do topo leva quem já entrou, conforme o tipo de conta
 export const homeLink = (me) => me.user.role === 'admin' ? null : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
-export const Logo = ({ size = 44, to = '/' }) => <Link className="logo" to={to} aria-label="JoyMap"><img src={logoUrl} alt="JoyMap" style={{ height: size }} /></Link>
+export const Logo = ({ size = 44, to = '/', write = false }) => <Link className="logo" to={to} aria-label="JoyMap">{write ? <LogoWrite height={size} /> : <img src={logoUrl} alt="JoyMap" style={{ height: size }} />}</Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
 const NAV = [['Como funciona', '/#como-funciona'], ['Exemplos', '/#exemplos'], ['Insights', '/#insights'], ['Planos', '/#planos'], ['Perguntas', '/perguntas']]
@@ -25,7 +26,7 @@ export function Top({ active = -1, overlay = false, dark = false }) {
     <>
       {!overlay && <div style={{ height: 84 }} />}
       <header className={'topbar' + (sc || open ? ' sc' : '') + (dark ? ' dk' : '')}>
-        <Logo />
+        <Logo write />
         <nav className="l" aria-label="Principal">{NAV.map(([l, to], i) => <Link key={l} className={i === active ? 'it on' : 'it'} to={to}>{l}</Link>)}</nav>
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
         {me?.user ? (homeLink(me) && <Link className="btn sm" to={homeLink(me)[1]}>{homeLink(me)[0]}</Link>) : <>

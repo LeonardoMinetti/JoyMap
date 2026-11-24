@@ -491,3 +491,8 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .au-escolha .au-card{max-width:560px}.au-escolha .au-w{justify-content:center}@media (min-width:901px){.au-escolha .au-card{height:auto}}
 .au-opt{transition:transform .15s,box-shadow .15s}.au-opt:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(23,23,19,.13)}
 .page.au-escolha{background:var(--ink)}
+
+/* logo do cabeçalho escrito na chegada */
+.logo .lw{width:auto;display:block}
+.lw mask path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1 2;stroke-dashoffset:1;visibility:hidden;animation:lw-draw linear forwards}
+@keyframes lw-draw{from{stroke-dashoffset:1;visibility:visible}to{stroke-dashoffset:0;visibility:visible}}
