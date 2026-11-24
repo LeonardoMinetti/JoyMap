@@ -9,7 +9,7 @@ import FakeMap from '../FakeMap.jsx'
 import { withBase } from './base.js'
 
 // Para onde o botão do topo leva quem já entrou, conforme o tipo de conta
-export const homeLink = (me) => me.user.role === 'admin' ? ['Admin', '/admin'] : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
+export const homeLink = (me) => me.user.role === 'admin' ? null : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
 export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="wagli"><img src={logoUrl} alt="wagli" style={{ height: size }} /></Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
@@ -28,11 +28,11 @@ export function Top({ active = -1, overlay = false, dark = false }) {
         <Logo />
         <nav className="l" aria-label="Principal">{NAV.map(([l, to], i) => <Link key={l} className={i === active ? 'it on' : 'it'} to={to}>{l}</Link>)}</nav>
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
-        {me?.user ? <Link className="btn sm" to={homeLink(me)[1]}>{homeLink(me)[0]}</Link> : <>
+        {me?.user ? (homeLink(me) && <Link className="btn sm" to={homeLink(me)[1]}>{homeLink(me)[0]}</Link>) : <>
           <Link className="btn ln sm tb-in" to="/entrar">Entrar</Link>
           <Link className="btn sm" to="/entrar?criar=1">Quero meu mapa</Link></>}
         <button type="button" className="tb-burger" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="tb-menu" onClick={() => setOpen(!open)}><i /><i /><i /></button>
-        {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? <Link to={homeLink(me)[1]} onClick={go}>{homeLink(me)[0]}</Link> : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
+        {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? (homeLink(me) && <Link to={homeLink(me)[1]} onClick={go}>{homeLink(me)[0]}</Link>) : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
       </header>
     </>
   )
@@ -40,7 +40,7 @@ export function Top({ active = -1, overlay = false, dark = false }) {
 export function SiteFooter() {
   const { me } = useMe()
   // quem não tem mapa e só quer guardar lugares entra por aqui (ou pelo mapa de um criador)
-  const exp = me?.user ? <Link className="sf-in" to={homeLink(me)[1]}><Icon n="user" s={16} c="currentColor" />{homeLink(me)[0]}</Link> : <Link className="sf-in" to="/entrar?como=explorador"><Icon n="user" s={16} c="currentColor" />Entrar como explorador</Link>
+  const exp = me?.user ? (homeLink(me) && <Link className="sf-in" to={homeLink(me)[1]}><Icon n="user" s={16} c="currentColor" />{homeLink(me)[0]}</Link>) : <Link className="sf-in" to="/entrar?como=explorador"><Icon n="user" s={16} c="currentColor" />Entrar como explorador</Link>
   return (
     <footer className="w sf">
       <Logo size={26} />
@@ -74,7 +74,6 @@ export function Side({ active }) {
         <span style={{ padding: '4px 12px 14px' }}><Logo /></span>
         <div className="row" style={{ padding: '0 12px 14px' }}><div className="av">{initial(c?.displayName)}</div><div><div className="b sm">@{c?.handle}</div><div className="xs mut">{c?.plan?.trialEnds ? 'Teste grátis' : 'Sem plano ativo'}</div></div></div>
         {items.map(({ k, l, i, to }) => <Link key={k} className={'it' + (k === active ? ' on' : '')} to={to}><span className="it-ic"><Icon n={i} s={18} c={k === active ? '#fff' : '#171713'} /></span>{l}{dot(k)}</Link>)}
-        {me?.user?.role === 'admin' && <Link className="it" to="/admin"><Icon n="shield" s={18} c="#404040" />Administração</Link>}
         {c?.slug && c.published !== false && (
           <a className="mapbn" href={withBase(`/@${c.slug}`)} target="_blank" rel="noopener noreferrer" style={{ marginTop: 'auto' }} aria-label="Ver meu mapa como um seguidor (abre em outra aba)">
             <span className="mapbn-pv"><FakeMap h={104} tone={c.theme?.tone || 'light'} shape={c.theme?.shape || 'drop'} acc={c.theme?.accent || '#ff4b2b'} n={6} lab={false} /></span>
@@ -95,7 +94,7 @@ export function Side({ active }) {
           <div className="mmore-sh" onClick={(e) => e.stopPropagation()}>
             <i className="mmore-grab" />
             <div className="mmore-g">{items.filter((t) => !TABS.includes(t.k)).map(({ k, l, i, to }) => <Link key={k} className={k === active ? 'on' : ''} to={to}><Icon n={i} s={22} c="#171713" /><span>{l}</span></Link>)}
-              {me?.user?.role === 'admin' && <Link to="/admin"><Icon n="shield" s={22} c="#404040" /><span>Administração</span></Link>}</div>
+</div>
             <button type="button" className="btn ln blk" onClick={out}>Sair</button>
           </div>
         </div>
