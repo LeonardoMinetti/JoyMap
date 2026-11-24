@@ -14,7 +14,7 @@ export const homeLink = (me) => me.user.role === 'admin' ? null : me.user.role =
 export const Logo = ({ size = 44, to = '/', write = false }) => <Link className="logo" to={to} aria-label="JoyMap">{write ? <LogoWrite height={size} /> : <img src={logoUrl} alt="JoyMap" style={{ height: size }} />}</Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
-const NAV = [['Como funciona', '/#como-funciona'], ['Exemplos', '/#exemplos'], ['Miniguias', '/miniguias'], ['Insights', '/#insights'], ['Planos', '/#planos'], ['Perguntas', '/perguntas']]
+const NAV = [['Como funciona', '/#como-funciona'], ['Exemplos', '/#exemplos'], ['RoteirosJoy', '/roteirosjoy'], ['Insights', '/#insights'], ['Planos', '/#planos'], ['Perguntas', '/perguntas']]
 export function Top({ active = -1, overlay = false, dark = false }) {
   const { me } = useMe()
   const [sc, setSc] = useState(false)
@@ -45,7 +45,7 @@ export function SiteFooter() {
   return (
     <footer className="w sf">
       <Logo size={26} />
-      <nav className="sf-l" aria-label="Rodapé">{exp}<Link to="/miniguias">Miniguias</Link><Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/para-restaurantes">Para restaurantes</Link><Link to="/voo">Meu voo</Link></nav>
+      <nav className="sf-l" aria-label="Rodapé">{exp}<Link to="/roteirosjoy">RoteirosJoy</Link><Link to="/termos">Termos</Link><Link to="/termos">Privacidade</Link><Link to="/perguntas">Contato</Link><Link to="/para-restaurantes">Para restaurantes</Link><Link to="/voo">Meu voo</Link></nav>
     </footer>
   )
 }
@@ -139,7 +139,7 @@ export const ExplorerPage = ({ active, children }) => (
     </Link>}>{children}</RolePanel>
 )
 // Administração: candidaturas, mapas, moderação, rede (mapa geral) e métricas
-const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['miniguias', 'Miniguias', 'route', '/admin/miniguias'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
+const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['miniguias', 'RoteirosJoy', 'route', '/admin/miniguias'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
 export const AdminPage = ({ active, children }) => (
   <Guard need="admin"><RolePanel items={ADM} active={active} label="Administração" loginTo="/entrar"
     banner={<a className="it" href={withBase('/painel')}><Icon n="home" s={18} c="#404040" />Painel de criador</a>}>{children}</RolePanel></Guard>

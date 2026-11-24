@@ -12,7 +12,7 @@ function Card({ g, i }) {
   return (
     <a className="mg-card" href={withBase(g.href)} style={{ '--c': g.color || COLORS[i % COLORS.length] }}>
       <div className="mg-ph" style={g.photo ? { backgroundImage: `url("${g.photo}")` } : undefined}>
-        <span className="mg-tag">Miniguia</span>{g.city && <span className="mg-city">{g.city}</span>}
+        <span className="mg-tag">RoteiroJoy</span>{g.city && <span className="mg-city">{g.city}</span>}
         <h2>{g.name}</h2>
       </div>
       <div className="mg-body">
@@ -28,7 +28,7 @@ function Card({ g, i }) {
 }
 
 export function Guides() {
-  useTitle('Miniguias')
+  useTitle('RoteirosJoy')
   const [d, setD] = useState(null)
   const [city, setCity] = useState('')
   useEffect(() => { api('/miniguias').then(setD).catch(() => setD({ guides: [] })) }, [])
@@ -42,7 +42,7 @@ export function Guides() {
       <header className="mg-hero fl-host">
         <div className="w">
           <span className="tag">Escolhidos pela equipe JoyMap</span>
-          <h1 className="d">Miniguias</h1>
+          <h1 className="d">RoteirosJoy</h1>
           <p>Roteiros curtos de quem vive indicando lugares. Escolha um, abra no mapa e siga parada por parada.</p>
         </div>
         <Floaters set="hero" />
@@ -52,7 +52,7 @@ export function Guides() {
           {d.demo && <p className="xs mut">Exemplos de demonstração: criadores, lugares e roteiros são fictícios.</p>}
           {cities.length > 1 && <div className="mg-chips" role="group" aria-label="Filtrar por cidade">{['', ...cities].map((c) => <button key={c} type="button" className={'chip' + (city === c ? ' on' : '')} aria-pressed={city === c} onClick={() => setCity(c)}>{c || 'Todas as cidades'}</button>)}</div>}
           <div className="mg-grid">{list.map((g, i) => <Card key={g.id} g={g} i={i} />)}</div>
-          {!list.length && <p className="mut">Os primeiros miniguias estão sendo escolhidos.</p>}
+          {!list.length && <p className="mut">Os primeiros RoteirosJoy estão sendo escolhidos.</p>}
           <div className="mg-cta"><div><h3 className="d">Você cria roteiros?</h3><p>Marque, no seu painel, os roteiros que o JoyMap pode divulgar.</p></div><Link className="btn" to="/entrar?criar=1">Quero meu mapa</Link></div>
         </>}
       </main>
@@ -62,21 +62,21 @@ export function Guides() {
 }
 
 export function AdminGuides() {
-  useTitle('Miniguias')
+  useTitle('RoteirosJoy')
   const [d, setD] = useState(null)
   const load = useCallback(() => api('/admin/miniguias').then(setD), [])
   useEffect(() => { load() }, [load])
-  const pick = async (g) => { try { await api(`/admin/miniguias/${g.id}`, { method: 'POST', body: { featured: !g.featured } }); toast(g.featured ? 'Saiu dos Miniguias' : 'Entrou nos Miniguias'); load() } catch { toast('Não foi possível salvar.') } }
+  const pick = async (g) => { try { await api(`/admin/miniguias/${g.id}`, { method: 'POST', body: { featured: !g.featured } }); toast(g.featured ? 'Saiu dos RoteirosJoy' : 'Entrou nos RoteirosJoy'); load() } catch { toast('Não foi possível salvar.') } }
   return (
     <AdminPage active="miniguias">
-      <div className="row jb wrap"><h1 className="d s44">Miniguias</h1><a className="btn ln sm" href={withBase('/miniguias')} target="_blank" rel="noopener noreferrer">Ver a página</a></div>
+      <div className="row jb wrap"><h1 className="d s44">RoteirosJoy</h1><a className="btn ln sm" href={withBase('/roteirosjoy')} target="_blank" rel="noopener noreferrer">Ver a página</a></div>
       <p className="sm mut">Aqui só aparecem roteiros que o criador liberou para divulgação. Entra na página apenas o que a equipe escolher.</p>
       {!d ? <Loading /> : <div className="col" style={{ gap: 10 }}>
         {d.guides.map((g) => <div key={g.id} className="card row wrap" style={{ gap: 12 }}>
           <div className="sp" style={{ minWidth: 200 }}><b>{g.name}</b><div className="xs mut">@{g.handle}{g.published ? '' : ' · mapa não publicado'}</div><div className="sm">{g.note}</div></div>
           {g.featured && <span className="tag ok">Na página</span>}
           <a className="btn ln sm" href={withBase(g.href)} target="_blank" rel="noopener noreferrer">Abrir</a>
-          <button type="button" className={'btn sm' + (g.featured ? ' sec' : '')} onClick={() => pick(g)}>{g.featured ? 'Tirar' : 'Colocar nos Miniguias'}</button>
+          <button type="button" className={'btn sm' + (g.featured ? ' sec' : '')} onClick={() => pick(g)}>{g.featured ? 'Tirar' : 'Colocar nos RoteirosJoy'}</button>
         </div>)}
         {!d.guides.length && <p className="sm mut">Nenhum roteiro liberado pelos criadores ainda.</p>}
       </div>}

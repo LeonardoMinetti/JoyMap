@@ -20,7 +20,7 @@ import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/miniguias', '/admin/miniguias', '/entrar', '/candidatura', '/rede', '/rede/lugar', '/admin/rede', '/admin/rede/lugar', '/restaurante/conta', '/painel-teste-restaurante', '/painel-teste-admin', '/restaurantes', '/restaurante', '/restaurante/percepcao', '/voo', '/admin', '/admin/mapas', '/admin/moderacao', '/admin/metricas', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/roteirosjoy', '/miniguias', '/admin/miniguias', '/entrar', '/candidatura', '/rede', '/rede/lugar', '/admin/rede', '/admin/rede/lugar', '/restaurante/conta', '/painel-teste-restaurante', '/painel-teste-admin', '/restaurantes', '/restaurante', '/restaurante/percepcao', '/voo', '/admin', '/admin/mapas', '/admin/moderacao', '/admin/metricas', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
@@ -34,11 +34,11 @@ const ROUTES = {
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': <Redirect to="/estudio" />, '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': <Redirect to="/estudio/pins" />,
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': <Redirect to="/estudio" />, '/estudio/links': <Redirect to="/estudio" />, '/estudio/endereco': <Redirect to="/painel/divulgar" />,
   '/rede': <Net.HardRedirect to="/admin/rede" />, '/rede/lugar': <Net.HardRedirect to="/admin/rede/lugar" />, '/admin/rede': <Net.AdminNetwork />, '/admin/rede/lugar': <Net.AdminNetworkPlace />, '/restaurante/conta': <Net.RestaurantAccount />, '/painel-teste-restaurante': <Au.TestEntry kind="restaurante" />, '/painel-teste-admin': <Au.TestEntry kind="admin" />, '/restaurantes': <Net.Claim />, '/para-restaurantes': <RestaurantsLanding />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
-  '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/miniguias': <AdminGuides />, '/miniguias': <Guides />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
+  '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/miniguias': <AdminGuides />, '/roteirosjoy': <Guides />, '/miniguias': <Redirect to="/roteirosjoy" />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
 }
 
 // Páginas do site: entram com um fade curto (as telas do painel e do estúdio ficam como estão, para não perder estado)
-const SITE = new Set(['/', '/miniguias', '/planos', '/perguntas', '/exemplos', '/termos'])
+const SITE = new Set(['/', '/roteirosjoy', '/planos', '/perguntas', '/exemplos', '/termos'])
 function Routes() {
   const { path } = useLocation()
   const { me } = useMe()

@@ -440,7 +440,7 @@ export function Roteiros() {
                 </button>) })}{!pool.length && <p className="sm mut" style={{ gridColumn: '1/-1' }}>{confirmed.length ? 'Nenhum lugar encontrado.' : 'Confirme lugares no mapa para montar roteiros.'}</p>}</div>
             </div>
             <div className="card col" style={{ gap: 10 }}>
-              <label className="row mg-opt"><input type="checkbox" checked={!!r.share} onChange={(e) => set({ share: e.target.checked })} /><span><b>Permitir que o JoyMap divulgue este roteiro</b><span className="xs mut">Ele pode aparecer na página de Miniguias, com o seu nome e o link para o seu mapa.</span></span></label>
+              <label className="row mg-opt"><input type="checkbox" checked={!!r.share} onChange={(e) => set({ share: e.target.checked })} /><span><b>Permitir que o JoyMap divulgue este roteiro</b><span className="xs mut">Ele pode aparecer na página RoteirosJoy, com o seu nome e o link para o seu mapa.</span></span></label>
               <span className="xs mut">Permitir não garante a seleção: a equipe JoyMap escolhe quais entram. Você pode desmarcar quando quiser; ao salvar, o roteiro sai da página.</span>
             </div>
             <div className="card col" style={{ gap: 12 }}>
