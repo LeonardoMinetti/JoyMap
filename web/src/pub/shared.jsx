@@ -4,7 +4,7 @@ import { toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
-import { STATIC } from '../lib/base.js'
+import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
 import { FONTS, catOf, fmtDate, onAccent, symOf } from '../theme.jsx'
 
@@ -204,7 +204,7 @@ function RouteProducts({ products, preview }) {
   return (
     <section className="rt-prod" aria-label="Produtos deste roteiro">
       <h3 className="pt">Produtos deste roteiro</h3>
-      <ul>{products.map((p, i) => <li key={i}><a href={p.url} target="_blank" rel="noopener noreferrer nofollow sponsored" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}><span className="sp"><b className="sm">{p.title}</b>{p.price && <span className="xs" style={{ display: 'block', opacity: 0.7 }}>{p.price}</span>}</span><Icon n="next" s={16} c="currentColor" /></a></li>)}</ul>
+      <ul>{products.map((p, i) => <li key={i}><a href={p.url} target="_blank" rel="noopener noreferrer nofollow sponsored" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}>{p.image && <img className="rt-pimg" src={withBase(p.image)} alt={p.title} loading="lazy" />}<span className="sp"><b className="sm">{p.title}</b>{p.price && <span className="xs" style={{ display: 'block', opacity: 0.7 }}>{p.price}</span>}</span><Icon n="next" s={16} c="currentColor" /></a></li>)}</ul>
       <span className="xs" style={{ opacity: 0.7 }}>Links indicados pelo criador.</span>
     </section>
   )

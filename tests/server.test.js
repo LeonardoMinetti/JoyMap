@@ -377,18 +377,19 @@ test('categorias próprias: nome limpo, tipo de base, limite e sem criar novas f
 
 test('roteiro à venda e produtos: só nos planos certos, preço limitado, prévia trancada', async () => {
   const { cleanOffer, cleanProducts, lockRoute, netOf } = await import('../server/offers.js')
-  const r = { price: '19.4', products: [{ title: ' Guia ', url: 'https://x.com/a', price: 'R$ 9' }, { title: 'Ruim', url: 'javascript:alert(1)' }, { title: '', url: 'https://x.com' }] }
+  const r = { price: '19.4', products: [{ title: ' Guia ', url: 'https://x.com/a', price: 'R$ 9', image: '/photos/cafe.jpg' }, { title: 'Sem foto', url: 'https://x.com/b' }, { title: 'Ruim', url: 'javascript:alert(1)', image: '/photos/cafe.jpg' }, { title: '', url: 'https://x.com', image: '/photos/cafe.jpg' }, { title: 'Foto ruim', url: 'https://x.com/c', image: 'https://evil.com/a.jpg' }] }
   assert.deepEqual(cleanOffer(r, 'free'), { price: null, products: [], sponsor: null })
-  const cr = cleanOffer({ ...r, sponsor: { brand: 'Marca' } }, 'creator')
+  const cr = cleanOffer({ ...r, sponsor: { brand: 'Marca', logo: 'data:image/png;base64,iVBORw0KGgo=' } }, 'creator')
   assert.equal(cr.price, 19); assert.equal(cr.products.length, 1); assert.equal(cr.sponsor, null)
   const sp = cleanOffer({ sponsor: { brand: '  Marca  X ', logo: 'data:image/png;base64,iVBORw0KGgo=' } }, 'pro').sponsor
-  assert.deepEqual(sp, { brand: 'Marca  X'.replace('  ', ' '), logo: 'data:image/png;base64,iVBORw0KGgo=' })
-  assert.equal(cleanOffer({ sponsor: { brand: 'M', logo: 'data:image/svg+xml;base64,AAAA' } }, 'pro').sponsor.logo, null)
+  assert.deepEqual(sp, { brand: 'Marca X', logo: 'data:image/png;base64,iVBORw0KGgo=' })
+  assert.equal(cleanOffer({ sponsor: { brand: 'Marca sem logo' } }, 'pro').sponsor, null)
+  assert.equal(cleanOffer({ sponsor: { brand: 'M', logo: 'data:image/svg+xml;base64,AAAA' } }, 'pro').sponsor, null)
   assert.equal(cleanOffer({ sponsor: { brand: '  ' } }, 'pro').sponsor, null)
   const pro = cleanOffer(r, 'pro')
   assert.equal(pro.price, 19); assert.equal(pro.products.length, 1); assert.equal(pro.products[0].title, 'Guia')
   assert.equal(cleanOffer({ price: 2 }, 'pro').price, null); assert.equal(cleanOffer({ price: 900 }, 'pro').price, null)
-  assert.equal(cleanProducts(Array(9).fill({ title: 'a', url: 'https://a.com' })).length, 6)
+  assert.equal(cleanProducts(Array(9).fill({ title: 'a', url: 'https://a.com', image: '/photos/cafe.jpg' })).length, 6)
   assert.equal(netOf(100, 'creator'), 92); assert.equal(netOf(100, 'pro'), 95)
   const route = { id: 1, price: 19, placeIds: [1, 2, 3], stops: [1, 2, 3, 4].map((n) => ({ placeId: n, text: 'história ' + n })) }
   const locked = lockRoute(route, false)

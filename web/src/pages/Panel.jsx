@@ -20,7 +20,8 @@ const AccountPage = ({ tab, children }) => (
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
-import { resizeLogo } from '../lib/image.js'
+import { resizeLogo, resizeImage } from '../lib/image.js'
+import { withBase } from '../lib/base.js'
 import { termEmoji } from '../lib/termEmoji.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
 import { demoExport } from '../lib/demoCreator.js'
@@ -321,7 +322,7 @@ function RoutePreview({ route, places, theme }) {
   const rp = route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean)
   return (
     <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
-      <div className={'ms-route' + (route.sponsor?.brand ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color ? { background: route.color, color: onColor(route.color) } : {}) }}>
+      <div className={'ms-route' + (route.sponsor?.brand ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color && !route.sponsor?.brand ? { background: route.color, color: onColor(route.color) } : {}) }}>
         <SponsorMark s={route.sponsor?.brand ? route.sponsor : null} /><SponsorTag s={route.sponsor?.brand ? route.sponsor : null} /><b className="pt">{route.name || 'Nome do roteiro'}</b>{route.note && <span>{route.note}</span>}<hr />
         <span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<span className="sp" /><Icon n="next" s={20} c="currentColor" /></span>
       </div>
@@ -453,10 +454,16 @@ export function Roteiros() {
                   <div key={k} className="card soft col" style={{ padding: 12, gap: 8 }}>
                     <div className="g2"><Field label="Nome do produto" id={`pn${k}`}><div className="in"><input id={`pn${k}`} value={pr.title} maxLength="60" placeholder="Ex.: Guia de bolso" onChange={(e) => sp({ title: e.target.value })} /></div></Field><Field label="Preço (opcional)" id={`pp${k}`}><div className="in"><input id={`pp${k}`} value={pr.price || ''} maxLength="20" placeholder="Ex.: R$ 29" onChange={(e) => sp({ price: e.target.value })} /></div></Field></div>
                     <Field label="Link" id={`pu${k}`}><div className="in"><input id={`pu${k}`} type="url" value={pr.url} maxLength="300" placeholder="https://" onChange={(e) => sp({ url: e.target.value })} /></div></Field>
+                    <div className="col" style={{ gap: 6 }}><span className="lb">Foto do produto (obrigatória)</span>
+                      <div className="row" style={{ gap: 10 }}>
+                        {pr.image ? <img src={pr.image.startsWith('/') ? withBase(pr.image) : pr.image} alt="Foto do produto" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, border: '1px solid #ddd' }} /> : <span className="catico" style={{ background: '#eee', width: 64, height: 64, borderRadius: 12 }}><Icon n="image" s={22} c="#888" /></span>}
+                        <label className="btn ln sm" style={{ cursor: 'pointer' }}>{pr.image ? 'Trocar foto' : 'Enviar foto'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { sp({ image: (await resizeImage(f, 480)).url }) } catch { toast('Use uma imagem PNG, JPG ou WebP.') } }} /></label>
+                        {!pr.image && <span className="xs mut">Sem foto, o produto não aparece no mapa.</span>}
+                      </div></div>
                     <button className="btn bd2 sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ products: r.products.filter((_, j) => j !== k) })}><Icon n="trash" s={14} />Remover produto</button>
                   </div>) })}
-                <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={(r.products || []).length >= MAX_PRODUCTS} onClick={() => set({ products: [...(r.products || []), { title: '', url: '', price: '' }] })}><Icon n="plus" s={14} />Adicionar produto</button>
-                <div className="xs mut">Até {MAX_PRODUCTS} produtos. Só entram os que têm nome e um link http(s) válido.</div>
+                <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={(r.products || []).length >= MAX_PRODUCTS} onClick={() => set({ products: [...(r.products || []), { title: '', url: '', price: '', image: null }] })}><Icon n="plus" s={14} />Adicionar produto</button>
+                <div className="xs mut">Até {MAX_PRODUCTS} produtos. Só entram os que têm nome, link http(s) válido e foto.</div>
               </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Mostrar produtos no roteiro está disponível a partir do plano Criador.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>
             <div className="card col" style={{ gap: 12 }}>
@@ -466,13 +473,13 @@ export function Roteiros() {
                 {r.sponsor && <>
                   <div className="g2" style={{ alignItems: 'end' }}>
                     <Field label="Nome da marca parceira" id="sb"><div className="in"><input id="sb" value={r.sponsor.brand} maxLength="40" placeholder="Ex.: nome da marca" onChange={(e) => set({ sponsor: { ...r.sponsor, brand: e.target.value } })} /></div></Field>
-                    <div className="col" style={{ gap: 6 }}><span className="lb">Logo da marca (opcional)</span>
+                    <div className="col" style={{ gap: 6 }}><span className="lb">Logo da marca (obrigatório)</span>
                       <div className="row" style={{ gap: 8 }}>
                         <label className="btn ln sm" style={{ cursor: 'pointer' }}>{r.sponsor.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { set({ sponsor: { ...r.sponsor, logo: await resizeLogo(f) } }) } catch { toast('Use uma imagem PNG, JPG ou WebP.') } }} /></label>
                         {r.sponsor.logo && <><img src={r.sponsor.logo} alt="Logo enviado" style={{ height: 36, maxWidth: 90, objectFit: 'contain', background: '#fff', borderRadius: 8, padding: 3, border: '1px solid #ddd' }} /><button className="btn ln sm" onClick={() => set({ sponsor: { ...r.sponsor, logo: null } })}>Tirar</button></>}
                       </div></div>
                   </div>
-                  <div className="xs mut">Só use a marca de quem você tem acordo. O seguidor sempre vê "Roteiro patrocinado", e sem o nome da marca o patrocínio não vai ao ar.</div>
+                  <div className="xs mut">Só use a marca de quem você tem acordo. O seguidor sempre vê "Roteiro patrocinado". Sem o nome e o logo da marca, o patrocínio não vai ao ar.</div>
                 </>}
               </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Roteiros patrocinados com marcas parceiras estão disponíveis no plano Pro.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>

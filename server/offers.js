@@ -9,24 +9,27 @@ export const MAX_PRODUCTS = 6
 export const cleanPrice = (v) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= PRICE_MIN && n <= PRICE_MAX ? n : null }
 
 const txt = (v, n) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n)
+// Foto do produto: obrigatória (sem foto ninguém compra). Imagem reduzida enviada como data URI, ou uma foto do próprio site (/photos/...).
+const IMG = /^(data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}|\/photos\/[a-z0-9-]{1,40}\.jpg)$/
+export const cleanImage = (v, max = 120000) => (typeof v === 'string' && v.length <= max && IMG.test(v) ? v : null)
 export function cleanProducts(input) {
   const out = []
   for (const p of (Array.isArray(input) ? input : []).slice(0, MAX_PRODUCTS)) {
     const title = txt(p?.title, 60)
+    const image = cleanImage(p?.image)
     let url = ''
     try { const u = new URL(String(p?.url || '').trim()); if (u.protocol === 'https:' || u.protocol === 'http:') url = u.href.slice(0, 300) } catch { /* link inválido */ }
-    if (title && url) out.push({ title, url, price: txt(p?.price, 20) })
+    if (title && url && image) out.push({ title, url, image, price: txt(p?.price, 20) })
   }
   return out
 }
 
-// Roteiro patrocinado (Pro): marca parceira com nome e, se quiser, logo (imagem pequena, enviada como data URI). Sempre identificado como patrocinado.
+// Roteiro patrocinado (Pro): marca parceira com nome e logo (obrigatórios) (imagem pequena, enviada como data URI). Sempre identificado como patrocinado.
 const LOGO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/
 export function cleanSponsor(v) {
   const brand = txt(v?.brand, 40)
-  if (!brand) return null
   const logo = typeof v?.logo === 'string' && v.logo.length <= 60000 && LOGO.test(v.logo) ? v.logo : null
-  return { brand, logo }
+  return brand && logo ? { brand, logo } : null // sem nome e logo da marca o patrocínio não vai ao ar
 }
 
 // o que o plano permite: sem permissão, preço e produtos simplesmente não valem
