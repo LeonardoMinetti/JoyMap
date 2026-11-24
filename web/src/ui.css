@@ -444,18 +444,18 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .page.au{min-height:100dvh;position:relative}
 .page.au-criador{background:var(--ink)}.page.au-explorador{background:var(--acc)}
 .page.au .au-w{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:80px;max-width:980px;min-height:100dvh;padding-top:112px;padding-bottom:64px}
-.au-card{width:100%;max-width:440px;flex:none;background:#fff;border-radius:28px;padding:36px;box-shadow:0 18px 50px rgba(23,23,19,.22);display:flex;flex-direction:column;gap:16px}
+.au-card{width:100%;max-width:520px;flex:none;background:#fff;border-radius:28px;padding:36px;box-shadow:0 18px 50px rgba(23,23,19,.22);display:flex;flex-direction:column;gap:16px}
 .au-card .link{font-weight:700}
 .au-alt{display:grid;gap:6px;text-align:center;padding-top:16px;border-top:1px solid var(--line)}
 .au-again{align-self:center}
-.au-mo{flex:none;align-self:flex-end;margin-bottom:-64px}
+.au-mo{flex:none;align-self:center}
 .au-mo .dv{box-shadow:inset 0 0 0 1.5px #555,0 0 0 1px #000,0 30px 60px rgba(0,0,0,.35)}
 @media (max-width:900px){.page.au .au-w{min-height:auto;padding-top:104px;padding-bottom:40px;max-width:520px}.page.au{min-height:100dvh}}
 @media (max-width:520px){.au-card{padding:26px 20px;border-radius:24px}}
 /* ilustração do explorador: salvar um lugar e vê-lo em Meus salvos (desenhada em 390 px, o mockup reduz) */
 .am-ficha{height:100%;background:#fff;display:flex;flex-direction:column;position:relative}
 .am-ph{height:250px;background-size:cover;background-position:center}
-.am-row{display:flex;align-items:center;gap:12px;padding:18px 20px 8px}.am-row b{display:block;font:700 26px/1.05 var(--disp);letter-spacing:-.02em}.am-row span{font-size:14px;color:var(--mut)}
+.am-row{display:flex;align-items:center;gap:12px;padding:18px 20px 8px}.am-row b{display:block;font:700 26px/1.05 var(--disp);letter-spacing:-.02em}.am-row .sp>span{display:block;font-size:14px;color:var(--mut);margin-top:4px}
 .am-heart{width:52px;height:52px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line);display:grid;place-items:center;color:var(--ink);flex:none;transition:background .25s,color .25s,box-shadow .25s}
 .am-heart.on{background:#d93a1c;color:#fff;box-shadow:none}.am-heart.on svg{fill:#fff}.am-heart.pop{animation:amPop .5s ease}
 @keyframes amPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
@@ -465,7 +465,17 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .am-h{font:700 34px/1 var(--disp);letter-spacing:-.025em;padding-top:6px}
 .am-tabs{display:flex;gap:8px}.am-tabs span{font:600 14px/1 var(--body);padding:10px 16px;border-radius:99px;background:var(--cream);color:var(--ink2)}.am-tabs span.on{background:var(--ink);color:#fff}
 .am-it{display:flex;align-items:center;gap:14px;padding:10px;border-radius:18px;box-shadow:inset 0 0 0 1.5px var(--line)}
-.am-it span{width:62px;height:62px;border-radius:14px;background-size:cover;background-position:center;flex:none}.am-it div{flex:1;min-width:0}.am-it b{display:block;font-size:18px}.am-it em{font-style:normal;font-size:13px;color:var(--mut)}
+.am-th{display:block;width:62px;height:62px;border-radius:14px;background-size:cover;background-position:center;flex:none}.am-it div{flex:1;min-width:0}.am-it b{display:block;font-size:18px}.am-it em{font-style:normal;font-size:13px;color:var(--mut)}
 .am-it.am-in{animation:amIn .6s .45s both cubic-bezier(.2,.7,.2,1)}
 @keyframes amIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.am-heart.pop,.am-it.am-in{animation:none}}
+/* elementos flutuantes só em contorno: brancos no fundo preto, pretos no amarelo */
+.au-criador .fl-layer{color:#fff}.au-explorador .fl-layer{color:var(--ink)}
+.dd-out *{fill:none!important;stroke:currentColor!important;stroke-width:2.2px!important;stroke-linecap:round;stroke-linejoin:round;opacity:1!important;filter:none!important}
+.dd-out [fill="#c9c9c1"]{display:none}
+.dd-out{filter:none!important}
+.au-soc{display:grid;grid-template-columns:1fr 1fr;gap:10px}.au-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.au-two{grid-template-columns:1fr}}
+/* mesma altura em todos os cenários de entrar e criar conta (computador): o cartão tem altura fixa e o rodapé de links fica embaixo */
+.au-card>form{flex:1}.au-alt{margin-top:auto}
+@media (min-width:901px){.au-card{height:690px}.au-mo .dv-s{height:676px!important}}

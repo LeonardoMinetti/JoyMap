@@ -35,7 +35,7 @@ export function AuthFrame({ kind = 'criador', children }) {
     <div className={`page lp au fl-host ${cr ? 'au-criador' : 'au-explorador'}`}>
       <DoodleDefs />
       <Top active={-1} overlay dark={cr} />
-      <Floaters set={cr ? 'g' : 'q'} />
+      <Floaters set={cr ? 'g' : 'q'} outline />
       <main className="w au-w">
         <section className="au-card">{children}</section>
         {wide && <Scene className="au-mo">{cr ? <MapMotion /> : <SaveMotion />}</Scene>}
@@ -63,8 +63,10 @@ function Social({ leitor, criar, voltar }) {
   }
   return (
     <div className="col" style={{ gap: 10 }}>
-      <button type="button" className="btn ln blk" onClick={() => go('google')}><Google />{criar ? 'Criar conta com Google' : 'Continuar com Google'}</button>
-      {!leitor && <button type="button" className="btn ln blk" onClick={() => go('instagram')}><Icon n="insta" s={18} />{criar ? 'Criar conta com Instagram' : 'Continuar com Instagram'}</button>}
+      <div className={leitor ? '' : 'au-soc'}>
+        <button type="button" className="btn ln blk" onClick={() => go('google')}><Google />{leitor ? (criar ? 'Criar conta com Google' : 'Continuar com Google') : 'Google'}</button>
+        {!leitor && <button type="button" className="btn ln blk" onClick={() => go('instagram')}><Icon n="insta" s={18} />Instagram</button>}
+      </div>
       {msg && <Note>{msg === 'google' ? 'O acesso com Google ainda não está ativo.' : 'O acesso pelo Instagram depende da aprovação do app pela Meta e ainda não está ativo.'} Use o e-mail.</Note>}
       <div className="row"><div className="sep sp" /><span className="xs mut">ou com e-mail</span><div className="sep sp" /></div>
     </div>
@@ -175,9 +177,11 @@ function ApplyForm({ me, voltar }) {
     <form onSubmit={submit} className="col" style={{ gap: 16 }}>
       <Head leitor={false} criar>Conta de criador: você pede o seu mapa e analisamos o perfil.{minF != null && <> Mínimo de {num(minF)} seguidores.</>}</Head>
       <Social leitor={false} criar voltar={voltar} />
+      <div className="au-two">
       <Field label="Seu @ no Instagram" id="a"><div className="in"><span className="mut">@</span><input id="a" value={f.handle} onChange={set('handle')} placeholder="seuperfil" autoComplete="off" required /></div></Field>
-      <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
       <Field label="@ no TikTok (opcional)" id="t"><div className="in"><input id="t" value={f.tiktok} onChange={set('tiktok')} placeholder="@seuperfil" autoComplete="off" /></div></Field>
+      </div>
+      <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
       <Check on={f.acceptTerms} onChange={(v) => setF({ ...f, acceptTerms: v })}>Sou o titular ou represento este perfil e aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>
       {err && <p className="err" role="alert">{err} {err.includes('Já existe') && <Link className="link" to="/entrar">Entrar</Link>}</p>}
       <button className="btn blk" disabled={busy}>Criar conta</button>

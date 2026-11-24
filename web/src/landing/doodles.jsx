@@ -172,12 +172,12 @@ const SETS = {
   g: [['ramen', 0, 'l', 8, -10, 150, -8, 9, 0], ['sushi', 0, 'r', 14, -4, 120, 10, 10, .8], ['suitcase', 0, 'r', 66, 60, 100, -12, 9, .3], ['car', 0, 'l', 62, 40, 130, 0, 10, 1.1], ['circle', 4, 'l', 40, 8, 30, 0, 7, .5], ['plus', 1, 'r', 42, 6, 28, 12, 8, 0]],
   f: [['pizza', 0, 'l', 6, -34, 110, 12, 10, .5], ['backpack', 0, 'r', 72, -30, 100, -10, 9, 0], ['tri', 3, 'r', 10, 30, 40, 18, 8, 1]],
 }
-export function Floaters({ set }) {
+export function Floaters({ set, outline = false }) {
   const items = SETS[set] || []
   return (
     <div className="fl-layer" aria-hidden="true">
       {items.map(([k, ci, side, top, off, size, rot, dur, delay], i) => (
-        <Doodle key={i} k={k} c={PALETTE[ci]} size={size} className={'fl' + (i > 1 ? ' fl-x' : '')}
+        <Doodle key={i} k={k} c={PALETTE[ci]} size={size} className={'fl' + (i > 1 ? ' fl-x' : '') + (outline ? ' dd-out' : '')}
           style={{ [side === 'l' ? 'left' : 'right']: `max(${off}px, calc((100vw - 1200px) / 2 + ${off}px))`, top: `${top}%`, '--r': `${rot}deg`, '--dur': `${dur}s`, '--dl': `${delay}s` }} />
       ))}
     </div>
