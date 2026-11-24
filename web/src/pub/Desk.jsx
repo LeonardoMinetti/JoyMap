@@ -113,7 +113,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   )
 
   return (
-    <div className="dk" style={{ '--dw': `${dw}px` }}>
+    <div className="dkroot" style={{ '--dw': `${dw}px` }}>
       <section className="dk-side" aria-label="Lugares do mapa">
         <header className="dk-head">
           <div className="dk-id">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}

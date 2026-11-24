@@ -133,7 +133,7 @@
 
 
 /* computador: painel largo com o conteúdo à esquerda e o mapa à direita */
-.dk{display:flex;height:100dvh;background:var(--bg);color:var(--fg);font-family:var(--pf)}
+.dkroot{display:flex;height:100dvh;background:var(--bg);color:var(--fg);font-family:var(--pf)}
 .dk-side{width:var(--dw);flex:none;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);position:relative;z-index:2}
 .dk-head{padding:20px 28px 0;flex:none}
 .dk-id{display:flex;align-items:center;gap:12px}.dk-id .pav{width:46px;height:46px;font-size:20px;flex:none}.dk-id .pt{display:block;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
