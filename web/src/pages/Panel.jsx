@@ -112,7 +112,7 @@ export function Searches() {
       <div className="card col" style={{ gap: 4, padding: 12 }}>
         {rows.map((x) => (
           <div key={x.term} className="srch">
-            <div className="sp col" style={{ gap: 6 }}><div className="row jb"><b><span aria-hidden="true" style={{ marginRight: 8 }}>{termEmoji(x.term)}</span>{x.term}</b><span className="xs mut">{x.count} busca{x.count === 1 ? '' : 's'}</span></div>
+            <div className="sp col" style={{ gap: 6 }}><div className="row jb"><b><span aria-hidden="true" style={{ marginRight: 10, fontSize: 28, lineHeight: 1, verticalAlign: 'middle' }}>{termEmoji(x.term)}</span>{x.term}</b><span className="xs mut">{x.count} busca{x.count === 1 ? '' : 's'}</span></div>
               <div className="hb split" title={`${x.withResults} com resultado, ${x.empty} sem`}><i style={{ width: `${(x.withResults / mx) * 100}%` }} /><i className="warn" style={{ width: `${(x.empty / mx) * 100}%` }} /></div></div>
             {x.empty > 0 ? <><span className="tag wn">{x.empty} sem resultado</span><Link className="btn sm" to={`/adicionar?q=${encodeURIComponent(x.term)}`}>Indicar lugar</Link></> : <span className="tag ok">Atendida</span>}
           </div>))}
