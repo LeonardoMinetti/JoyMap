@@ -10,7 +10,7 @@ import { withBase } from './base.js'
 
 // Para onde o botão do topo leva quem já entrou, conforme o tipo de conta
 export const homeLink = (me) => me.user.role === 'admin' ? null : me.user.role === 'restaurant' ? ['Meu painel', '/restaurante'] : me.user.role === 'viewer' && !me.creator ? ['Meus salvos', '/salvos'] : ['Meu painel', '/painel']
-export const Logo = ({ size = 34, to = '/' }) => <Link className="logo" to={to} aria-label="JoyMap"><img src={logoUrl} alt="JoyMap" style={{ height: size }} /></Link>
+export const Logo = ({ size = 44, to = '/' }) => <Link className="logo" to={to} aria-label="JoyMap"><img src={logoUrl} alt="JoyMap" style={{ height: size }} /></Link>
 
 // Barra do site: flutuante, transparente sobre o hero e cápsula ao rolar
 const NAV = [['Como funciona', '/#como-funciona'], ['Exemplos', '/#exemplos'], ['Insights', '/#insights'], ['Planos', '/#planos'], ['Perguntas', '/perguntas']]

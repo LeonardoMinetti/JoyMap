@@ -8,3 +8,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 |---|---|---|---|---|
 | 001 | 2026-11-24 16:05 | site | Rótulo da seção de monetização | `deploy/site/001-rotulo-da-secao-de-monetizacao` |
 | 002 | 2026-11-24 16:08 | site | Remove o botão Pausar animações | `deploy/site/002-remove-o-botao-pausar-animacoes` |
+| 003 | 2026-11-24 17:31 | conteudo | Novo logotipo JoyMap | `deploy/conteudo/003-novo-logotipo-joymap` |

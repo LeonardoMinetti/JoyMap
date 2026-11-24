@@ -167,7 +167,7 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .btn.dk{background:var(--ink);color:#fff}.btn.ln{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}.btn.sec{background:#fff}
 .topbar{background:var(--acc);border-bottom:0}.topbar .it{text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink)}.topbar .it.on{background:rgba(23,23,19,.12)}
 .topbar .btn:not(.ln){background:var(--ink);color:#fff}
-.logo{display:inline-flex;align-items:center}.logo img{height:34px;width:auto;display:block}
+.logo{display:inline-flex;align-items:center}.logo img{height:44px;width:auto;display:block}
 .eb,.lb,.tag{letter-spacing:.06em}
 .card{border-radius:20px}
 .hd{text-transform:none;font-family:var(--disp)}
