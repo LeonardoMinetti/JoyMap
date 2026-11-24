@@ -376,15 +376,20 @@ test('categorias próprias: nome limpo, tipo de base, limite e sem criar novas f
 })
 
 test('roteiro à venda e produtos: só nos planos certos, preço limitado, prévia trancada', async () => {
-  const { cleanOffer, cleanProducts, lockRoute, netOf } = await import('../server/offers.js')
+  const { cleanOffer, cleanProducts, lockRoute, netOf, logoUriFromSvg, cleanLogo } = await import('../server/offers.js')
+  const LOGO = logoUriFromSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10z"/></svg>')
+  assert.equal(cleanLogo(LOGO), LOGO)
+  const bad = (t) => assert.throws(() => logoUriFromSvg(t))
+  bad('<svg><script>alert(1)</script></svg>'); bad('<svg onload="x()"></svg>'); bad('<svg><image href="https://e.com/a.png"/></svg>'); bad('<svg><a href="https://e.com"/></svg>'); bad('não é svg')
+  assert.equal(cleanLogo('data:image/png;base64,iVBORw0KGgo='), null)
   const r = { price: '19.4', products: [{ title: ' Guia ', url: 'https://x.com/a', price: 'R$ 9', image: '/photos/cafe.jpg' }, { title: 'Sem foto', url: 'https://x.com/b' }, { title: 'Ruim', url: 'javascript:alert(1)', image: '/photos/cafe.jpg' }, { title: '', url: 'https://x.com', image: '/photos/cafe.jpg' }, { title: 'Foto ruim', url: 'https://x.com/c', image: 'https://evil.com/a.jpg' }] }
   assert.deepEqual(cleanOffer(r, 'free'), { price: null, products: [], sponsor: null })
-  const cr = cleanOffer({ ...r, sponsor: { brand: 'Marca', logo: 'data:image/png;base64,iVBORw0KGgo=' } }, 'creator')
+  const cr = cleanOffer({ ...r, sponsor: { brand: 'Marca', logo: LOGO } }, 'creator')
   assert.equal(cr.price, 19); assert.equal(cr.products.length, 1); assert.equal(cr.sponsor, null)
-  const sp = cleanOffer({ sponsor: { brand: '  Marca  X ', logo: 'data:image/png;base64,iVBORw0KGgo=' } }, 'pro').sponsor
-  assert.deepEqual(sp, { brand: 'Marca X', logo: 'data:image/png;base64,iVBORw0KGgo=' })
+  const sp = cleanOffer({ sponsor: { brand: '  Marca  X ', logo: LOGO } }, 'pro').sponsor
+  assert.deepEqual(sp, { brand: 'Marca X', logo: LOGO })
   assert.equal(cleanOffer({ sponsor: { brand: 'Marca sem logo' } }, 'pro').sponsor, null)
-  assert.equal(cleanOffer({ sponsor: { brand: 'M', logo: 'data:image/svg+xml;base64,AAAA' } }, 'pro').sponsor, null)
+  assert.equal(cleanOffer({ sponsor: { brand: 'M', logo: 'data:image/png;base64,iVBORw0KGgo=' } }, 'pro').sponsor, null)
   assert.equal(cleanOffer({ sponsor: { brand: '  ' } }, 'pro').sponsor, null)
   const pro = cleanOffer(r, 'pro')
   assert.equal(pro.price, 19); assert.equal(pro.products.length, 1); assert.equal(pro.products[0].title, 'Guia')

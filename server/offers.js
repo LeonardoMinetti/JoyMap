@@ -24,11 +24,25 @@ export function cleanProducts(input) {
   return out
 }
 
-// Roteiro patrocinado (Pro): marca parceira com nome e logo (obrigatórios) (imagem pequena, enviada como data URI). Sempre identificado como patrocinado.
-const LOGO = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+// Roteiro patrocinado (Pro): marca parceira com nome e logo em SVG de fundo transparente (obrigatórios).
+// O SVG é mostrado só dentro de <img> (sem scripts), e mesmo assim removemos tudo que possa executar ou buscar algo de fora.
+const SVG_PREFIX = 'data:image/svg+xml;base64,'
+const b64enc = (t) => { const bytes = new TextEncoder().encode(t); let bin = ''; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin) }
+const b64dec = (x) => new TextDecoder().decode(Uint8Array.from(atob(x), (c) => c.charCodeAt(0)))
+export function cleanLogoSvg(src) {
+  const t = String(src || '').trim()
+  if (t.length > 60000 || !/<svg[\s>]/i.test(t)) return null
+  if (/<\s*(script|foreignObject|image|iframe|object|embed|audio|video|animate|set)\b|\son\w+\s*=|javascript:|<!ENTITY|<!DOCTYPE|@import|url\(\s*['"]?\s*(https?:|\/\/|data:)|(xlink:)?href\s*=\s*['"]\s*(?!#)/i.test(t)) return null
+  return /xmlns\s*=/.test(t) ? t : t.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"')
+}
+export const logoUriFromSvg = (text) => { const c = cleanLogoSvg(text); if (!c) throw new Error('svg_invalido'); return SVG_PREFIX + b64enc(c) }
+export function cleanLogo(v) {
+  if (typeof v !== 'string' || !v.startsWith(SVG_PREFIX) || v.length > 90000) return null
+  try { const c = cleanLogoSvg(b64dec(v.slice(SVG_PREFIX.length))); return c ? SVG_PREFIX + b64enc(c) : null } catch { return null }
+}
 export function cleanSponsor(v) {
   const brand = txt(v?.brand, 40)
-  const logo = typeof v?.logo === 'string' && v.logo.length <= 60000 && LOGO.test(v.logo) ? v.logo : null
+  const logo = cleanLogo(v?.logo)
   return brand && logo ? { brand, logo } : null // sem nome e logo da marca o patrocínio não vai ao ar
 }
 

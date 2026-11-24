@@ -20,7 +20,8 @@ const AccountPage = ({ tab, children }) => (
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
-import { resizeLogo, resizeImage } from '../lib/image.js'
+import { resizeImage } from '../lib/image.js'
+import { logoUriFromSvg } from '../../../server/offers.js'
 import { withBase } from '../lib/base.js'
 import { termEmoji } from '../lib/termEmoji.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
@@ -476,13 +477,13 @@ export function Roteiros() {
                 {r.sponsor && <>
                   <div className="g2" style={{ alignItems: 'end' }}>
                     <Field label="Nome da marca parceira" id="sb"><div className="in"><input id="sb" value={r.sponsor.brand} maxLength="40" placeholder="Ex.: nome da marca" onChange={(e) => set({ sponsor: { ...r.sponsor, brand: e.target.value } })} /></div></Field>
-                    <div className="col" style={{ gap: 6 }}><span className="lb">Logo da marca (obrigatório)</span>
+                    <div className="col" style={{ gap: 6 }}><span className="lb">Logo da marca em SVG, fundo transparente (obrigatório)</span>
                       <div className="row" style={{ gap: 8 }}>
-                        <label className="btn ln sm" style={{ cursor: 'pointer' }}>{r.sponsor.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/png,image/jpeg,image/webp" className="sr" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { set({ sponsor: { ...r.sponsor, logo: await resizeLogo(f) } }) } catch { toast('Use uma imagem PNG, JPG ou WebP.') } }} /></label>
-                        {r.sponsor.logo && <><img src={r.sponsor.logo} alt="Logo enviado" style={{ height: 36, maxWidth: 90, objectFit: 'contain', background: '#fff', borderRadius: 8, padding: 3, border: '1px solid #ddd' }} /><button className="btn ln sm" onClick={() => set({ sponsor: { ...r.sponsor, logo: null } })}>Tirar</button></>}
+                        <label className="btn ln sm" style={{ cursor: 'pointer' }}>{r.sponsor.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/svg+xml,.svg" className="sr" onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; try { set({ sponsor: { ...r.sponsor, logo: logoUriFromSvg(await f.text()) } }) } catch { toast('Envie o logo em SVG, com fundo transparente e sem scripts ou links externos.') } }} /></label>
+                        {r.sponsor.logo && <><img src={r.sponsor.logo} alt="Logo enviado" style={{ height: 32, maxWidth: 120, objectFit: 'contain', background: '#fff', borderRadius: 8, padding: 6, border: '1px solid #ddd' }} /><button className="btn ln sm" onClick={() => set({ sponsor: { ...r.sponsor, logo: null } })}>Tirar</button></>}
                       </div></div>
                   </div>
-                  <div className="xs mut">Só use a marca de quem você tem acordo. O seguidor sempre vê "Roteiro patrocinado". Sem o nome e o logo da marca, o patrocínio não vai ao ar.</div>
+                  <div className="xs mut">Só use a marca de quem você tem acordo. O seguidor sempre vê "Roteiro patrocinado". Use o logo oficial em SVG vazado (sem fundo). Sem o nome e o logo da marca, o patrocínio não vai ao ar.</div>
                 </>}
               </> : <div className="row" style={{ gap: 10 }}><Icon n="lock" s={16} /><div className="sp sm">Roteiros patrocinados com marcas parceiras estão disponíveis no plano Pro.</div><Link to="/painel/plano" className="btn ln sm">Ver planos</Link></div>}
             </div>
