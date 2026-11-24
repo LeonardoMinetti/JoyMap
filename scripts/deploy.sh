@@ -11,7 +11,7 @@ CAT="${1:-}"; NOME="${2:-}"
 [[ " $CATS " == *" $CAT "* && -n "$NOME" ]] || { echo "uso: scripts/deploy.sh <categoria> \"<nome>\"   categorias: $CATS"; exit 1; }
 npm test --silent >/dev/null
 N=$(printf '%03d' $(( $(git tag -l 'deploy/*' | wc -l) + 1 )))
-SLUG=$(printf '%s' "$NOME" | iconv -f utf8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//' | cut -c1-40)
+SLUG=$(python3 -c 'import sys,re,unicodedata; t=unicodedata.normalize("NFKD", sys.argv[1]).encode("ascii","ignore").decode().lower(); print(re.sub(r"[^a-z0-9]+","-",t).strip("-")[:40])' "$NOME")
 TAG="deploy/$CAT/$N-$SLUG"
 DATA=$(date '+%Y-%m-%d %H:%M')
 [ -f DEPLOYS.md ] || printf '# Deploys\n\nCada deploy é nomeado e categorizado: `[categoria] nome`. Tag: `deploy/<categoria>/NNN-slug`.\n\n| Nº | Data | Categoria | Nome | Tag |\n|---|---|---|---|---|\n' > DEPLOYS.md
