@@ -52,7 +52,7 @@ function seed(d) {
       settings: { autoConfirmHigh: false, bioLinkIg: false, bioLinkTiktok: false, paused: false, adminPaused: false },
       domain: { name: null, status: 'none' }, hasCover: false, symbols: [], meta: { instagramReady: false, tiktokReady: false },
     },
-    places, photo, routes: DEMO_ROUTES.map((r) => ({ ...r, price: r.id === 1 ? 19 : null, sponsor: r.id === 3 ? { brand: 'Marca Exemplo', logo: null } : null, products: r.id === 1 ? [{ title: 'Guia de bolso: Liberdade', url: 'https://example.com/guia-liberdade', price: 'R$ 29' }, { title: 'Kit de hashis de viagem', url: 'https://example.com/hashis', price: '' }] : [] })), unlocked: [], interest: false, consentLog: [], notices: [],
+    places, photo, routes: DEMO_ROUTES.map((r) => ({ price: null, products: [], sponsor: null, ...r, ...(r.id === 1 ? { price: 19 } : {}) })), unlocked: [], interest: false, consentLog: [], notices: [],
   }
 }
 async function S() {

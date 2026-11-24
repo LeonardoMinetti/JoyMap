@@ -45,10 +45,21 @@ export const DEMO_ROUTES = [
     { placeId: null, when: 'Dia 1 · começo da tarde', title: 'Uma volta pelo bairro', text: 'Sobrou tempo antes do próximo destino? Caminhe pelas ruas ao redor, entre nas lojinhas e deixe a digestão ajudar.', tip: '' },
     { placeId: 11, when: 'Dia 1 · fim da tarde', title: 'Fecha com um ramen', text: 'A poucas quadras dali, o caldo é o forte da casa. Dá para comer em dez minutos ou ficar uma hora conversando.', tip: 'Peça o ovo extra.' },
   ] },
+  // Roteiro com produtos (plano Criador em diante): a história leva ao que o criador usa em casa
   { id: 2, name: 'Cafés para ficar mais um pouco', note: 'Pinheiros, Vila Madalena e Paulista', placeIds: [2, 4, 12], stops: [
-    { placeId: 2, when: 'Manhã', title: 'Brunch sem pressa', text: 'Para quem gosta de começar o dia devagar: mesa grande, pão quente e café coado.', tip: 'Fim de semana enche, chegue antes das 10h.' },
-    { placeId: 4, when: 'Meio da tarde', title: 'O café para trabalhar', text: 'Tomadas, luz boa e um latte que não esfria na primeira meia hora.', tip: '' },
-    { placeId: 12, when: 'Fim do dia', title: 'Último café, na Paulista', text: 'Para fechar o roteiro com uma xícara e a avenida acendendo lá fora.', tip: '' },
+    { placeId: 2, when: 'Sábado · 9h40', title: 'Brunch sem pressa', text: 'A fila ainda está só no começo e a mesa grande do fundo está livre: é a que eu sempre peço. Começo pelo pão de fermentação longa com manteiga e um café coado que chega à mesa ainda soltando vapor. A ideia aqui não é correr, é abrir o dia devagar, de conversa em conversa. Esse café eu repito em casa com o moedor manual que deixei nos produtos, no fim do roteiro.', tip: 'Peça o pão quente com a manteiga da casa e reserve a mesa grande pelo Instagram.' },
+    { placeId: 4, when: 'Sábado · 15h', title: 'O café para trabalhar', text: 'Depois do almoço o plano muda: notebook na bolsa e ninguém me chama. Aqui tem tomada em quase toda mesa, a luz da janela bate de lado, sem refletir na tela, e o latte não esfria na primeira meia hora. Foi nessa mesa que escrevi metade dos roteiros deste mapa.', tip: 'Sente perto da janela dos fundos: é onde ficam as tomadas e o silêncio.' },
+    { placeId: 12, when: 'Sábado · 18h', title: 'Último café, na Paulista', text: 'A avenida acende enquanto a xícara esfria. Fecho o roteiro aqui, de pé no balcão, vendo o movimento da Paulista virar noite. Um expresso curto, sem açúcar, e a sensação de que o dia rendeu. Se quiser levar um pedaço disso para casa, deixei abaixo a caneca que uso e o guia de bolso que me acompanha.', tip: 'Vá perto das 18h: a luz da avenida nessa hora vale o café.' },
+  ], products: [
+    { title: 'Moedor manual de café', url: 'https://example.com/moedor-manual', price: 'R$ 189' },
+    { title: 'Caneca de cerâmica esmaltada', url: 'https://example.com/caneca', price: 'R$ 79' },
+    { title: 'Guia de bolso: cafés de São Paulo', url: 'https://example.com/guia-cafes-sp', price: 'R$ 39' },
   ] },
-  { id: 3, name: 'Noite no centro', note: 'Bar, pizza e sobremesa', placeIds: [7, 9, 6, 10] },
+  // Roteiro patrocinado (plano Pro): marca fictícia, só para o exemplo
+  { id: 3, name: 'Uma noite, quatro bairros', note: 'Bar, pizza, sobremesa e um último lanche', placeIds: [7, 9, 6, 10], sponsor: { brand: 'Cartão Aurora', logo: null }, stops: [
+    { placeId: 7, when: 'Sexta · 19h', title: 'Começa no centro', text: 'Este roteiro foi feito em parceria com o Cartão Aurora, uma marca fictícia criada só para este exemplo. A noite começa quando os escritórios esvaziam e o bar enche aos poucos. Peço a primeira rodada no balcão e deixo o resto sem horário: é aqui que a noite escolhe para onde vai.', tip: 'Pague a primeira rodada no balcão para não perder a mesa.' },
+    { placeId: 9, when: 'Sexta · 21h', title: 'Pizza que sai em dois minutos', text: 'O forno é a lenha, a massa é fina de borda alta e a primeira fatia some antes de a conversa recomeçar. Dividi com três amigos e ainda sobrou espaço para o resto da noite, que era o plano.', tip: 'Peça meio a meio: dá para provar dois sabores sem briga.' },
+    { placeId: 6, when: 'Sexta · 23h', title: 'Sobremesa tarde, que vale mais', text: 'A vitrine ainda está cheia e a mousse de chocolate com sal é a que entra em todo roteiro meu. Comer doce depois da meia-noite tem outro sabor, e aqui ninguém olha o relógio.', tip: 'Os doces de vitrine acabam por volta de 23h30.' },
+    { placeId: 10, when: 'Sábado · 1h', title: 'Fecha com uma tapioca', text: 'Final de noite honesto: tapioca na chapa, queijo coalho derretendo e a rua ainda acesa. Pago a conta, volto a pé até o carro e a noite termina do jeito que começou, sem pressa.', tip: 'Leve dinheiro trocado: a chapa é pequena e o caixa é simples.' },
+  ] },
 ]
