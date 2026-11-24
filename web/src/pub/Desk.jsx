@@ -8,7 +8,7 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 
 // Mapa no computador: painel largo com o conteúdo à esquerda e o mapa à direita (organização inspirada em guias como o Viver SP),
 // com o mesmo design do celular: cores, fonte, cantos, chips e cartões do criador.
-const NAV = [['home', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
+const NAV = [['home', 'Início', 'store'], ['bairros', 'Bairros', 'map', true], ['categorias', 'Categorias', 'grid', true], ['roteiros', 'Roteiros', 'route']]
 
 function Card({ p, theme, saved, onOpen, preview }) {
   const cat = catOf(theme, p.category)
@@ -72,6 +72,12 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const [routeId, setRouteId] = useState(initialRouteId)
   const [dw, setDw] = useState(() => Math.round(Math.min(860, Math.max(560, innerWidth * 0.54))))
   useEffect(() => { const r = () => setDw(Math.round(Math.min(860, Math.max(560, innerWidth * 0.54)))); window.addEventListener('resize', r); return () => window.removeEventListener('resize', r) }, [])
+  const [pop, setPop] = useState(null) // menu aberto: 'bairros' | 'categorias'
+  const closeT = React.useRef(null)
+  const openPop = (k) => { clearTimeout(closeT.current); setPop(k) }
+  const closePop = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setPop(null), 160) }
+  useEffect(() => { if (!pop) return; const k = (e) => e.key === 'Escape' && setPop(null); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [pop])
+  const pickMenu = (fn) => { fn(); setPop(null); setView('home'); setRouteId(null); if (fichaPlace) go('/') }
   const scroller = React.useRef(null)
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }) }, [fichaPlace?.id, view, routeId])
   const route = routeId != null ? data.routes.find((r) => r.id === routeId) : null
@@ -87,8 +93,6 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
 
   let body
   if (fichaPlace) body = <DeskFicha place={fichaPlace} data={data} ctx={ctx} others={others} onOpen={openFicha} onBack={() => go('/')} />
-  else if (view === 'bairros') body = <><p className="dk-lead">Escolha um bairro para ver só os lugares dele.</p><div className="dk-tiles"><button type="button" className="dk-tile" onClick={() => { f.setHoods([]); setView('home') }}><b>Todos os bairros</b><i>{places.length}</i></button>{hoods.map(([h, n]) => <button key={h} type="button" className="dk-tile" onClick={() => { f.setHoods([h]); setView('home') }}><b>{h}</b><i>{n}</i></button>)}</div></>
-  else if (view === 'categorias') body = <><p className="dk-lead">Veja os lugares por tipo.</p><div className="dk-tiles"><button type="button" className="dk-tile" onClick={() => { f.setCats([]); setView('home') }}><b>Todas as categorias</b><i>{places.length}</i></button>{usedCats.map((c) => { const { n, sym } = symOf(c, creator.symbols); return <button key={c.id} type="button" className="dk-tile" onClick={() => { f.setCats([c.id]); setView('home') }}><span className="ms-oi" style={{ background: c.color }}><Icon n={n} sym={sym} s={16} c="#fff" /></span><b>{c.name}</b><i>{places.filter((p) => p.category === c.id).length}</i></button> })}</div></>
   else if (view === 'roteiros') body = <>{(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}<div className="dk-routes">{(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
     <button key={r.id} type="button" className="ms-route" style={r.color ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => { setRouteId(r.id); setView('route') }}>
       <b className="pt">{r.name}</b>{r.note && <span>{r.note}</span>}<hr />
@@ -117,10 +121,20 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
             <button type="button" className="ms-ib" aria-label="Salvos" onClick={() => nav('salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
             <button type="button" className="ms-ib" aria-label="Compartilhar" onClick={onShare}><Icon n="share" s={20} c="currentColor" /></button>
           </div>
-          <nav className="dk-nav" aria-label="Navegação do mapa">
-            {NAV.map(([k, l, ic]) => <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onClick={() => { nav(k); if (k === 'home') { f.clear?.(); f.setHoods?.([]) } }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
-            <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
-          </nav>
+          <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
+            <nav className="dk-nav" aria-label="Navegação do mapa">
+              {NAV.map(([k, l, ic, menu]) => menu
+                ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
+                : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k); if (k === 'home') { f.clear?.(); f.setHoods?.([]) } }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
+              <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
+            </nav>
+            {pop && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? 'Bairros' : 'Categorias'}>
+              {pop === 'bairros'
+                ? <>{hoods.map(([h, n]) => <button key={h} type="button" role="menuitem" className={f.hoods?.length === 1 && f.hoods[0] === h ? 'on' : ''} onClick={() => pickMenu(() => f.setHoods([h]))}>{h}<i>{n}</i></button>)}</>
+                : <>{usedCats.map((c) => <button key={c.id} type="button" role="menuitem" className={f.cats.length === 1 && f.cats[0] === c.id ? 'on' : ''} onClick={() => pickMenu(() => f.setCats([c.id]))}>{c.name}<i>{places.filter((p) => p.category === c.id).length}</i></button>)}</>}
+              <button type="button" role="menuitem" className="all" onClick={() => pickMenu(() => (pop === 'bairros' ? f.setHoods([]) : f.setCats([])))}>{pop === 'bairros' ? 'Todos os bairros' : 'Todas as categorias'}</button>
+            </div>}
+          </div>
         </header>
         <div className="dk-scroll" ref={scroller}>
           {body}

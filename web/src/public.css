@@ -137,7 +137,8 @@
 .dk-side{width:var(--dw);flex:none;display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line);position:relative;z-index:2}
 .dk-head{padding:20px 28px 0;flex:none}
 .dk-id{display:flex;align-items:center;gap:12px}.dk-id .pav{width:46px;height:46px;font-size:20px;flex:none}.dk-id .pt{display:block;line-height:1.05;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dk-nav{display:flex;align-items:center;gap:4px;margin-top:14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 0}
+.dk-head{position:relative;z-index:30}.dk-navwrap{position:relative;margin-top:14px}
+.dk-nav{display:flex;align-items:center;gap:4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 0}
 .dk-nav>button{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--mut);font:600 12px var(--pf);text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
 .dk-nav>button:hover{color:var(--fg)}.dk-nav>button.on{color:var(--fg);background:var(--soft);box-shadow:inset 0 -3px 0 var(--acc)}
 .dk-search{margin-left:auto;display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:99px;background:var(--soft);min-width:0;width:260px;flex:0 1 260px}
@@ -162,3 +163,13 @@
 .dk-fi-info{display:flex;flex-direction:column;gap:14px;min-width:0}.dk-p{margin:4px 0 2px;font-size:15px;line-height:1.5}
 .dk-sec2{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:20px}
 @media (max-width:1180px){.dk-fi-top{grid-template-columns:1fr}.dk-search{width:200px;flex-basis:200px}}
+
+/* menus de bairros e categorias: abrem ao passar o mouse, com chips na cor principal */
+.dk-nav>button.open{color:var(--fg);background:var(--soft)}
+.dk-pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:var(--bg);color:var(--fg);border-radius:min(var(--r),18px);box-shadow:0 16px 44px rgba(0,0,0,.2),0 0 0 1px var(--line);padding:16px;display:flex;flex-wrap:wrap;gap:8px;max-height:min(56vh,420px);overflow-y:auto;animation:msFade .15s}
+.dk-pop button{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:min(var(--r),12px);padding:9px 14px;background:var(--acc);color:var(--onacc);font:700 13px var(--pf);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.dk-pop button i{font-style:normal;font-weight:600;font-size:11px;opacity:.7}
+.dk-pop button:hover,.dk-pop button:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2);outline:0}
+.dk-pop button.on{background:var(--fg);color:var(--bg)}
+.dk-pop button.all{background:var(--soft);color:var(--fg);margin-left:auto}
+@media (prefers-reduced-motion:reduce){.dk-pop{animation:none}.dk-pop button{transition:none}}
