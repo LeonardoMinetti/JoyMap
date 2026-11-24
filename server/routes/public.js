@@ -29,8 +29,8 @@ export default function publicRoutes(app, x) {
     const places = livePlaces(row.id).map((p) => pubPlace(p, row.slug))
     const ids = new Set(places.map((p) => p.id))
     const blocks = Object.fromEntries(v.theme.layout.blocks.map((b) => [b.id, b.on]))
-    const routes = db.prepare('SELECT id, name, note, color, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
-      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)) })).filter((r) => r.placeIds.length)
+    const routes = db.prepare('SELECT id, name, note, color, place_ids, stops FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
+      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => r.placeIds.length || r.stops.length)
     return c.json({
       creator: {
         handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme,

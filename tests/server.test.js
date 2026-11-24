@@ -326,3 +326,19 @@ test('tema: a cor do texto sai do fundo e sempre passa no contraste; cor princip
   assert.equal(accentProblem({ accent: '#fefefe', bg: '#ffffff' }), 'cor_principal_igual_ao_fundo')
   assert.equal(accentProblem({ accent: '#ffc400', bg: '#ffffff' }), null)
 })
+
+test('roteiro como história: paradas só com lugares do criador, limites e texto sem lugar', async () => {
+  const { cleanStops } = await import('../server/stops.js')
+  const own = new Set([1, 2])
+  const r = cleanStops([
+    { placeId: 1, title: 'A', when: 'Dia 1', text: 'História', tip: 'Dica' },
+    { placeId: 99, title: '', text: 'Lugar de outro criador vira só texto' },
+    { placeId: null, title: '', text: '' }, // vazia: descartada
+    { placeId: 2, text: 'x'.repeat(900) },
+  ], own)
+  assert.equal(r.length, 3)
+  assert.equal(r[0].placeId, 1)
+  assert.equal(r[1].placeId, null)
+  assert.equal(r[2].text.length, 600)
+  assert.equal(cleanStops(new Array(50).fill({ placeId: 1 }), own).length, 30)
+})

@@ -4,7 +4,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
-import { PlacePhoto, sub, useMemoColors, NoResult } from './shared.jsx'
+import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody } from './shared.jsx'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
 // inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
@@ -153,10 +153,11 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
+          {route ? <RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
-            : <div className="ms-list">{shown.map(row)}</div>}
+            : <div className="ms-list">{shown.map(row)}</div>}</>}
           {!preview && <div className="pfoot">Mapa feito com <b>wagli</b></div>}
         </div>
       </section>

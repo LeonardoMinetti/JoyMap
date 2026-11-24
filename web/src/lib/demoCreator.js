@@ -4,6 +4,7 @@
 import { sanitizeTheme, sanitizeSvg, accentProblem } from '../../../server/theme.js'
 import { extract, tiktokId } from '../../../server/extract.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js'
+import { cleanStops } from '../../../server/stops.js'
 import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG } from '../demoData.js'
 import { BASE, withBase } from './base.js'
 
@@ -188,7 +189,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/creator/routes' && method === 'GET') return { routes: s.routes }
   if (p === '/creator/routes' && method === 'PUT') {
     const own = new Set(s.places.map((v) => v.id))
-    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => ({ id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30) })).filter((r) => r.name)
+    s.routes = (Array.isArray(body.routes) ? body.routes : []).slice(0, 12).map((r, i) => { const stops = cleanStops(r.stops, own); const ids = stops.length ? [...new Set(stops.map((v) => v.placeId).filter(Boolean))] : (r.placeIds || []).map(Number).filter((n) => own.has(n)).slice(0, 30); return { id: r.id || s.nextId++ + i, name: String(r.name || '').trim().slice(0, 40), note: String(r.note || '').slice(0, 60), color: /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, placeIds: ids, stops } }).filter((r) => r.name)
     return out({ ok: true })
   }
   if (p === '/creator/domain') throw err('estatico', 503)
@@ -201,7 +202,7 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
     const ids = new Set(live.map((x) => x.id))
     return {
       creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
-      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, placeIds: r.placeIds.filter((i) => ids.has(i)) })).filter((r) => r.placeIds.length),
+      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => r.placeIds.length || r.stops.length),
     }
   }
   return null // não é do painel: quem chamou segue o caminho padrão

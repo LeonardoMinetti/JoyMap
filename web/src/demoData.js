@@ -40,7 +40,15 @@ export const MIXED_POOL = ['pizza', 'sushi', 'burger', 'bolo', 'tacos', 'croissa
 
 // Roteiros de demonstração (listas de lugares fictícios)
 export const DEMO_ROUTES = [
-  { id: 1, name: 'Liberdade a pé', note: 'Izakaya e ramen em poucas quadras', placeIds: [1, 11] },
-  { id: 2, name: 'Cafés para ficar mais um pouco', note: 'Pinheiros, Vila Madalena e Paulista', placeIds: [2, 4, 12] },
+  { id: 1, name: 'Liberdade a pé', note: 'Izakaya e ramen em poucas quadras', placeIds: [1, 11], stops: [
+    { placeId: 1, when: 'Dia 1 · almoço', title: 'Começa pelo izakaya', text: 'Chegue cedo: a casa é pequena e a fila cresce depois das 12h30. Peça os espetinhos para dividir e deixe o sushi para o fim.', tip: 'Sem reserva, vá na abertura.' },
+    { placeId: null, when: 'Dia 1 · começo da tarde', title: 'Uma volta pelo bairro', text: 'Sobrou tempo antes do próximo destino? Caminhe pelas ruas ao redor, entre nas lojinhas e deixe a digestão ajudar.', tip: '' },
+    { placeId: 11, when: 'Dia 1 · fim da tarde', title: 'Fecha com um ramen', text: 'A poucas quadras dali, o caldo é o forte da casa. Dá para comer em dez minutos ou ficar uma hora conversando.', tip: 'Peça o ovo extra.' },
+  ] },
+  { id: 2, name: 'Cafés para ficar mais um pouco', note: 'Pinheiros, Vila Madalena e Paulista', placeIds: [2, 4, 12], stops: [
+    { placeId: 2, when: 'Manhã', title: 'Brunch sem pressa', text: 'Para quem gosta de começar o dia devagar: mesa grande, pão quente e café coado.', tip: 'Fim de semana enche, chegue antes das 10h.' },
+    { placeId: 4, when: 'Meio da tarde', title: 'O café para trabalhar', text: 'Tomadas, luz boa e um latte que não esfria na primeira meia hora.', tip: '' },
+    { placeId: 12, when: 'Fim do dia', title: 'Último café, na Paulista', text: 'Para fechar o roteiro com uma xícara e a avenida acendendo lá fora.', tip: '' },
+  ] },
   { id: 3, name: 'Noite no centro', note: 'Bar, pizza e sobremesa', placeIds: [7, 9, 6, 10] },
 ]

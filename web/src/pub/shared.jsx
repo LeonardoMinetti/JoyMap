@@ -149,3 +149,45 @@ export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, 
 export function useMemoColors(theme) {
   return useMemo(() => { const m = {}; for (const c of theme.categories) if (!/^custom:/.test(c.icon)) m[c.icon] = c.color; return m }, [theme.categories])
 }
+
+// ---------- roteiro como história: linha do tempo de paradas ----------
+// Um roteiro antigo, sem paradas, vira uma linha do tempo só com os lugares na ordem.
+export const routeStops = (route) => (route.stops?.length ? route.stops : route.placeIds.map((id) => ({ placeId: id })))
+export const hasStory = (route) => (route.stops || []).some((s) => s.text || s.title)
+export function RouteTimeline({ route, places, theme, openFicha, preview }) {
+  const stops = routeStops(route)
+  return (
+    <ol className="tl" aria-label={`Linha do tempo: ${route.name}`}>
+      {stops.map((st, i) => {
+        const p = st.placeId != null ? places.find((x) => x.id === st.placeId) : null
+        const title = st.title || p?.name || 'Parada'
+        return (
+          <li key={i} className="tl-i">
+            <span className={'tl-n' + (p ? '' : ' txt')} aria-hidden="true">{i + 1}</span>
+            <div className="tl-b">
+              {st.when && <span className="tl-w">{st.when}</span>}
+              <h3 className="pt">{title}</h3>
+              {p && <button type="button" className="tl-ph" aria-label={`Ver ${p.name}`} tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha?.(p.id)}><PlacePhoto place={p} theme={theme} aspect="16/9" style={{ width: '100%', borderRadius: 14 }} /></button>}
+              {st.text && <p>{st.text}</p>}
+              {st.tip && <div className="tl-tip"><b>Dica</b>{st.tip}</div>}
+              {p && <button type="button" className="tl-pl" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha?.(p.id)}><Icon n="pin" s={16} c="currentColor" /><span className="sp"><b className="sm">{p.name}</b><span className="xs" style={{ display: 'block', opacity: 0.7 }}>{sub(p, theme)}</span></span><Icon n="next" s={16} c="currentColor" /></button>}
+            </div>
+          </li>)
+      })}
+    </ol>
+  )
+}
+// Corpo de um roteiro aberto: escolhe como ver (linha do tempo, lista ou, no celular, o mapa)
+export function RouteBody({ route, places, theme, openFicha, renderList, onMap, preview }) {
+  const story = hasStory(route)
+  const [view, setView] = useState(story ? 'timeline' : 'list')
+  useEffect(() => { setView(story ? 'timeline' : 'list') }, [route.id])
+  const opts = [['timeline', 'Linha do tempo'], ['list', 'Lista'], ...(onMap ? [['map', 'Mapa']] : [])]
+  return (
+    <>
+      {route.note && <p className="ms-bio">{route.note}</p>}
+      <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
+      {view === 'timeline' ? <RouteTimeline route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} /> : renderList()}
+    </>
+  )
+}

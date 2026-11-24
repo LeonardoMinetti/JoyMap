@@ -6,7 +6,7 @@ import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle } from '../lib/
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
-import { PlacePhoto, pubVars } from '../pub/shared.jsx'
+import { PlacePhoto, RouteTimeline, pubVars } from '../pub/shared.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 
 const ACCOUNT_TABS = [['conta', 'Perfil', 'user', '/painel/conta'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'], ['plano', 'Plano e cobrança', 'card', '/painel/plano']]
@@ -282,6 +282,10 @@ function useReorder(list, set) {
 }
 let KEYN = 0
 const withKey = (r) => ({ ...r, _k: r._k || `k${++KEYN}` })
+const blankStop = (placeId = null) => ({ _k: `s${++KEYN}`, placeId, title: '', when: '', text: '', tip: '' })
+// um roteiro antigo, só com lugares, vira uma lista de paradas
+const normRoute = (r) => withKey({ ...r, stops: (r.stops?.length ? r.stops : (r.placeIds || []).map((id) => ({ placeId: id }))).map((v) => ({ _k: `s${++KEYN}`, placeId: v.placeId ?? null, title: v.title || '', when: v.when || '', text: v.text || '', tip: v.tip || '' })) })
+const stopIds = (r) => [...new Set(r.stops.map((v) => v.placeId).filter((v) => v != null))]
 
 // o mesmo cartão que o seguidor vê na aba Roteiros do mapa
 function RoutePreview({ route, places, theme }) {
@@ -307,31 +311,34 @@ export function Roteiros() {
   const [q, setQ] = useState('')
   const [cat, setCat] = useState('')
   const [on, setOn] = useState(null)
-  const load = () => api('/creator/routes').then((d) => { const r = d.routes.map(withKey); setRows(r); setOrig(JSON.stringify(r)) })
+  const load = () => api('/creator/routes').then((d) => { const r = d.routes.map(normRoute); setRows(r); setOrig(JSON.stringify(r)) })
   useEffect(() => { load(); api('/creator/interest').then((d) => setOn(d.listas)) }, [])
   const rowsSort = useReorder(rows || [], (n) => { const cur = rows[sel]; setRows(n); setSel(n.indexOf(cur)) })
   const r = rows?.[sel]
-  const placeSort = useReorder(r?.placeIds || [], (ids) => setRows(rows.map((x, j) => (j === sel ? { ...x, placeIds: ids } : x))))
+  const stopSort = useReorder(r?.stops || [], (n) => setRows(rows.map((x, j) => (j === sel ? { ...x, stops: n } : x))))
+  const [openStop, setOpenStop] = useState(null)
   if (!rows || !places) return <PanelPage active="roteiros"><Loading /></PanelPage>
   const confirmed = places.filter((p) => p.status === 'confirmed')
   const byId = new Map(places.map((p) => [p.id, p]))
   const dirty = JSON.stringify(rows) !== orig
   const set = (patch) => setRows(rows.map((x, j) => (j === sel ? { ...x, ...patch } : x)))
-  const add = () => { setRows([...rows, withKey({ name: '', note: '', placeIds: [] })]); setSel(rows.length) }
-  const remove = () => { if (r.placeIds.length && !confirm(`Remover o roteiro "${r.name || 'sem nome'}"?`)) return; setRows(rows.filter((_, j) => j !== sel)); setSel(Math.max(0, sel - 1)) }
-  const toggle = (id) => set({ placeIds: r.placeIds.includes(id) ? r.placeIds.filter((x) => x !== id) : [...r.placeIds, id] })
+  const add = () => { setRows([...rows, normRoute({ name: '', note: '', stops: [] })]); setSel(rows.length) }
+  const remove = () => { if (r.stops.length && !confirm(`Remover o roteiro "${r.name || 'sem nome'}"?`)) return; setRows(rows.filter((_, j) => j !== sel)); setSel(Math.max(0, sel - 1)) }
+  const toggle = (id) => set({ stops: r.stops.some((v) => v.placeId === id) ? r.stops.filter((v) => v.placeId !== id) : [...r.stops, blankStop(id)] })
+  const setStop = (k, patch) => set({ stops: r.stops.map((v) => (v._k === k ? { ...v, ...patch } : v)) })
+  const addText = () => { const b = blankStop(); set({ stops: [...r.stops, b] }); setOpenStop(b._k) }
   const save = async () => { await api('/creator/routes', { method: 'PUT', body: { routes: rows.filter((x) => x.name.trim()) } }); await load(); setSel(0); toast('Roteiros salvos (já valem no mapa publicado)') }
   const cats = theme.categories.filter((c) => confirmed.some((p) => p.category === c.id))
   const pool = confirmed.filter((p) => (!cat || p.category === cat) && (!q || `${p.name} ${p.neighborhood || ''}`.toLowerCase().includes(q.toLowerCase())))
-  const pts = r ? r.placeIds.map((id) => byId.get(id)).filter((p) => p && hasCoords(p)) : []
+  const pts = r ? stopIds(r).map((id) => byId.get(id)).filter((p) => p && hasCoords(p)) : []
   return (
     <PanelPage active="roteiros">
-      <Head title="Roteiros" sub="Monte percursos com os lugares do seu mapa, na ordem em que você indicaria" right={<div className="row">{dirty && <button className="btn ln sm" onClick={() => { const o = JSON.parse(orig); setRows(o); setSel(0) }}>Desfazer</button>}<button className="btn sm" disabled={!dirty} onClick={save}>{dirty ? 'Salvar roteiros' : 'Tudo salvo'}</button></div>} />
+      <Head title="Roteiros" sub="Monte roteiros com paradas e conte a história de cada lugar. Quem abre vê no mapa ou numa linha do tempo" right={<div className="row">{dirty && <button className="btn ln sm" onClick={() => { const o = JSON.parse(orig); setRows(o); setSel(0) }}>Desfazer</button>}<button className="btn sm" disabled={!dirty} onClick={save}>{dirty ? 'Salvar roteiros' : 'Tudo salvo'}</button></div>} />
       <div className="g2" style={{ gridTemplateColumns: 'minmax(260px,340px) 1fr', alignItems: 'start' }}>
         <div className="col" style={{ gap: 10, minWidth: 0 }}>
-          {rows.map((x, i) => { const rp = x.placeIds.map((id) => byId.get(id)).filter(Boolean); return (
+          {rows.map((x, i) => { const rp = stopIds(x).map((id) => byId.get(id)).filter(Boolean); return (
             <div key={x._k} {...rowsSort.props(i)} className={'card col rt-it' + (i === sel ? ' sel' : '')} style={{ gap: 8, cursor: 'pointer', padding: 14 }} role="button" tabIndex={0} aria-pressed={i === sel} onClick={() => setSel(i)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setSel(i))}>
-              <div className="row">{rowsSort.handle(i)}<div className="sp"><b>{x.name || 'Roteiro sem nome'}</b><div className="xs mut">{x.placeIds.length} lugar{x.placeIds.length === 1 ? '' : 'es'}{x.note ? ` · ${x.note}` : ''}</div></div></div>
+              <div className="row">{rowsSort.handle(i)}<div className="sp"><b>{x.name || 'Roteiro sem nome'}</b><div className="xs mut">{x.stops.length} parada{x.stops.length === 1 ? '' : 's'}{x.note ? ` · ${x.note}` : ''}</div></div></div>
               <div className="row" style={{ gap: 0, paddingLeft: 26 }}>{rp.slice(0, 5).map((p, k) => <span key={p.id} style={{ marginLeft: k ? -10 : 0, border: '3px solid #fff', borderRadius: '50%', overflow: 'hidden', display: 'inline-flex' }}><PlacePhoto place={p} theme={theme} size={36} style={{ borderRadius: '50%' }} /></span>)}{rp.length > 5 && <span className="xs mut" style={{ marginLeft: 8 }}>+{rp.length - 5}</span>}{!rp.length && <span className="xs mut">Sem lugares ainda</span>}</div>
             </div>) })}
           <button className="btn ln blk" disabled={rows.length >= 12} onClick={add}><Icon n="plus" s={16} />Novo roteiro</button>
@@ -341,7 +348,7 @@ export function Roteiros() {
           <div className="col" style={{ gap: 16, minWidth: 0 }} key={r._k}>
             <div className="card col" style={{ gap: 12 }}>
               <span className="eb">Como aparece no seu mapa</span>
-              <RoutePreview route={r} places={places} theme={theme} />
+              <RoutePreview route={{ ...r, placeIds: stopIds(r) }} places={places} theme={theme} />
               <div><span className="lb">Cor do cartão</span>
                 <div className="row wrap" style={{ gap: 8 }}>
                   <button type="button" className={'chip' + (!r.color ? ' on' : '')} onClick={() => set({ color: null })}>Cor do mapa</button>
@@ -350,22 +357,40 @@ export function Roteiros() {
               <div className="g2"><Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field><Field label="Observação" id="ro"><div className="in"><input id="ro" value={r.note || ''} maxLength="60" placeholder="Ex.: 3 h de passeio" onChange={(e) => set({ note: e.target.value })} /></div></Field></div>
             </div>
             <div className="card col" style={{ gap: 10 }}>
-              <div className="row jb"><b>Percurso <span className="mut sm">({r.placeIds.length})</span></b><span className="xs mut">Arraste para mudar a ordem</span></div>
+              <div className="row jb"><b>Paradas <span className="mut sm">({r.stops.length})</span></b><span className="xs mut">Arraste para mudar a ordem</span></div>
               {pts.length > 0 && <div style={{ borderRadius: 16, overflow: 'hidden', pointerEvents: 'none' }}><MapCanvas places={pts} theme={{ ...theme, cluster: false, mapLabels: false }} symbols={me.creator.symbols} interactive={false} style={{ height: 170 }} /></div>}
-              {r.placeIds.map((id, i) => { const p = byId.get(id); if (!p) return null; return (
-                <div key={id} {...placeSort.props(i)} className="row card soft" style={{ padding: 8, gap: 10 }}>
-                  {placeSort.handle(i)}<b className="sm" style={{ width: 20, textAlign: 'center' }}>{i + 1}</b><PlacePhoto place={p} theme={theme} size={44} style={{ borderRadius: 12 }} />
-                  <div className="sp"><b className="sm">{p.name}</b><div className="xs mut">{catOf(theme, p.category).name}{p.neighborhood ? ` · ${p.neighborhood}` : ''}</div></div>
-                  <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => placeSort.move(i, i - 1)}><Icon n="up" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.placeIds.length - 1} onClick={() => placeSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
-                  <button className="btn ln sm" aria-label={`Tirar ${p.name} do roteiro`} onClick={() => toggle(id)}><Icon n="close" s={14} /></button>
+              {r.stops.map((st, i) => { const p = st.placeId != null ? byId.get(st.placeId) : null; const open = openStop === st._k; return (
+                <div key={st._k} {...stopSort.props(i)} className="card soft col" style={{ padding: 12, gap: 12 }}>
+                  <div className="row" style={{ gap: 10 }}>
+                    {stopSort.handle(i)}<b className="sm" style={{ width: 20, textAlign: 'center' }}>{i + 1}</b>
+                    {p ? <PlacePhoto place={p} theme={theme} size={44} style={{ borderRadius: 12 }} /> : <span className="catico" style={{ background: '#171713', borderRadius: 12, width: 44, height: 44 }}><Icon n="edit" s={18} c="#fff" /></span>}
+                    <div className="sp"><b className="sm">{st.title || p?.name || 'Capítulo de texto'}</b><div className="xs mut trunc">{st.when || (p ? `${catOf(theme, p.category).name}${p.neighborhood ? ` · ${p.neighborhood}` : ''}` : 'Sem lugar no mapa')}{st.text ? ' · com história' : ''}</div></div>
+                    <button className="btn ln sm" aria-label="Subir" disabled={i === 0} onClick={() => stopSort.move(i, i - 1)}><Icon n="up" s={14} /></button><button className="btn ln sm" aria-label="Descer" disabled={i === r.stops.length - 1} onClick={() => stopSort.move(i, i + 1)}><Icon n="down" s={14} /></button>
+                    <button className={'btn sm ' + (open ? '' : 'sec')} aria-expanded={open} onClick={() => setOpenStop(open ? null : st._k)}>{open ? 'Fechar' : 'Contar a história'}</button>
+                    <button className="btn ln sm" aria-label="Remover parada" onClick={() => set({ stops: r.stops.filter((v) => v._k !== st._k) })}><Icon n="close" s={14} /></button>
+                  </div>
+                  {open && <div className="col" style={{ gap: 12 }}>
+                    <div className="g2" style={{ alignItems: 'start' }}>
+                      <Field label="Título da parada" id={`st${st._k}`}><div className="in"><input id={`st${st._k}`} value={st.title} maxLength="60" placeholder={p?.name || 'Ex.: Um café antes da trilha'} onChange={(e) => setStop(st._k, { title: e.target.value })} /></div></Field>
+                      <Field label="Quando" id={`sw${st._k}`}><div className="in"><input id={`sw${st._k}`} value={st.when} maxLength="30" placeholder="Ex.: Dia 1 · manhã" onChange={(e) => setStop(st._k, { when: e.target.value })} /></div></Field>
+                    </div>
+                    <Field label="A história desta parada" id={`sx${st._k}`}><textarea id={`sx${st._k}`} className="in" rows="4" maxLength="600" value={st.text} placeholder="Conte o que aconteceu, o que pedir, como chegar…" onChange={(e) => setStop(st._k, { text: e.target.value })} /><span className="xs mut" style={{ justifySelf: 'end' }}>{st.text.length}/600</span></Field>
+                    <Field label="Dica rápida (opcional)" id={`sd${st._k}`}><div className="in"><input id={`sd${st._k}`} value={st.tip} maxLength="160" placeholder="Ex.: Vá cedo, a fila cresce depois das 12h" onChange={(e) => setStop(st._k, { tip: e.target.value })} /></div></Field>
+                    <Field label="Lugar no mapa" id={`sp${st._k}`}><select id={`sp${st._k}`} className="selbox" value={st.placeId ?? ''} onChange={(e) => setStop(st._k, { placeId: e.target.value === '' ? null : Number(e.target.value) })}><option value="">Sem lugar (só texto)</option>{confirmed.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+                  </div>}
                 </div>) })}
-              {!r.placeIds.length && <p className="sm mut">Escolha os lugares abaixo. A ordem em que entram é a ordem do percurso.</p>}
+              {!r.stops.length && <p className="sm mut">Escolha lugares abaixo ou adicione um capítulo só de texto. A ordem das paradas é a ordem da história.</p>}
+              <button className="btn ln sm" style={{ alignSelf: 'flex-start' }} disabled={r.stops.length >= 30} onClick={addText}><Icon n="plus" s={14} />Adicionar parada só com texto</button>
             </div>
+            {r.stops.some((v) => v.text || v.title) && <div className="card col" style={{ gap: 12 }}>
+              <span className="eb">Como o seguidor vê na linha do tempo</span>
+              <div className="pub" style={{ ...pubVars(theme), background: theme.bg, color: theme.fg, minHeight: 0, borderRadius: 20, padding: '20px 18px 0' }}><RouteTimeline route={{ ...r, placeIds: stopIds(r) }} places={places} theme={theme} preview /></div>
+            </div>}
             <div className="card col" style={{ gap: 10 }}>
-              <b>Adicionar lugares</b>
+              <b>Adicionar lugares como paradas</b>
               <div className="in" style={{ minHeight: 40 }}><Icon n="search" s={16} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nome ou bairro" aria-label="Buscar lugar" /></div>
               <div className="row wrap"><button className={'chip' + (!cat ? ' on' : '')} onClick={() => setCat('')}>Todos</button>{cats.map((c) => <button key={c.id} className={'chip' + (cat === c.id ? ' on' : '')} onClick={() => setCat(cat === c.id ? '' : c.id)}>{c.name}</button>)}</div>
-              <div className="g4" style={{ gap: 10 }}>{pool.map((p) => { const inn = r.placeIds.includes(p.id); return (
+              <div className="g4" style={{ gap: 10 }}>{pool.map((p) => { const inn = r.stops.some((v) => v.placeId === p.id); return (
                 <button key={p.id} type="button" className={'card col' + (inn ? ' sel' : '')} style={{ padding: 8, gap: 6, textAlign: 'left', position: 'relative' }} aria-pressed={inn} onClick={() => toggle(p.id)}>
                   <PlacePhoto place={p} theme={theme} aspect="4/3" style={{ borderRadius: 12, width: '100%' }} />
                   <b className="xs">{p.name}</b><span className="xs mut">{p.neighborhood || catOf(theme, p.category).name}</span>

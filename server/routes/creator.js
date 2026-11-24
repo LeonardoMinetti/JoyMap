@@ -5,6 +5,7 @@ import { enqueueGeocode, searchPlaces } from '../geocode.js'
 import { sanitizeTheme, sanitizeSvg, accentProblem } from '../theme.js'
 import { RESERVED, j, placeKey } from '../lib.js'
 import { cleanGoogleUrl, cleanInstagramUrl } from '../placelinks.js'
+import { cleanStops } from '../stops.js'
 
 const STEPS = ['start', 'instagram', 'tiktok', 'consents', 'plan', 'payment', 'welcome', 'done']
 const CATEGORY = /^[a-z0-9_-]{1,20}$/
@@ -253,7 +254,7 @@ export default function creatorRoutes(app, x) {
     return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'no-store' }) : c.body(null, 404)
   })
   cr.delete('/cover', (c) => { db.prepare('DELETE FROM media WHERE creator_id=?').run(me(c).id); return c.json({ ok: true }) })
-  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []) })) }))
+  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
   cr.put('/routes', async (c) => {
     const { routes } = await c.req.json().catch(() => ({}))
     const own = new Set(db.prepare("SELECT id FROM places WHERE creator_id=?").all(me(c).id).map((r) => r.id))
@@ -261,8 +262,10 @@ export default function creatorRoutes(app, x) {
     ;(Array.isArray(routes) ? routes : []).slice(0, 12).forEach((r, i) => {
       const name = String(r.name || '').trim().slice(0, 40)
       if (!name) return
-      const ids = (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
-      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,pos) VALUES (?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), i)
+      const stops = cleanStops(r.stops, own)
+      // com paradas, os lugares do roteiro saem delas (na ordem da história); sem paradas, vale a lista de lugares
+      const ids = stops.length ? [...new Set(stops.map((s) => s.placeId).filter(Boolean))] : (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
+      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos) VALUES (?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 60), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i)
     })
     return c.json({ ok: true })
   })
@@ -346,7 +349,7 @@ export default function creatorRoutes(app, x) {
     const since = Date.now() - 30 * 86400000
     const data = {
       exportedAt: new Date().toISOString(), creator: x.view(row), places,
-      routes: db.prepare('SELECT name, note, place_ids FROM routes WHERE creator_id=?').all(row.id),
+      routes: db.prepare('SELECT name, note, place_ids, stops FROM routes WHERE creator_id=?').all(row.id),
       consentHistory: db.prepare('SELECT key, value, terms_version, ts FROM consent_log WHERE creator_id=?').all(row.id),
       aggregateStats30d: {
         sessions: db.prepare('SELECT COUNT(DISTINCT sid) n FROM events WHERE creator_id=? AND ts>?').get(row.id, since).n,

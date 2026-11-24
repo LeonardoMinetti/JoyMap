@@ -114,3 +114,19 @@
 @keyframes msUp{from{transform:translateY(24px);opacity:0}}@keyframes msFade{from{opacity:0}}
 .ms-sh .pt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ms-hint,.ms-count{white-space:nowrap;flex:none}
 .pub img.pav{object-fit:cover;background:#ddd}
+
+/* roteiro como história */
+.rt-seg{display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(128,128,128,.16);width:max-content;max-width:100%;margin:4px 0 14px}
+.rt-seg button{border:0;background:none;padding:7px 14px;border-radius:99px;font:600 13px var(--pf);color:inherit;opacity:.75;cursor:pointer;white-space:nowrap}
+.rt-seg button.on{background:var(--acc);color:var(--onacc);opacity:1}
+.tl{list-style:none;margin:0;padding:0}
+.tl-i{display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;position:relative;padding-bottom:28px}
+.tl-i:not(:last-child)::before{content:'';position:absolute;left:17px;top:40px;bottom:4px;width:2px;background:currentColor;opacity:.18}
+.tl-n{width:36px;height:36px;border-radius:50%;background:var(--acc);color:var(--onacc);display:grid;place-items:center;font:700 15px var(--pf);position:relative;z-index:1}
+.tl-n.txt{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor;opacity:.55}
+.tl-b{display:flex;flex-direction:column;gap:10px;min-width:0}.tl-b h3{margin:0;font-size:22px;line-height:1.12}
+.tl-w{font:700 11px var(--pf);letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.tl-b p{margin:0;font-size:15px;line-height:1.5;opacity:.92;white-space:pre-line}
+.tl-ph{border:0;padding:0;background:none;border-radius:14px;overflow:hidden;cursor:pointer;display:block;width:100%}
+.tl-pl{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(128,128,128,.14);border:0;cursor:pointer;color:inherit;text-align:left;font:inherit;width:100%}
+.tl-tip{font-size:13px;padding:10px 12px;border-radius:12px;background:rgba(128,128,128,.14)}.tl-tip b{margin-right:6px}
