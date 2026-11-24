@@ -57,7 +57,7 @@ export function Overview() {
     <PanelPage active="visao">
       {me.notices.map((n) => <div key={n.id} className="note row"><Icon n="alert" s={18} c="#93370d" /><span className="sp">{n.text}</span><button className="btn sm ln" onClick={async () => { await api('/creator/notices/seen', { method: 'POST' }); reload() }}>Entendi</button></div>)}
       {!c.published && <div className="note row"><span className="sp"><b>Seu mapa ainda não está no ar.</b> Revise os lugares e publique para os seguidores verem.</span><Link className="btn sm" to="/revisar">Revisar e publicar</Link></div>}
-      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div><Link className="btn sm" to="/painel/atualizar">Atualizar mapa{pending ? ` (${pending})` : ''}</Link></div>} />
+      <Head title="Visão geral" sub={`Últimos ${days} dias · interações no seu mapa`} right={<div className="row wrap">{s && !s.error && sampleTag(s.sessions)}<div className="seg" role="group" aria-label="Período"><button className={days === 30 ? 'on' : ''} onClick={() => setDays(30)}>30 dias</button><button className={days === 7 ? 'on' : ''} onClick={() => setDays(7)}>7 dias</button></div></div>} />
       {!s ? <Loading /> : s.error ? <p className="err">Não foi possível carregar.</p> : <>
         <div className="g4"><Kpi v={s.sessions} l="sessões" hint="Visitas ao seu mapa" />{!s.limited && <><Kpi v={s.placeOpens} l="lugares abertos" hint="Vezes que um lugar foi aberto" /><Kpi v={s.routeClicks} l="cliques em rota" hint="Quem pediu rota até o lugar" /><Kpi v={s.postOpens} l="voltas aos seus posts" hint="Quem voltou ao post original" /></>}</div>
         <div className="g2" style={{ gridTemplateColumns: '2fr 1fr' }}>
@@ -148,14 +148,16 @@ export function PlacesPage() {
   const maxPlaces = me.creator.plan?.can?.maxPlaces ?? null
   const used = places.filter((p) => p.status !== 'removed').length
   const full = maxPlaces != null && used >= maxPlaces
+  const toUpdate = places.filter((p) => p.status === 'pending' || p.status === 'unresolved').length
   const limitMsg = () => toast(`Você chegou ao limite de ${maxPlaces} lugares. Exclua um lugar para adicionar outro, ou passe para o plano Criador.`)
   const confirm1 = async (e, p) => { e.stopPropagation(); await api(`/creator/places/${p.id}`, { method: 'PATCH', body: { status: 'confirmed' } }); toast('Lugar confirmado'); reload() }
   return (
     <PanelPage active="lugares">
       <Head title="Lugares" sub={maxPlaces != null ? `${used} de ${maxPlaces} lugares no plano Grátis${full ? '. Exclua um lugar para adicionar outro, ou conheça o plano Criador, sem limite' : ''}` : `${live.length} lugares no seu mapa`} right={<div className="row wrap">
         {maxPlaces != null && <span className="row" style={{ gap: 8 }} title={`Plano Grátis: até ${maxPlaces} lugares`}><span className="hb" style={{ width: 72, height: 6, borderRadius: 99, background: 'rgba(0,0,0,.14)', overflow: 'hidden', display: 'block' }} aria-hidden="true"><i style={{ width: `${Math.min(100, (used / maxPlaces) * 100)}%` }} /></span><span className="xs"><b>{used}/{maxPlaces}</b></span></span>}
+        <Link className="btn ln sm" to="/painel/atualizar"><Icon n="refresh" s={14} />Atualizar mapa{toUpdate ? ` (${toUpdate})` : ''}</Link>
         {full ? <><button className="btn sm" onClick={limitMsg}><Icon n="lock" s={14} />Limite atingido</button><Link className="btn ln sm" to="/painel/plano">Ver planos</Link></>
-          : <><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></>}</div>} />
+          : <Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link>}</div>} />
       <section className="blk" aria-label="Lista de lugares">
       <div className="row wrap jb">
         <div className="seg" role="group" aria-label="Filtrar lugares">{FIL.map(([k, l, fn]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}{k !== 'all' && <span className="n">{live.filter(fn).length}</span>}</button>)}</div>
