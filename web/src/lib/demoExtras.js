@@ -1,6 +1,8 @@
 // Telas que dependem do servidor, com dados fictícios, só para a demonstração publicada (GitHub Pages):
 // administração, mapa geral, restaurantes e "Meu voo". Nada é enviado: o estado vive na memória da aba (some ao recarregar)
 // e, no voo, no sessionStorage. Os nomes e números são inventados.
+import { DEMO_GUIDES } from '../demoGuides.js'
+import { withBase } from './base.js'
 import { DEMO_PLACES } from '../demoData.js'
 import { ICON_PATHS } from './icons.jsx'
 import { PERSONALITIES, XP_PER_VISIT, levelOf, nextOf } from '../levels.js'
@@ -30,6 +32,10 @@ const groups = () => DEMO_PLACES.slice(0, 12).map((p, i) => {
     creators: who.map((c, k) => ({ ...c, postedOn: day(3 + i * 4 + k), postUrl: c.slug === 'demo' ? 'https://example.com/post-ilustrativo' : null, tiktokId: null, ad: i % 5 === 2 && k === 0 })),
   }
 })
+
+// ---------- miniguias ----------
+let GUIDES
+const guides = () => (GUIDES ||= DEMO_GUIDES.map((g) => ({ ...g, published: true, photo: withBase(`/photos/${g.photo}.jpg`), avatar: g.avatar ? withBase(`/photos/${g.avatar}.jpg`) : null })))
 
 // ---------- administração ----------
 const MIN = 10000
@@ -87,6 +93,11 @@ export async function demoExtrasApi(path, { method = 'GET', body = {} } = {}) {
   if (p === '/restaurants/search') { const t = (q.get('q') || '').toLowerCase(); return { results: groups().filter((g) => g.name.toLowerCase().includes(t)).map((g) => ({ key: g.key, name: g.name, address: g.address, neighborhood: g.neighborhood, creators: g.creators.length })) } }
   if (p === '/claims' && method === 'POST') return { ok: true }
   if (p === '/restaurant/panel') return { places: groups().filter((g) => ['k1', 'k3'].includes(g.key)).map((g) => ({ key: g.key, name: g.name, neighborhood: g.neighborhood, address: g.address, creators: g.creators.length, ads: g.creators.filter((c) => c.ad).length, indications: g.creators.map((c) => ({ name: c.name, accent: c.accent, postedOn: c.postedOn, ad: c.ad })) })) }
+
+  // miniguias: exemplos fictícios; a escolha da equipe vale enquanto a aba estiver aberta
+  if (p === '/miniguias') return { demo: true, guides: guides().filter((g) => g.featured) }
+  if (p === '/admin/miniguias') return { guides: guides() }
+  if ((m = p.match(/^\/admin\/miniguias\/(\d+)$/))) { const g = guides().find((x) => x.id === Number(m[1])); if (g) g.featured = !!body.featured; return { ok: true } }
 
   // administração
   if (p === '/admin/creators') return adminCreators()

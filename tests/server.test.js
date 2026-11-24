@@ -176,6 +176,21 @@ test('fluxo: candidatura → análise → aprovação → onboarding → posts �
   const pub2 = await (await app.request('/api/public/dudacomesp')).json()
   assert.deepEqual(pub2.routes[0].placeIds, [carola.id])
 
+  // miniguias: precisa da permissão do criador E da escolha da equipe; o id se mantém ao salvar de novo
+  const guides = async () => (await (await app.request('/api/miniguias')).json()).guides
+  const mine = async () => (await (await call(app, a.cookie, '/api/creator/routes')).json()).routes
+  const rid = (await mine())[0].id
+  assert.equal((await call(app, adm.cookie, `/api/admin/miniguias/${rid}`, 'POST', { featured: true })).status, 404) // sem permissão não entra
+  const save = (share) => call(app, a.cookie, '/api/creator/routes', 'PUT', { routes: [{ name: 'Novo', placeIds: [carola.id] }, { id: rid, name: 'Domingo', placeIds: [carola.id], share }] })
+  await save(true)
+  assert.equal((await guides()).length, 0) // liberado, mas ainda não escolhido
+  assert.equal((await call(app, a.cookie, `/api/admin/miniguias/${rid}`, 'POST', { featured: true })).status, 403)
+  assert.equal((await call(app, adm.cookie, `/api/admin/miniguias/${rid}`, 'POST', { featured: true })).status, 200)
+  await save(true)
+  assert.deepEqual((await guides()).map((g) => [g.id, g.name, g.handle]), [[rid, 'Domingo', 'dudacomesp']])
+  await save(false)
+  assert.equal((await guides()).length, 0) // retirou a permissão: sai na hora
+
   // eventos: termo higienizado; agregados; amostra mínima para audiência
   const ev = (b) => post(app, '/api/e', { slug: 'dudacomesp', ...b })
   await ev({ type: 'session', sid: 's1', dev: 'm', ref: 'instagram', ret: false })

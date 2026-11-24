@@ -47,6 +47,14 @@ export default function adminRoutes(app, x) {
     return c.json({ ok: true })
   })
 
+  // ---------- miniguias: só entra o que o criador liberou e a equipe escolher ----------
+  ad.get('/miniguias', (c) => c.json({ guides: all("SELECT r.id, r.name, r.note, r.featured, c.handle, c.slug, c.published FROM routes r JOIN creators c ON c.id=r.creator_id WHERE r.share=1 AND c.status='approved' ORDER BY r.featured DESC, r.id DESC").map((r) => ({ id: r.id, name: r.name, note: r.note || '', handle: r.handle, featured: !!r.featured, published: !!r.published, href: `/@${r.slug}/roteiros/${r.id}` })) }))
+  ad.post('/miniguias/:id', async (c) => {
+    const b = await c.req.json().catch(() => ({}))
+    const r = db.prepare('UPDATE routes SET featured=? WHERE id=? AND share=1').run(b.featured ? 1 : 0, Number(c.req.param('id')))
+    return r.changes ? c.json({ ok: true }) : c.json({ error: 'nao_encontrado' }, 404)
+  })
+
   // ---------- I2 · revisão de mapas ----------
   const issueOf = (p) => (p.geo_status === 'rejected' ? 'Município diverge' : p.geo_status === 'not_found' ? 'Endereço não encontrado' : p.geo_quality === 'street_approx' ? 'Endereço aproximado' : p.geo_quality === 'area' ? 'Localização por área' : p.confidence !== 'high' ? 'Confiança baixa' : null)
   ad.get('/review', (c) => {

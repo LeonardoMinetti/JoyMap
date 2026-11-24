@@ -15,3 +15,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 007 | 2026-11-24 18:57 | site | Logo do cabecalho escrito na chegada | `deploy/site/007-logo-do-cabecalho-escrito-na-chegada` |
 | 008 | 2026-11-24 19:02 | site | Celular cresce no fim do motion da hero | `deploy/site/008-celular-cresce-no-fim-do-motion-da-hero` |
 | 009 | 2026-11-24 19:05 | site | Celular da hero cresce 30 por cento | `deploy/site/009-celular-da-hero-cresce-30-por-cento` |
+| 010 | 2026-11-24 19:13 | conteudo | Pagina de Miniguias com curadoria | `deploy/conteudo/010-pagina-de-miniguias-com-curadoria` |

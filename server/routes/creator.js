@@ -268,21 +268,23 @@ export default function creatorRoutes(app, x) {
     return m ? c.body(m.data, 200, { 'Content-Type': m.mime, 'Cache-Control': 'no-store' }) : c.body(null, 404)
   })
   cr.delete('/cover', (c) => { db.prepare('DELETE FROM media WHERE creator_id=?').run(me(c).id); return c.json({ ok: true }) })
-  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops, price, products, sponsor FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ sponsor: j(r.sponsor, null), id: r.id, name: r.name, note: r.note, color: r.color || null, price: r.price || null, products: j(r.products, []), placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
+  cr.get('/routes', (c) => c.json({ routes: db.prepare('SELECT id, name, note, color, place_ids, stops, price, products, sponsor, share FROM routes WHERE creator_id=? ORDER BY pos, id').all(me(c).id).map((r) => ({ share: !!r.share, sponsor: j(r.sponsor, null), id: r.id, name: r.name, note: r.note, color: r.color || null, price: r.price || null, products: j(r.products, []), placeIds: j(r.place_ids, []), stops: j(r.stops, []) })) }))
   cr.put('/routes', async (c) => {
     const { routes } = await c.req.json().catch(() => ({}))
     if (!can(fresh(c).plan_tier, 'roteiros')) return c.json({ error: 'plano', need: minTier('roteiros') }, 403)
     const own = new Set(db.prepare("SELECT id FROM places WHERE creator_id=?").all(me(c).id).map((r) => r.id))
     const tier = fresh(c).plan_tier
+    // o id do roteiro se mantém entre salvamentos, e com ele a escolha da equipe para os Miniguias
+    const old = new Map(db.prepare('SELECT id, featured FROM routes WHERE creator_id=?').all(me(c).id).map((r) => [r.id, r.featured]))
     db.prepare('DELETE FROM routes WHERE creator_id=?').run(me(c).id)
-    ;(Array.isArray(routes) ? routes : []).slice(0, 12).forEach((r, i) => {
+    ;(Array.isArray(routes) ? routes : []).slice(0, 12).map((r, i) => [r, i]).sort((a, b) => old.has(b[0].id) - old.has(a[0].id)).forEach(([r, i]) => {
       const name = String(r.name || '').trim().slice(0, 40)
       if (!name) return
       const stops = cleanStops(r.stops, own)
       const offer = cleanOffer(r, tier)
       // com paradas, os lugares do roteiro saem delas (na ordem da história); sem paradas, vale a lista de lugares
       const ids = stops.length ? [...new Set(stops.map((s) => s.placeId).filter(Boolean))] : (Array.isArray(r.placeIds) ? r.placeIds : []).map(Number).filter((n) => own.has(n)).slice(0, 30)
-      db.prepare('INSERT INTO routes(creator_id,name,note,color,place_ids,stops,pos,price,products,sponsor) VALUES (?,?,?,?,?,?,?,?,?,?)').run(me(c).id, name, String(r.note || '').slice(0, 240), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i, offer.price, JSON.stringify(offer.products), offer.sponsor ? JSON.stringify(offer.sponsor) : null)
+      db.prepare('INSERT INTO routes(id,share,featured,creator_id,name,note,color,place_ids,stops,pos,price,products,sponsor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)').run(old.has(r.id) ? r.id : null, r.share ? 1 : 0, r.share && old.get(r.id) ? 1 : 0, me(c).id, name, String(r.note || '').slice(0, 240), /^#[0-9a-fA-F]{6}$/.test(r.color || '') ? r.color : null, JSON.stringify(ids), JSON.stringify(stops), i, offer.price, JSON.stringify(offer.products), offer.sponsor ? JSON.stringify(offer.sponsor) : null)
     })
     return c.json({ ok: true })
   })

@@ -19,6 +19,20 @@ export default function publicRoutes(app, x) {
   const pubPlace = (p, slug) => ({ photo: p.photo_v && slug ? `/api/public/${slug}/places/${p.id}/photo?v=${p.photo_v}` : null, id: p.id, name: p.name, address: p.address, municipality: p.municipality, neighborhood: p.neighborhood, lat: p.lat, lon: p.lon, geoQuality: p.geo_quality, category: p.category, postUrl: p.post_url, postedOn: p.posted_on, ad: !!p.ad, tiktokId: p.post_id, couponCode: p.coupon_code || null, couponNote: p.coupon_note || null, googleUrl: p.google_url || null, instagramUrl: p.instagram_url || null, hours: j(p.hours, null) })
   const livePlaces = (id) => db.prepare("SELECT * FROM places WHERE creator_id=? AND status='confirmed' AND geo_status='found' AND lat IS NOT NULL AND hidden=0 ORDER BY id").all(id)
 
+  // ---------- miniguias: roteiros que o criador liberou e a equipe escolheu ----------
+  app.get('/api/miniguias', (c) => {
+    const rows = db.prepare("SELECT r.id, r.name, r.note, r.place_ids, c.* , r.id AS rid, r.name AS rname FROM routes r JOIN creators c ON c.id=r.creator_id WHERE r.share=1 AND r.featured=1 AND c.status='approved' AND c.published=1 ORDER BY r.id DESC").all()
+    const guides = rows.flatMap((r) => {
+      const v = x.view(live(r.slug))
+      if (!can(v.plan.tier, 'roteiros')) return []
+      const ids = new Set(j(r.place_ids, []))
+      const places = livePlaces(v.id).filter((p) => ids.has(p.id)).map((p) => pubPlace(p, r.slug))
+      if (!places.length) return []
+      return [{ id: r.rid, name: r.rname, note: r.note || '', by: v.displayName, handle: v.handle, count: places.length, city: places[0].municipality || '', photo: places.find((p) => p.photo)?.photo || null, avatar: null, href: `/@${r.slug}/roteiros/${r.rid}` }]
+    })
+    return c.json({ guides })
+  })
+
   // ---------- mapa de um criador ----------
   app.get('/api/public/:slug', (c, next) => {
     // mapa de demonstração (dados fictícios), aberto a qualquer pessoa, sem cadastro

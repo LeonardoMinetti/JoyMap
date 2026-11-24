@@ -92,6 +92,8 @@ export function openDb(path = process.env.DB_PATH || 'data/mvp.sqlite') {
   ensureColumn(db, 'routes', 'price', 'INTEGER')
   ensureColumn(db, 'routes', 'products', 'TEXT')
   ensureColumn(db, 'routes', 'sponsor', 'TEXT')
+  ensureColumn(db, 'routes', 'share', 'INTEGER NOT NULL DEFAULT 0') // o criador permite a divulgação nos Miniguias
+  ensureColumn(db, 'routes', 'featured', 'INTEGER NOT NULL DEFAULT 0') // escolhido pela equipe JoyMap
   ensureColumn(db, 'places', 'hours', 'TEXT')
   ensureColumn(db, 'places', 'coupon_code', 'TEXT')
   ensureColumn(db, 'places', 'coupon_note', 'TEXT')
