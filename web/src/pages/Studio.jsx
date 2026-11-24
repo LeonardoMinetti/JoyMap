@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Logo, Guard, Loading, Note, Switch, Side, Tabs, useTitle } from '../lib/ui.jsx'
+import { Logo, Guard, Loading, Note, Switch, Side, Tabs, Field, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import FakeMap from '../FakeMap.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -265,15 +265,13 @@ export function StudioCategories() {
           </div>)
       })}</div>
       {can ? (
-        <div className="card col" style={{ gap: 12, padding: 14 }}>
-          <div><b>Nova categoria</b><div className="xs mut">Plano Pro. Até {EXTRA_MAX} categorias próprias, além das {CATEGORIES.length} fixas. O tipo de base define o símbolo nos pacotes.</div></div>
-          <div className="row wrap" style={{ gap: 8 }}>
-            <input className="inp" style={{ flex: '1 1 180px', minWidth: 0 }} maxLength={24} placeholder="Nome (ex.: Comida de rua)" aria-label="Nome da nova categoria" value={nn} onChange={(e) => setNn(e.target.value)} disabled={full} />
-            <select className="inp" aria-label="Tipo de base" value={nb} onChange={(e) => setNb(e.target.value)} disabled={full}>{CATEGORIES.map((d) => <option key={d.id} value={d.id}>Base: {d.name}</option>)}</select>
-            <button type="button" className="btn" disabled={full || nameBad} onClick={addCat}>Criar categoria</button>
+        <Sec title="Nova categoria" hint={`Plano Pro. Até ${EXTRA_MAX} categorias próprias, além das ${CATEGORIES.length} fixas. O tipo de base define o símbolo nos pacotes.`}>
+          <div className="col" style={{ gap: 12 }}>
+            <Field label="Nome" id="ncn"><div className="in"><input id="ncn" maxLength={24} placeholder="Ex.: Comida de rua" value={nn} onChange={(e) => setNn(e.target.value)} disabled={full} /></div></Field>
+            <Field label="Tipo de base" id="ncb"><select id="ncb" className="selbox" style={{ width: '100%' }} value={nb} onChange={(e) => setNb(e.target.value)} disabled={full}>{CATEGORIES.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></Field>
           </div>
-          <div className="xs mut">{full ? `Você usou as ${EXTRA_MAX} categorias próprias.` : 'Nomes curtos, sem links. Depois de criar, mude a cor e mova os lugares para ela em Lugares.'}</div>
-        </div>
+          <div className="row jb wrap"><span className="xs mut">{full ? `Você usou as ${EXTRA_MAX} categorias próprias.` : 'Nomes curtos, sem links. Depois de criar, mude a cor e mova os lugares para ela em Lugares.'}</span><button type="button" className="btn sm" disabled={full || nameBad} onClick={addCat}><Icon n="plus" s={14} />Criar categoria</button></div>
+        </Sec>
       ) : (
         <div className="card row" style={{ gap: 12, padding: 14 }}><span className="catico" style={{ background: '#e5e5e5' }}><Icon n="lock" s={18} c="#555" /></span><div className="sp"><b className="sm">Categorias próprias</b><div className="xs mut">Crie categorias além das {CATEGORIES.length} fixas. Disponível no plano Pro.</div></div><Link to="/planos" className="btn ghost sm">Ver planos</Link></div>
       )}

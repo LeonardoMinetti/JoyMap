@@ -146,11 +146,15 @@ export function PlacesPage() {
   const status = (p) => { const is = issueOf(p, places); return p.ad ? ['ax', 'Publi'] : [is.k, is.tag === 'Ver unidades' ? (p.status === 'confirmed' ? 'Confirmado' : 'Para revisar') : is.tag] }
   const maxPlaces = me.creator.plan?.can?.maxPlaces ?? null
   const used = places.filter((p) => p.status !== 'removed').length
+  const full = maxPlaces != null && used >= maxPlaces
+  const limitMsg = () => toast(`Você chegou ao limite de ${maxPlaces} lugares. Exclua um lugar para adicionar outro, ou passe para o plano Criador.`)
   const confirm1 = async (e, p) => { e.stopPropagation(); await api(`/creator/places/${p.id}`, { method: 'PATCH', body: { status: 'confirmed' } }); toast('Lugar confirmado'); reload() }
   return (
     <PanelPage active="lugares">
-      {maxPlaces != null && <div className={'note row' + (used >= maxPlaces ? '' : ' soft')}><span className="sp"><b>{used} de {maxPlaces} lugares</b> no plano Grátis.{used >= maxPlaces ? ' Para adicionar mais, passe para o plano Criador.' : ''}</span><Link className="btn sm ln" to="/painel/plano">Ver planos</Link></div>}
-      <Head title="Lugares" sub={`${live.length} lugares no seu mapa`} right={<div className="row wrap"><Link className="btn ln sm" to="/colar-posts?voltar=/painel/atualizar">Colar posts</Link><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></div>} />
+      <Head title="Lugares" sub={maxPlaces != null ? `${used} de ${maxPlaces} lugares no plano Grátis${full ? '. Exclua um lugar para adicionar outro, ou conheça o plano Criador, sem limite' : ''}` : `${live.length} lugares no seu mapa`} right={<div className="row wrap">
+        {maxPlaces != null && <span className="row" style={{ gap: 8 }} title={`Plano Grátis: até ${maxPlaces} lugares`}><span className="hb" style={{ width: 72, height: 6, borderRadius: 99, background: 'rgba(0,0,0,.14)', overflow: 'hidden', display: 'block' }} aria-hidden="true"><i style={{ width: `${Math.min(100, (used / maxPlaces) * 100)}%` }} /></span><span className="xs"><b>{used}/{maxPlaces}</b></span></span>}
+        {full ? <><button className="btn ln sm" onClick={limitMsg}>Colar posts</button><button className="btn sm" onClick={limitMsg}><Icon n="lock" s={14} />Limite atingido</button><Link className="btn ln sm" to="/painel/plano">Ver planos</Link></>
+          : <><Link className="btn ln sm" to="/colar-posts?voltar=/painel/atualizar">Colar posts</Link><Link className="btn sm" to="/adicionar"><Icon n="plus" s={14} />Adicionar lugar</Link></>}</div>} />
       <section className="blk" aria-label="Lista de lugares">
       <div className="row wrap jb">
         <div className="seg" role="group" aria-label="Filtrar lugares">{FIL.map(([k, l, fn]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}{k !== 'all' && <span className="n">{live.filter(fn).length}</span>}</button>)}</div>
