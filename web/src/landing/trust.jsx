@@ -161,20 +161,20 @@ export function PlansBlock({ min, compact }) {
     <section id="planos" className="sec" aria-labelledby="planos-h" style={{ background: 'var(--cream)' }}>
       <div className="w col" style={{ gap: 32 }}>
         <div className="sec-h c"><span className="eb">Planos e condições de entrada</span><h2 id="planos-h" className="d h-sec">Comece pelo seu <span style={hl}>mapa.</span></h2>
-          <p className="lead">Um plano grátis, em que você mesmo atualiza o mapa, e dois pagos, para quem quer o mapa completo sempre em dia e roteiros que podem ser vendidos. Você paga pouco e a JoyMap ganha quando você ganha.</p></div>
+          <p className="lead">Comece no plano grátis, por convite, atualizando o seu mapa. Em breve, dois planos pagos, para o mapa completo sempre em dia e roteiros que podem ser vendidos. Você paga pouco e a JoyMap ganha quando você ganha.</p></div>
         <div className="row" style={{ justifyContent: 'center' }}>
           <div className="pl-per pn-per" role="group" aria-label="Periodicidade da assinatura"><button type="button" aria-pressed={!annual} className={'chip' + (!annual ? ' on' : '')} onClick={() => setAnnual(false)}>Mensal</button><button type="button" aria-pressed={annual} className={'chip' + (annual ? ' on' : '')} onClick={() => setAnnual(true)}>Anual · 2 meses grátis</button></div>
         </div>
         <div className="pn">
           {PLANS.map((p) => (
-            <article key={p.k} className={'pn-c pn-' + p.k + (p.main ? ' pn-main' : '')}>
-              {p.main && <span className="tag pn-badge">Plano principal</span>}
+            <article key={p.k} className={'pn-c pn-' + p.k + (p.main ? ' pn-main' : '') + (p.k === 'free' ? '' : ' pn-off')}>
+              {p.k !== 'free' && <span className="tag pn-badge">Em breve</span>}
               <div className="pn-head"><span className="pn-em" aria-hidden="true"><Icon s={40} sym={em(p.icon)} /></span><b className="d s26">{p.name}</b></div>
               <p className="pn-who">{p.who}</p>
               <div className="pn-price"><b className="d">{p.price[i]}</b><span>{Array.isArray(p.per) ? p.per[i] : p.per}</span></div>
-              {p.note && annual ? <span className="xs pn-note">{p.note}</span> : <span className="xs pn-note">{p.trial ? '30 dias grátis após aprovação e lançamento' : 'Sem prazo e sem cartão'}</span>}
+              {p.note && annual && p.k === 'free' ? <span className="xs pn-note">{p.note}</span> : <span className="xs pn-note">{p.k === 'free' ? 'Sem prazo e sem cartão' : 'Disponível em breve'}</span>}
               <ul className="pn-ul">{p.items.map(([t, tip]) => <li key={t}><i aria-hidden="true"><Icon n="check" s={12} c="#171713" /></i><span>{t}{tip && <Tip text={tip} />}</span></li>)}</ul>
-              <Link className={'btn btn-lg pn-cta ' + (p.main ? 'dk' : p.k === 'pro' ? '' : 'ln')} to="/entrar?criar=1">Quero meu mapa</Link>
+              {p.k === 'free' ? <Link className="btn btn-lg pn-cta dk" to="/entrar?criar=1">Pedir convite</Link> : <span className="btn btn-lg pn-cta pn-wait">Em breve</span>}
             </article>))}
         </div>
         <Compare open={open} setOpen={setOpen} />
@@ -234,7 +234,7 @@ export function FinalCta() {
         <span className="tag" style={{ background: 'var(--cream)' }}>Seu jeito. Seu voo.</span>
         <h2 id="fim" className="d h-sec" style={{ maxWidth: 760 }}>Você já tem o conteúdo. Falta o mapa.</h2>
         <p className="lead" style={{ maxWidth: 560 }}>Dê um novo destino às suas recomendações e descubra até onde elas podem levar sua audiência.</p>
-        <div className="row wrap" style={{ gap: 12, justifyContent: 'center' }}><Link className="btn dk btn-lg" to="/entrar?criar=1">Quero meu mapa</Link><Link className="btn ln btn-lg" to="/@demo">Explorar um mapa</Link></div>
+        <div className="row wrap" style={{ gap: 12, justifyContent: 'center' }}><Link className="btn dk btn-lg" to="/entrar?criar=1">Pedir convite</Link><Link className="btn ln btn-lg" to="/@demo">Explorar um mapa</Link></div>
       </div>
     </section>
   )

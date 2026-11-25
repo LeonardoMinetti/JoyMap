@@ -31,7 +31,7 @@ export function Top({ active = -1, overlay = false, dark = false }) {
         <Link className="it tb-ex" to="/@demo">Explorar mapas</Link>
         {me?.user ? (homeLink(me) && <Link className="btn sm" to={homeLink(me)[1]}>{homeLink(me)[0]}</Link>) : <>
           <Link className="btn ln sm tb-in" to="/entrar">Entrar</Link>
-          <Link className="btn sm" to="/entrar?criar=1">Quero meu mapa</Link></>}
+          <Link className="btn sm" to="/entrar?criar=1">Pedir convite</Link></>}
         <button type="button" className="tb-burger" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="tb-menu" onClick={() => setOpen(!open)}><i /><i /><i /></button>
         {open && <div id="tb-menu" className="tb-menu">{NAV.map(([l, to]) => <Link key={l} to={to} onClick={go}>{l}</Link>)}<Link to="/@demo" onClick={go}>Explorar mapas</Link>{me?.user ? (homeLink(me) && <Link to={homeLink(me)[1]} onClick={go}>{homeLink(me)[0]}</Link>) : <Link to="/entrar" onClick={go}>Entrar</Link>}</div>}
       </header>

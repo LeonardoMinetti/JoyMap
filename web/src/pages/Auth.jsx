@@ -81,7 +81,7 @@ const EB = { criador: 'Criadores', explorador: 'Exploradores', restaurante: 'Res
 const Head = ({ kind, criar, children }) => (
   <>
     <span className="eb">{EB[kind]}</span>
-    <h1 className="d s44">{criar ? 'Criar conta' : 'Entrar'}</h1>
+    <h1 className="d s44">{criar ? (kind === 'criador' ? 'Pedir convite' : 'Criar conta') : 'Entrar'}</h1>
     <p className="mut">{children}</p>
   </>
 )
@@ -196,7 +196,7 @@ function ApplyForm({ me, voltar }) {
       <Field label="E-mail" id="e"><div className="in"><input id="e" type="email" value={f.email} onChange={set('email')} placeholder="voce@email.com" autoComplete="email" required /></div></Field>
       <Check on={f.acceptTerms} onChange={(v) => setF({ ...f, acceptTerms: v })}>Sou o titular ou represento este perfil e aceito os <b><Link to="/termos" target="_blank">Termos</Link></b> e a <b><Link to="/termos" target="_blank">Política de Privacidade</Link></b>.</Check>
       {err && <p className="err" role="alert">{err} {err.includes('Já existe') && <Link className="link" to="/entrar">Entrar</Link>}</p>}
-      <button className="btn blk" disabled={busy}>Criar conta</button>
+      <button className="btn blk" disabled={busy}>Pedir convite</button>
       <span className="xs mut c">Sem senha e sem cobrança nesta etapa.</span>
       <Bottom kind="criador" criar voltar={voltar} />
     </form>
@@ -237,7 +237,7 @@ export function Login() {
   const escolher = !como && !criar && qs.get('leitor') !== '1' && !qs.get('erro')
   // volta só para um mapa (/@criador...) ou para os salvos
   const voltar = /^\/(@[a-z0-9_-]{1,40}(\/[a-z0-9\/_-]*)?|salvos)$/i.test(qs.get('voltar') || '') ? qs.get('voltar') : '/salvos'
-  useTitle(`${criar ? 'Criar conta' : 'Entrar'}${kind === 'explorador' ? ' de explorador' : kind === 'restaurante' ? ' de restaurante' : ''}`)
+  useTitle(`${criar ? (kind === 'criador' ? 'Pedir convite' : 'Criar conta') : 'Entrar'}${kind === 'explorador' ? ' de explorador' : kind === 'restaurante' ? ' de restaurante' : ''}`)
   useEffect(() => {
     if (!me?.user) return
     const home = homeFor(me)

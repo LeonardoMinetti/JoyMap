@@ -8,4 +8,6 @@ data/apify/
 
 # extração de lugares (dados de criadores) e arquivos do macOS
 saida/
+# prévia local com dados do Google (não publicar)
+web/public/maps/*.google.json
 .DS_Store

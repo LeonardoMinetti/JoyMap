@@ -65,7 +65,7 @@ export function Guides() {
           {cities.length > 1 && <div className="mg-chips" role="group" aria-label="Filtrar por cidade">{['', ...cities].map((c) => <button key={c} type="button" className={'chip' + (city === c ? ' on' : '')} aria-pressed={city === c} onClick={() => setCity(c)}>{c || 'Todas as cidades'}</button>)}</div>}
           <div className="mg-grid">{list.map((g, i) => <Card key={g.id} g={g} i={i} />)}</div>
           {!list.length && <p className="mut">Os primeiros RoteirosJoy estão sendo escolhidos.</p>}
-          <div className="mg-cta"><div><h3 className="d">Você cria roteiros?</h3><p>Marque, no seu painel, os roteiros que o JoyMap pode divulgar.</p></div><Link className="btn" to="/entrar?criar=1">Quero meu mapa</Link></div>
+          <div className="mg-cta"><div><h3 className="d">Você cria roteiros?</h3><p>Marque, no seu painel, os roteiros que o JoyMap pode divulgar.</p></div><Link className="btn" to="/entrar?criar=1">Pedir convite</Link></div>
         </>}
       </main>
       <SiteFooter />

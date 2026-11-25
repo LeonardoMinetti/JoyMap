@@ -652,3 +652,9 @@
 .hs-ph{transition:transform 1.1s cubic-bezier(.4,0,.2,1);transform-origin:50% 50%;z-index:3}
 .hs-ph.big{transform:scale(1.3)}
 @media (max-width:760px){.hs-ph.big{transform:scale(1.2)}}
+
+/* lançamento: planos pagos aparecem esmaecidos, com "Em breve"; voltam ao normal ao passar o mouse, para ler */
+.pn-c.pn-off{opacity:.6;transition:opacity .2s}.pn-c.pn-off:hover,.pn-c.pn-off:focus-within{opacity:1}
+.pn-c .pn-wait,.pn-c.pn-pro .pn-wait{background:transparent;border:2px dashed currentColor;color:inherit;cursor:default;box-shadow:none;transform:none}
+.pn-c.pn-pro .pn-badge{background:#fff;color:var(--ink)}
+.pn-c.pn-pro .pn-wait{color:#fff}
