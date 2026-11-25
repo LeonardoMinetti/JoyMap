@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
 import { api, track } from '../api.js'
 import { BASE, STATIC } from '../lib/base.js'
+import { byCity, citiesOf } from './extras.js'
 import { Link, navigate, toast, useLocation } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -58,13 +59,15 @@ function ReportSheet({ slug, place, creator, onClose }) {
 function FiltersSheet({ data, f, onClose }) {
   const theme = data.creator.theme
   const cats = theme.categories.filter((c) => data.places.some((p) => p.category === c.id))
-  const hoods = [...new Set(data.places.map((p) => p.neighborhood || p.municipality).filter(Boolean))].sort().slice(0, 14)
+  const cityNav = byCity(data.places)
+  const hoods = cityNav ? citiesOf(data.places).map(([c]) => c) : [...new Set(data.places.map((p) => p.neighborhood || p.municipality).filter(Boolean))].sort().slice(0, 14)
+  const [picked, setPicked] = cityNav ? [f.cities, f.setCities] : [f.hoods, f.setHoods]
   const flip = (arr, set, v) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
   return (
     <div className="psheetwrap" onClick={onClose}><div className="psheet" onClick={(e) => e.stopPropagation()}>
       <div className="prow"><h2 className="pt sp" style={{ '--fs': '26px' }}>Filtros</h2><button className="pb sm sec" onClick={() => { f.clear() }}>Limpar</button></div>
       <div><div className="xs" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Categoria</div><div className="pchips">{cats.map((c) => <button key={c.id} className={'pchip' + (f.cats.includes(c.id) ? ' on' : '')} onClick={() => flip(f.cats, f.setCats, c.id)}>{c.name}</button>)}</div></div>
-      {hoods.length > 0 && <div><div className="xs" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Bairro</div><div className="pchips">{hoods.map((h) => <button key={h} className={'pchip' + (f.hoods.includes(h) ? ' on' : '')} onClick={() => flip(f.hoods, f.setHoods, h)}>{h}</button>)}</div></div>}
+      {hoods.length > 0 && <div><div className="xs" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{cityNav ? 'Cidade' : 'Bairro'}</div><div className="pchips">{hoods.map((h) => <button key={h} className={'pchip' + (picked.includes(h) ? ' on' : '')} onClick={() => flip(picked, setPicked, h)}>{h}</button>)}</div></div>}
       <div className="prow"><div className="sp"><b className="sm">Perto de mim</b><div className="xs mut">Usa a localização só neste aparelho, nesta visita (até {NEAR_KM} km)</div></div><Sw on={!!f.near} onChange={f.toggleNear} label="Perto de mim" /></div>
       <div className="prow"><div className="sp"><b className="sm">Só com vídeo</b></div><Sw on={f.video} onChange={f.setVideo} label="Só com vídeo" /></div>
       <button className="pb" onClick={onClose}>Ver {f.shown.length} {f.shown.length === 1 ? 'lugar' : 'lugares'}</button>
@@ -191,7 +194,7 @@ export default function Public({ slug, embed }) {
   }
 
   // celular
-  const page = (inner, tabCur) => <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}><div className="pub" style={{ ...wrapStyle, width: '100%', maxWidth: 460, minHeight: '100dvh', display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px var(--line)' }}>{inner}{tabCur && <PubTabs cur={tabCur} href={href} />}{overlays}</div></div>
+  const page = (inner, tabCur) => <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}><div className="pub" style={{ ...wrapStyle, width: '100%', maxWidth: 460, minHeight: '100dvh', display: 'flex', flexDirection: 'column', boxShadow: '0 0 0 1px var(--line)' }}>{inner}{tabCur && <PubTabs cityNav={byCity(data.places)} cur={tabCur} href={href} />}{overlays}</div></div>
 
   if (fichaMatch) {
     if (!fichaPlace) return page(<><Header title="Lugar não encontrado" back={href('/')} /><div className="pbody"><p className="mut">Este lugar não está mais no mapa.</p></div></>)

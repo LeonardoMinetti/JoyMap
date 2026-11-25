@@ -249,3 +249,11 @@
 .jm-row{flex-direction:row-reverse}
 .jm-col{align-items:flex-end;text-align:right}
 .jm-own{flex-direction:row-reverse;justify-content:flex-end;text-align:left;flex:1}
+
+/* linha do tempo em duas colunas quando há largura (no celular continua em uma) */
+.tl-wrap{container-type:inline-size}
+@container (min-width:480px){
+  .tl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;row-gap:34px}
+  .tl-i{display:flex;flex-direction:column;gap:12px;padding-bottom:0}
+  .tl-i:not(:last-child)::before,.tl-i::before{content:'';position:absolute;left:46px;right:0;top:17px;bottom:auto;width:auto;height:2px;background:currentColor;opacity:.18}
+}

@@ -229,6 +229,7 @@ export const hasStory = (route) => (route.stops || []).some((s) => s.text || s.t
 export function RouteTimeline({ route, places, theme, openFicha, preview }) {
   const stops = routeStops(route)
   return (
+    <div className="tl-wrap">
     <ol className="tl" aria-label={`Linha do tempo: ${route.name}`}>
       {stops.map((st, i) => {
         const p = st.placeId != null ? places.find((x) => x.id === st.placeId) : null
@@ -247,6 +248,7 @@ export function RouteTimeline({ route, places, theme, openFicha, preview }) {
           </li>)
       })}
     </ol>
+    </div>
   )
 }
 // Aberto agora (só para lugares com horário informado)

@@ -5,7 +5,7 @@ import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
 import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE } from './shared.jsx'
-import { cityOf, citiesOf, hasHours, newest } from './extras.js'
+import { cityOf, citiesOf, byCity, hasHours, newest } from './extras.js'
 
 // Mapa individual no celular, no padrão do Viver SP: o mapa ocupa a tela toda e a lista fica numa folha
 // inferior arrastável (peek / meia / cheia). Tocar em um pin destaca o lugar e mostra um cartão flutuante.
@@ -15,11 +15,12 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
 const KEY = { '/': 'inicio', '/roteiros': 'roteiros' }
 // Abas inferiores (Início, Bairros, Categorias, Roteiros). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
-export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes }) {
+export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes, cityNav }) {
   const c = KEY[cur] || cur
   return (
     <nav ref={navRef} className="ms-tabs" aria-label="Navegação do mapa">
-      {NAV_TABS.filter(([k]) => !(noRoutes && k === 'roteiros')).map(([k, l, ic]) => {
+      {NAV_TABS.filter(([k]) => !(noRoutes && k === 'roteiros')).map(([k, label, icon]) => {
+        const swap = cityNav && k === 'bairros', l = swap ? 'Cidades' : label, ic = swap ? 'globe' : icon
         const inner = <><Icon n={ic} s={22} c="currentColor" />{l}</>
         const on = c === k
         if (onOpen || preview) return <button key={k} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} tabIndex={preview ? -1 : 0} onClick={() => onOpen?.(k)}>{inner}</button>
@@ -103,6 +104,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const hoods = Object.entries(places.filter((p) => !f.cities?.length || f.cities.includes(cityOf(p))).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
   const cities = citiesOf(places)
   const multiCity = cities.length > 1
+  const cityNav = byCity(places)
   const city = f.cities?.length === 1 ? f.cities[0] : null
   const anyHours = hasHours(places)
   const news = !f.active && !route ? newest(places) : []
@@ -148,7 +150,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
         {hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>}
         {city && <button type="button" className="ms-chip on" onClick={() => f.setCities([])} aria-label={`Remover a cidade ${city}`}><Icon n="globe" s={14} c="currentColor" />{city}<Icon n="close" s={14} c="currentColor" /></button>}
-        {multiCity && !city && <button type="button" className="ms-chip" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel('cidades')}><Icon n="globe" s={14} c="currentColor" />Cidades</button>}
+        {multiCity && !cityNav && !city && <button type="button" className="ms-chip" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel('cidades')}><Icon n="globe" s={14} c="currentColor" />Cidades</button>}
         {anyHours && <button type="button" className={'ms-chip' + (f.openNow ? ' on' : '')} aria-pressed={!!f.openNow} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.setOpenNow(!f.openNow)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>}
         {f.toggleNear && <button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button>}
         <button type="button" className={'ms-chip' + (!f.cats.length ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([])}>Todos</button>
@@ -175,12 +177,12 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {!preview && creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </div>
       </section>
-      {panel === 'bairros' && (
+      {panel === 'bairros' && !cityNav && (
         <Panel bottom={tabs ? tabH : 0} title="Bairros" onClose={() => setPanel(null)}>
           <button type="button" className={'ms-opt' + (!hood ? ' on' : '')} onClick={() => pick(() => f.setHoods([]))}><span className="sp">Todos os bairros</span><i>{places.length}</i></button>
           {hoods.map(([h, n]) => <button key={h} type="button" className={'ms-opt' + (hood === h ? ' on' : '')} onClick={() => pick(() => f.setHoods([h]))}><span className="sp">{h}</span><i>{n}</i></button>)}
         </Panel>)}
-      {panel === 'cidades' && (
+      {(panel === 'cidades' || (panel === 'bairros' && cityNav)) && (
         <Panel bottom={tabs ? tabH : 0} title="Cidades" onClose={() => setPanel(null)}>
           <button type="button" className={'ms-opt' + (!city ? ' on' : '')} onClick={() => pick(() => f.setCities([]))}><span className="sp">Todas as cidades</span><i>{places.length}</i></button>
           {cities.map(([c, n]) => <button key={c} type="button" className={'ms-opt' + (city === c ? ' on' : '')} onClick={() => pick(() => { f.setCities([c]); f.setHoods?.([]) })}><span className="sp">{c}</span><i>{n}</i></button>)}
@@ -208,7 +210,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {saved && <SavedNote saved={saved} slug={creator.slug} />}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </Panel>)}
-      {tabs && <PubTabs noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
+      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
     </div>
   )
 }

@@ -18,3 +18,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 010 | 2026-11-24 19:13 | conteudo | Pagina de Miniguias com curadoria | `deploy/conteudo/010-pagina-de-miniguias-com-curadoria` |
 | 011 | 2026-11-24 19:38 | mapa | Cabecalho do mapa com a marca JoyMap | `deploy/mapa/011-cabecalho-do-mapa-com-a-marca-joymap` |
 | 012 | 2026-11-24 19:40 | conteudo | Miniguias passam a se chamar RoteirosJoy | `deploy/conteudo/012-miniguias-passam-a-se-chamar-roteirosjoy` |
+| 013 | 2026-11-24 21:33 | mapa | Cidades para viajantes e linha do tempo em duas colunas | `deploy/mapa/013-cidades-para-viajantes-e-linha-do-tempo-` |

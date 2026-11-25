@@ -3,7 +3,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, sub } from './shared.jsx'
-import { cityOf, citiesOf, hasHours, newest } from './extras.js'
+import { cityOf, citiesOf, byCity, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 
@@ -87,6 +87,8 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
   const cities = useMemo(() => citiesOf(places), [places])
   const multiCity = cities.length > 1
+  const cityNav = byCity(places)
+  const pickCity = (c) => { f.setCities(c ? [c] : []); f.setHoods?.([]); setView('home'); setRouteId(null); if (fichaPlace) go('/') }
   const city = f.cities?.length === 1 ? f.cities[0] : null
   const anyHours = hasHours(places)
   const [cityMenu, setCityMenu] = useState(false)
@@ -123,7 +125,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         {grid(news)}
       </>}
       {f.openNow && <div className="dk-chips" role="group" aria-label="Filtro ativo"><button type="button" className="ms-chip on" onClick={() => f.setOpenNow(false)} aria-label="Tirar filtro Abertos agora"><span className="opn"><i aria-hidden="true" />Abertos agora</span> ×</button></div>}
-      {sechead(hood || city || (news.length ? 'Mais lugares' : 'Lugares'), list.length - (news.length ? news.length : 0), hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>)}
+      {sechead(hood || city || (news.length ? 'Mais lugares' : 'Lugares'), list.length - (news.length ? news.length : 0), cityNav && city ? <button type="button" className="ms-chip on" onClick={() => f.setCities([])} aria-label={`Remover a cidade ${city}`}><Icon n="globe" s={14} c="currentColor" />{city}<Icon n="close" s={14} c="currentColor" /></button> : hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>)}
       {list.length === 0 && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : list.length === 0 ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} /> : grid(news.length ? list.filter((p) => !newIds.has(p.id)) : list)}
     </>
   )
@@ -145,16 +147,18 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
           <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
             <nav className="dk-nav" aria-label="Navegação do mapa">
-              {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, l, ic, menu]) => menu
+              {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, label, icon, menu]) => [k, cityNav && k === 'bairros' ? 'Cidades' : label, cityNav && k === 'bairros' ? 'globe' : icon, menu]).map(([k, l, ic, menu]) => menu
                 ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
                 : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k); if (k === 'home') { f.clear?.(); f.setHoods?.([]) } }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
               <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
             </nav>
-            {pop && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? 'Bairros' : 'Categorias'}>
-              {pop === 'bairros'
+            {pop && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
+              {pop === 'bairros' && cityNav
+                ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>
+                : pop === 'bairros'
                 ? <>{hoods.map(([h, n]) => <button key={h} type="button" role="menuitem" className={f.hoods?.length === 1 && f.hoods[0] === h ? 'on' : ''} onClick={() => pickMenu(() => f.setHoods([h]))}>{h}<i>{n}</i></button>)}</>
                 : <>{usedCats.map((c) => <button key={c.id} type="button" role="menuitem" className={f.cats.length === 1 && f.cats[0] === c.id ? 'on' : ''} onClick={() => pickMenu(() => f.setCats([c.id]))}>{c.name}<i>{places.filter((p) => p.category === c.id).length}</i></button>)}</>}
-              <button type="button" role="menuitem" className="all" onClick={() => pickMenu(() => (pop === 'bairros' ? f.setHoods([]) : f.setCats([])))}>{pop === 'bairros' ? 'Todos os bairros' : 'Todas as categorias'}</button>
+              <button type="button" role="menuitem" className="all" onClick={() => pickMenu(() => (pop === 'bairros' ? (cityNav ? f.setCities([]) : f.setHoods([])) : f.setCats([])))}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
             </div>}
           </div>
         </header>
@@ -165,7 +169,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       </section>
       <div className="dk-map">
         <MapCanvas places={list} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
-        {multiCity && (
+        {multiCity && !cityNav && (
           <div className="dk-cities" onMouseLeave={() => setCityMenu(false)}>
             <button type="button" className="ms-chip" aria-haspopup="true" aria-expanded={cityMenu} onClick={() => setCityMenu(!cityMenu)}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}</button>
             {cityMenu && <div className="dk-pop dk-citypop" role="menu" aria-label="Cidades">
