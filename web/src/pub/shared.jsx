@@ -130,6 +130,12 @@ export function AccountBtn({ slug, preview }) {
 }
 
 // Marca JoyMap no topo do mapa (como no Viver SP). Some no plano Pro (showBrand false). A cor segue o texto do tema do criador.
+// Instagram do dono do mapa (respeita a opção do criador no estúdio). Na demonstração o perfil é fictício e não abre nada.
+export function InstaLink({ creator, preview, className, children }) {
+  if (creator.theme?.social?.instagram === false) return children || null
+  const off = preview || creator.demo
+  return <a className={className} aria-label={`Instagram de ${creator.displayName}`} title={`@${creator.handle} no Instagram`} href={off ? '#' : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => { if (!off) return; e.preventDefault(); if (!preview) toast('Perfil fictício da demonstração') }}>{children}<span className="ig-ic" aria-hidden="true"><Icon n="insta" s={16} c="currentColor" /></span></a>
+}
 export const BRAND_LINE = 'Os lugares de quem você segue.'
 export function BrandMark({ preview }) {
   const mask = `url("${logoUrl}") left center / contain no-repeat`
