@@ -524,3 +524,15 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .mg-cta{margin-top:24px;border:2px solid var(--ink);border-radius:24px;padding:26px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.mg-cta h3{margin:0 0 4px;font-size:26px}.mg-cta p{margin:0}
 @media (max-width:640px){.mg-hero{padding:112px 0 52px}.mg-hero .fl-layer{display:none}.mg-grid{grid-template-columns:1fr}.mg-ph{aspect-ratio:1}}
 @media (prefers-reduced-motion:reduce){.mg-card{transition:none}}
+
+/* cartões do RoteirosJoy no mesmo padrão dos roteiros do mapa: fundo cheio na cor, cantos de 24px, sem contorno nem sombra dura */
+.mg-grid{gap:20px}
+.mg-card{border:0;border-radius:24px;background:var(--c);box-shadow:none}
+.mg-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(23,23,19,.18)}
+.mg-ph{margin:8px 8px 0;border-radius:18px;overflow:hidden}
+.mg-tag{background:#fff}
+.mg-body{padding:16px 18px 18px}
+.mg-by{border-top:1px solid color-mix(in srgb,currentColor 30%,transparent)}
+.mg-by small{opacity:.85}
+.mg-by img,.mg-by>i{box-shadow:0 0 0 3px #fff}
+.mg-tag,.mg-city{left:12px}.mg-city{left:auto;right:12px}.mg-tag,.mg-city{top:12px}
