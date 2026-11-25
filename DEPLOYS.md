@@ -20,3 +20,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 012 | 2026-11-24 19:40 | conteudo | Miniguias passam a se chamar RoteirosJoy | `deploy/conteudo/012-miniguias-passam-a-se-chamar-roteirosjoy` |
 | 013 | 2026-11-24 21:33 | mapa | Cidades para viajantes e linha do tempo em duas colunas | `deploy/mapa/013-cidades-para-viajantes-e-linha-do-tempo-` |
 | 014 | 2026-11-24 21:39 | mapa | Roteiros com paradas numeradas e ligadas no mapa | `deploy/mapa/014-roteiros-com-paradas-numeradas-e-ligadas` |
+| 015 | 2026-11-24 21:43 | mapa | Botao para abrir o roteiro no Google Maps | `deploy/mapa/015-botao-para-abrir-o-roteiro-no-google-map` |

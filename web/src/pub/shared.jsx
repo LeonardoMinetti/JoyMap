@@ -8,7 +8,7 @@ import FakeMap from '../FakeMap.jsx'
 import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
 import logoUrl from '../brand/logo.svg'
-import { cityOf, openState, openLabel } from './extras.js'
+import { cityOf, openState, openLabel, gmapsRoute, GMAPS_MAX } from './extras.js'
 import { DAY_LONG } from '../../../server/hours.js'
 import { FONTS, catOf, fmtDate, initial, onAccent, symOf } from '../theme.jsx'
 
@@ -300,12 +300,14 @@ export function RouteBody({ route, places, theme, openFicha, renderList, onMap, 
   const story = hasStory(route)
   const [view, setView] = useState(story ? 'timeline' : 'list')
   useEffect(() => { setView(story ? 'timeline' : 'list') }, [route.id])
+  const gm = gmapsRoute(route, places)
   const opts = [['timeline', 'Linha do tempo'], ['list', 'Lista'], ...(onMap ? [['map', 'Mapa']] : [])]
   return (
     <>
       {route.sponsor && <div className="sp-bar"><SponsorTag s={route.sponsor} /><span>Em parceria com <b>{route.sponsor.brand}</b></span><SponsorMark s={route.sponsor} /></div>}
       {route.note && <p className="ms-bio">{route.note}</p>}
       <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
+      {gm && <div className="rt-gm"><a className="pb sec sm" href={gm.url} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}><Icon n="route" s={16} c="currentColor" />Abrir o roteiro no Google Maps</a>{gm.cut > 0 && <span className="xs">O Google Maps recebe as {GMAPS_MAX} primeiras paradas.</span>}</div>}
       {view === 'timeline' ? <RouteTimeline route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} /> : renderList()}
       {route.locked && <RouteLock route={route} preview={preview} />}
       {route.products?.length > 0 && <RouteProducts products={route.products} preview={preview} />}
