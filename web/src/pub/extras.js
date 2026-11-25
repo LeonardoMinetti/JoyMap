@@ -11,6 +11,7 @@ export const byCity = (places) => {
   const hoods = new Set(places.filter((p) => cityOf(p) === cities[0][0] && p.neighborhood).map((p) => p.neighborhood))
   return cities.length > hoods.size
 }
+export const routePath = (route) => (route.stops?.length ? route.stops : route.placeIds.map((placeId) => ({ placeId }))).map((s, i) => ({ id: s.placeId, n: i + 1 })).filter((s) => s.id != null)
 export const hasHours = (places) => places.some((p) => p.hours)
 // os últimos lugares adicionados ao mapa (ids crescem a cada lugar novo)
 export const newest = (places, n = 4) => (places.length >= 6 ? [...places].sort((a, b) => b.id - a.id).slice(0, n) : [])

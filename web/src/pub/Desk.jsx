@@ -3,7 +3,7 @@ import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, sub } from './shared.jsx'
-import { cityOf, citiesOf, byCity, hasHours, newest } from './extras.js'
+import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 
@@ -168,7 +168,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         </div>
       </section>
       <div className="dk-map">
-        <MapCanvas places={list} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
+        <MapCanvas places={list} path={route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
         {multiCity && !cityNav && (
           <div className="dk-cities" onMouseLeave={() => setCityMenu(false)}>
             <button type="button" className="ms-chip" aria-haspopup="true" aria-expanded={cityMenu} onClick={() => setCityMenu(!cityMenu)}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}</button>

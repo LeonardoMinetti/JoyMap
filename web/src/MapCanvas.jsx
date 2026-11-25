@@ -7,12 +7,14 @@ import { useLibVersion } from './iconlib.js'
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)] }
 
 // Mapa real (Leaflet + base vetorial nativa do OpenFreeMap) com o visual do criador: tom, rótulos, formato/tamanho do pin, agrupamento e pin selecionado.
-export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove }) {
+export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove, path }) {
   const libV = useLibVersion()
   const el = useRef(null)
   const map = useRef(null)
   const layer = useRef(null)
   const extraLayer = useRef(null)
+  const pathLayer = useRef(null)
+  const pathKey = path ? path.map((s) => `${s.id}:${s.n}`).join(',') : ''
   const fitted = useRef('')
   const draw = useRef(() => {})
   const cache = useRef(new Map()) // marcadores já desenhados (evita piscar quando chega um lugar novo)
@@ -24,6 +26,7 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
     map.current = m
     if (interactive) L.control.zoom({ position: zoomPos }).addTo(m)
     m.attributionControl.setPrefix(false)
+    pathLayer.current = L.layerGroup().addTo(m)
     layer.current = L.layerGroup().addTo(m)
     extraLayer.current = L.layerGroup().addTo(m)
     m.on('zoomend', () => draw.current())
@@ -40,7 +43,7 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
     const mine = cache.current
     // mudou o visual (tema, símbolos, zoom de agrupamento): refaz tudo; senão só entram/saem os que mudaram
     const zoom = m.getZoom()
-    const clustering = theme.cluster && zoom < 14 && places.length > 3
+    const clustering = !path && theme.cluster && zoom < 14 && places.length > 3
     const style = JSON.stringify([theme.categories, theme.shape, theme.pinSize, theme.pinBorder, theme.selected, symbols, libV, dim, clustering ? Math.round(zoom) : 'x'])
     if (sig.current !== style) { layer.current.clearLayers(); mine.clear(); sig.current = style }
     const want = new Map()
@@ -86,6 +89,27 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
   // transição curta dos pins quando o visitante troca símbolo, formato ou paleta (escala + opacidade)
   useEffect(() => { if (!pop || !el.current) return; el.current.classList.add('repop'); const h = setTimeout(() => el.current?.classList.remove('repop'), 420); return () => clearTimeout(h) }, [pop])
   useEffect(() => { draw.current() }, [places, theme.categories, theme.shape, theme.pinSize, theme.pinBorder, theme.cluster, theme.selected, symbols, selectedId, libV, dim])
+
+  // roteiro aberto: linha ligando as paradas na ordem e o número de cada uma (o mesmo da linha do tempo)
+  useEffect(() => {
+    const m = map.current, g = pathLayer.current
+    g.clearLayers()
+    draw.current()
+    if (!pathKey) return
+    const stops = path.map((s) => ({ ...s, p: places.find((x) => x.id === s.id) })).filter((s) => s.p)
+    const pts = stops.map((s) => [s.p.lat, s.p.lon])
+    if (!pts.length) return
+    if (pts.length > 1) {
+      const dark = theme.tone === 'dark'
+      L.polyline(pts, { color: dark ? '#171713' : '#fff', weight: 8, opacity: 0.9, interactive: false }).addTo(g)
+      L.polyline(pts, { color: dark ? '#fff' : '#171713', weight: 3, dashArray: '2 9', interactive: false }).addTo(g)
+    }
+    const nums = new Map()
+    for (const s of stops) nums.set(s.p.id, { p: s.p, n: [...(nums.get(s.p.id)?.n || []), s.n] })
+    for (const { p, n } of nums.values()) L.marker([p.lat, p.lon], { icon: L.divIcon({ className: 'pinwrap', html: `<b class="stopn${theme.shape === 'drop' ? ' drop' : ''}">${n.join('·')}</b>`, iconSize: [0, 0] }), zIndexOffset: 2000, keyboard: false }).addTo(g).on('click', () => onSelect?.(p.id))
+    m.fitBounds(L.latLngBounds(pts), fitPad ? { paddingTopLeft: [fitPad.left ?? 50, (fitPad.top || 0) + 20], paddingBottomRight: [50, (fitPad.bottom || 0) + 20], maxZoom: 14 } : { padding: [60, 60], maxZoom: 14 })
+    return () => { fitted.current = '' }
+  }, [pathKey, places.length, theme.tone, theme.shape])
 
   // enquadramento inicial conforme o "ponto inicial" escolhido
   useEffect(() => {
