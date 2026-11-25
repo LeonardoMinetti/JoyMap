@@ -25,3 +25,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 017 | 2026-11-24 21:49 | ajuste | Selo Aberto agora com ponto redondo | `deploy/ajuste/017-selo-aberto-agora-com-ponto-redondo` |
 | 018 | 2026-11-24 21:51 | conteudo | Cartoes do RoteirosJoy no padrao do mapa | `deploy/conteudo/018-cartoes-do-roteirosjoy-no-padrao-do-mapa` |
 | 019 | 2026-11-24 22:07 | conteudo | RoteirosJoy com letra legivel e sem etiqueta | `deploy/conteudo/019-roteirosjoy-com-letra-legivel-e-sem-etiq` |
+| 020 | 2026-11-24 22:08 | login | Restaurante ou estabelecimento na escolha de entrada | `deploy/login/020-restaurante-ou-estabelecimento-na-escolh` |

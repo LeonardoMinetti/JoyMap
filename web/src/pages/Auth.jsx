@@ -85,7 +85,7 @@ const Head = ({ kind, criar, children }) => (
     <p className="mut">{children}</p>
   </>
 )
-const OTHER = { criador: [['explorador', 'Só quer salvar lugares?', 'Entrar como explorador'], ['restaurante', 'Tem um restaurante?', 'Entrar como restaurante']], explorador: [['criador', 'Tem um mapa?', 'Entrar como criador'], ['restaurante', 'Tem um restaurante?', 'Entrar como restaurante']], restaurante: [['criador', 'Tem um mapa?', 'Entrar como criador'], ['explorador', 'Só quer salvar lugares?', 'Entrar como explorador']] }
+const OTHER = { criador: [['explorador', 'Só quer salvar lugares?', 'Entrar como explorador'], ['restaurante', 'Tem um restaurante/estabelecimento?', 'Entrar como restaurante/estabelecimento']], explorador: [['criador', 'Tem um mapa?', 'Entrar como criador'], ['restaurante', 'Tem um restaurante/estabelecimento?', 'Entrar como restaurante/estabelecimento']], restaurante: [['criador', 'Tem um mapa?', 'Entrar como criador'], ['explorador', 'Só quer salvar lugares?', 'Entrar como explorador']] }
 const Bottom = ({ kind, criar, voltar }) => (
   <Alt>
     <div>{criar ? 'Já tem conta?' : 'Ainda não tem conta?'} <Link className="link" to={url(kind, !criar, voltar)}>{criar ? 'Entrar' : 'Criar conta'}</Link></div>
@@ -207,7 +207,7 @@ function ApplyForm({ me, voltar }) {
 const CHOICES = [
   ['criador', 'user', 'Sou criador', 'Tenho, ou quero ter, um mapa das minhas indicações, com painel, Estúdio de estilo e métricas.'],
   ['explorador', 'heart', 'Sou explorador', 'Quero salvar lugares dos mapas dos criadores e encontrar tudo num só lugar.'],
-  ['restaurante', 'pin', 'Tenho um restaurante', 'Quero ver quais criadores indicam o meu lugar e corrigir os dados exibidos.'],
+  ['restaurante', 'pin', 'Tenho um restaurante/estabelecimento', 'Quero ver quais criadores indicam o meu lugar e corrigir os dados exibidos.'],
 ]
 function Choose() {
   return (
