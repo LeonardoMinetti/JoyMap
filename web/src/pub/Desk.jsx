@@ -61,7 +61,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
         {place.note && <p className="dk-p">“{place.note}”</p>}
         {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
       </div>
-      <div className="prow">{!creator.demo && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button><span className="xs mut sp">Informações podem estar desatualizadas. Confirme com o estabelecimento.</span></div>
+      <div className="prow">{!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button><span className="xs mut sp">Informações podem estar desatualizadas. Confirme com o estabelecimento.</span></div>
       {others.length > 0 && <section className="dk-sec2"><div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>Outros lugares{hood ? ` em ${hood}` : ''}</b></div><div className="dk-grid">{others.map((p) => <Card key={p.id} p={p} theme={theme} saved={ctx.saved} onOpen={onOpen} />)}</div></section>}
     </div>
   )

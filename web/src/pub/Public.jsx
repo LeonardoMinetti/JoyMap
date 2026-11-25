@@ -111,7 +111,7 @@ function Ficha({ place, data, ctx }) {
       <div className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Quem indicou</div>
       <div className="box"><div className="prow"><div className="pav" style={{ width: 36, height: 36, fontSize: 16 }}>{initial(creator.displayName)}</div><div className="sp"><b className="sm">{creator.displayName}</b><div className="xs mut">{place.postedOn ? fmtDate(place.postedOn) : 'Indicado pelo criador'}</div></div>{place.ad && <span className="tag2 publi">Publi</span>}</div>
         {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}</div>
-      <div className="prow"><button className="pb sm sec" onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>{!creator.demo && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button></div>
+      <div className="prow"><button className="pb sm sec" onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>{!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button></div>
       <span className="xs mut" style={{ textAlign: 'center' }}>Informações podem estar desatualizadas. Confirme com o estabelecimento.</span>
     </div>
   )
