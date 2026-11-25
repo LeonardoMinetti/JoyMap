@@ -5,3 +5,7 @@ data/*.sqlite*
 .claude/
 pages-dist/
 data/apify/
+
+# extração de lugares (dados de criadores) e arquivos do macOS
+saida/
+.DS_Store

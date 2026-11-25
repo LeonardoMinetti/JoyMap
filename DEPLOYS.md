@@ -30,3 +30,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 022 | 2026-11-24 22:25 | mapa | Player da postagem dentro do mapa | `deploy/mapa/022-player-da-postagem-dentro-do-mapa` |
 | 023 | 2026-11-24 22:31 | conteudo | Mapa da Nathi Guarienti no formato Pro | `deploy/conteudo/023-mapa-da-nathi-guarienti-no-formato-pro` |
 | 024 | 2026-11-24 22:47 | conteudo | Foto de perfil no mapa da Nathi | `deploy/conteudo/024-foto-de-perfil-no-mapa-da-nathi` |
+| 025 | 2026-11-25 01:17 | ajuste | Script que extrai lugares das legendas para revisao | `deploy/ajuste/025-script-que-extrai-lugares-das-legendas-p` |
