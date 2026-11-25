@@ -29,3 +29,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 021 | 2026-11-24 22:11 | mapa | Link da postagem no lugar e video no roteiro | `deploy/mapa/021-link-da-postagem-no-lugar-e-video-no-rot` |
 | 022 | 2026-11-24 22:25 | mapa | Player da postagem dentro do mapa | `deploy/mapa/022-player-da-postagem-dentro-do-mapa` |
 | 023 | 2026-11-24 22:31 | conteudo | Mapa da Nathi Guarienti no formato Pro | `deploy/conteudo/023-mapa-da-nathi-guarienti-no-formato-pro` |
+| 024 | 2026-11-24 22:47 | conteudo | Foto de perfil no mapa da Nathi | `deploy/conteudo/024-foto-de-perfil-no-mapa-da-nathi` |
