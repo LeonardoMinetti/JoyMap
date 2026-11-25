@@ -23,6 +23,9 @@ async function staticApi(path, opts) {
   { const r = await demoExtrasApi(path, opts); if (r) return r }
   if (path === '/me') return { user: null, creator: null, claims: [], notices: [] }
   if (path === '/public/demo') { const r = await fetch(`${BASE}/demo.json`); if (!r.ok) throw NO_SERVER(); const d = await r.json(); return { ...d, places: d.places.map((p) => (p.photo ? { ...p, photo: withBase(p.photo) } : p)) } }
+  // outro mapa na versão estática: um arquivo por criador em /maps/<usuario>.json
+  const other = path.match(/^\/public\/([a-z0-9_-]{2,40})$/i)
+  if (other) { const r = await fetch(`${BASE}/maps/${other[1]}.json`).catch(() => null); if (r?.ok && /json/.test(r.headers.get('content-type') || '')) { const d = await r.json(); return { ...d, places: d.places.map((p) => (p.photo ? { ...p, photo: withBase(p.photo) } : p)) } } }
   throw NO_SERVER()
 }
 

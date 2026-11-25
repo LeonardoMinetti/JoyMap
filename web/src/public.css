@@ -276,3 +276,9 @@
 .ms-tags .opn i{width:7px;height:7px;padding:0;border-radius:50%;background:#12b76a;box-shadow:none}
 .ms-tags .opn{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;line-height:1.2}
 .ficha-post{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;width:100%}
+/* player da postagem do criador */
+.postv{position:fixed;inset:0;z-index:3000;background:rgba(10,10,8,.82);display:grid;place-items:center;padding:16px;font-family:var(--body,system-ui)}
+.postv-box{width:min(400px,100%);height:min(760px,calc(100dvh - 32px));display:flex;flex-direction:column;background:#fff;color:#171713;border-radius:22px;overflow:hidden}
+.postv-top{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 10px 18px}.postv-top button{border:0;background:#f1f1ee;color:inherit;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.postv-box iframe{flex:1;width:100%;border:0;min-height:0;background:#fff}
+.postv-out{display:block;text-align:center;padding:14px;font-weight:700;font-size:14px;color:inherit;border-top:1px solid #e6e6e2}

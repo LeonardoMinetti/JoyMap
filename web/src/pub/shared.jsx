@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { embedOf } from './embed.js'
 import { api, track } from '../api.js'
 import { toast, Link } from '../lib/router.jsx'
 import { useMe } from '../lib/me.jsx'
@@ -141,7 +143,30 @@ export function PostLink({ url, creator, preview, className = 'pb', onOpen }) {
   const net = /instagram\.com/.test(url) ? 'Instagram' : /tiktok\.com/.test(url) ? 'TikTok' : /youtu\.?be/.test(url) ? 'YouTube' : null
   const video = /\/(reel|reels|video|shorts)\/|youtu/.test(url)
   const off = preview || creator?.demo
-  return <a className={className} href={off ? '#' : url} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => { if (off) { e.preventDefault(); if (!preview) toast('Postagem ilustrativa da demonstração') } else onOpen?.() }}><Icon n={video ? 'play' : net === 'Instagram' ? 'insta' : 'ext'} s={16} c="currentColor" />{video ? 'Assistir' : 'Ver postagem'}{net ? ` no ${net}` : ''}</a>
+  const embed = embedOf(url)
+  const [open, setOpen] = useState(false)
+  const click = (e) => {
+    if (off) { e.preventDefault(); if (!preview) toast('Postagem ilustrativa da demonstração'); return }
+    onOpen?.()
+    // clique simples abre o player aqui; com Ctrl/Cmd continua abrindo na plataforma
+    if (embed && !e.metaKey && !e.ctrlKey && !e.shiftKey) { e.preventDefault(); setOpen(true) }
+  }
+  return <>
+    <a className={className} href={off ? '#' : url} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={click}><Icon n={video || embed ? 'play' : 'ext'} s={16} c="currentColor" />{embed ? `Assistir post do ${embed.net}` : `${video ? 'Assistir' : 'Ver postagem'}${net ? ` no ${net}` : ''}`}</a>
+    {open && <PostPlayer embed={embed} url={url} creator={creator} onClose={() => setOpen(false)} />}
+  </>
+}
+// Janela com o player; só carrega o conteúdo da plataforma depois do toque
+function PostPlayer({ embed, url, creator, onClose }) {
+  useEffect(() => { const k = (e) => e.key === 'Escape' && onClose(); addEventListener('keydown', k); return () => removeEventListener('keydown', k) }, [onClose])
+  return createPortal(
+    <div className="postv" role="dialog" aria-modal="true" aria-label={`Postagem de @${creator?.handle}`} onClick={onClose}>
+      <div className="postv-box" onClick={(e) => e.stopPropagation()}>
+        <div className="postv-top"><b>@{creator?.handle}</b><button type="button" aria-label="Fechar" autoFocus onClick={onClose}><Icon n="close" s={20} c="currentColor" /></button></div>
+        <iframe title={`Postagem no ${embed.net}`} src={embed.src} allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+        <a className="postv-out" href={url} target="_blank" rel="noopener noreferrer">Abrir no {embed.net}</a>
+      </div>
+    </div>, document.body)
 }
 export const BRAND_LINE = 'Os lugares de quem você segue.'
 export function BrandMark({ preview }) {

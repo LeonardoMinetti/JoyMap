@@ -27,3 +27,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 019 | 2026-11-24 22:07 | conteudo | RoteirosJoy com letra legivel e sem etiqueta | `deploy/conteudo/019-roteirosjoy-com-letra-legivel-e-sem-etiq` |
 | 020 | 2026-11-24 22:08 | login | Restaurante ou estabelecimento na escolha de entrada | `deploy/login/020-restaurante-ou-estabelecimento-na-escolh` |
 | 021 | 2026-11-24 22:11 | mapa | Link da postagem no lugar e video no roteiro | `deploy/mapa/021-link-da-postagem-no-lugar-e-video-no-rot` |
+| 022 | 2026-11-24 22:25 | mapa | Player da postagem dentro do mapa | `deploy/mapa/022-player-da-postagem-dentro-do-mapa` |
