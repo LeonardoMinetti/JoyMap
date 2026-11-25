@@ -5,16 +5,26 @@ import { Icon } from '../lib/icons.jsx'
 import { AdminPage, Loading, SiteFooter, Top, useTitle } from '../lib/ui.jsx'
 import { Floaters, DoodleDefs } from '../landing/doodles.jsx'
 import { withBase } from '../lib/base.js'
-import { onColor } from '../theme.jsx'
+import { contrast } from '../../../server/theme.js'
 
 const COLORS = ['#FF4B2B', '#2D7FF9', '#36C5A0', '#FF5C8A', '#8B5CF6', '#FFC400']
 
+// Leitura: fundos claros (amarelo, menta) levam letra escura; nos demais a letra é branca e o fundo
+// escurece só o necessário para o texto pequeno passar de 4,5:1.
+const DARK = '#171713'
+export function cardColors(color) {
+  if (contrast(color, DARK) >= 8) return { bg: color, fg: DARK }
+  let n = parseInt(color.slice(1), 16), rgb = [n >> 16, (n >> 8) & 255, n & 255], bg = color
+  while (contrast(bg, '#ffffff') < 4.8) { rgb = rgb.map((v) => Math.floor(v * 0.96)); bg = '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('') }
+  return { bg, fg: '#ffffff' }
+}
+
 function Card({ g, i }) {
-  const bg = g.color || COLORS[i % COLORS.length]
+  const { bg, fg } = cardColors(g.color || COLORS[i % COLORS.length])
   return (
-    <a className="mg-card" href={withBase(g.href)} style={{ '--c': bg, color: onColor(bg) }}>
+    <a className="mg-card" href={withBase(g.href)} style={{ '--c': bg, color: fg }}>
       <div className="mg-ph" style={g.photo ? { backgroundImage: `url("${g.photo}")` } : undefined}>
-        <span className="mg-tag">RoteiroJoy</span>{g.city && <span className="mg-city">{g.city}</span>}
+        {g.city && <span className="mg-city">{g.city}</span>}
         <h2>{g.name}</h2>
       </div>
       <div className="mg-body">

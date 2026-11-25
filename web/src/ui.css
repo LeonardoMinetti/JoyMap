@@ -536,3 +536,4 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .mg-by small{opacity:.85}
 .mg-by img,.mg-by>i{box-shadow:0 0 0 3px #fff}
 .mg-tag,.mg-city{left:12px}.mg-city{left:auto;right:12px}.mg-tag,.mg-city{top:12px}
+.mg-body p,.mg-by small{opacity:1}
