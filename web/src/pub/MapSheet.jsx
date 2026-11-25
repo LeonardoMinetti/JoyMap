@@ -168,7 +168,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
-          {route ? <RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
+          {route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {news.length > 0 && <section className="ms-new" aria-label="Novidades"><div className="ms-sec" style={{ marginTop: 0 }}>Novidades</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
           {shown.length === 0 && !preview && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : shown.length === 0 && !preview

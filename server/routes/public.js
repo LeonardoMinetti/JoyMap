@@ -48,8 +48,8 @@ export default function publicRoutes(app, x) {
     const places = livePlaces(row.id).map((p) => pubPlace(p, row.slug))
     const ids = new Set(places.map((p) => p.id))
     const blocks = Object.fromEntries(v.theme.layout.blocks.map((b) => [b.id, b.on]))
-    const routes = db.prepare('SELECT id, name, note, color, place_ids, stops, price, products, sponsor FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
-      .map((r) => ({ id: r.id, name: r.name, note: r.note, color: r.color || null, price: PAYMENTS && can(v.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(v.plan.tier, 'products') ? j(r.products, []) : [], sponsor: can(v.plan.tier, 'sponsoredRoteiros') ? j(r.sponsor, null) : null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => (can(v.plan.tier, 'roteiros') && (r.placeIds.length || r.stops.length))).map((r) => lockRoute(r, false))
+    const routes = db.prepare('SELECT id, name, note, color, place_ids, stops, price, products, sponsor, video FROM routes WHERE creator_id=? ORDER BY pos, id').all(row.id)
+      .map((r) => ({ video: r.video || null, id: r.id, name: r.name, note: r.note, color: r.color || null, price: PAYMENTS && can(v.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(v.plan.tier, 'products') ? j(r.products, []) : [], sponsor: can(v.plan.tier, 'sponsoredRoteiros') ? j(r.sponsor, null) : null, placeIds: j(r.place_ids, []).filter((i) => ids.has(i)), stops: j(r.stops, []).map((s) => ({ ...s, placeId: ids.has(s.placeId) ? s.placeId : null })).filter((s) => s.placeId || s.title || s.text) })).filter((r) => (can(v.plan.tier, 'roteiros') && (r.placeIds.length || r.stops.length))).map((r) => lockRoute(r, false))
     return c.json({
       creator: {
         handle: v.handle, tiktok: v.tiktok, slug: v.slug, displayName: v.displayName, theme: v.theme, showBrand: !v.plan.can.removeBrand, routesOn: v.plan.can.roteiros,

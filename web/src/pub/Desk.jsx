@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
-import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub } from './shared.jsx'
+import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
 import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
@@ -44,6 +44,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
           <h1 className="pt" style={{ '--fs': '38px' }}>{place.name}</h1>
           <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}<i>@{creator.handle}</i>{place.ad && <i>Publi</i>}</div>
           <div><span className="ms-sec" style={{ marginTop: 0 }}>Endereço</span><p className="dk-p">{place.address || 'Endereço não informado'}</p><span className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</span></div>
+      {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
           <div className="prow">
             <a className="pb sp" href={routeUrl} target="_blank" rel="noopener noreferrer" onClick={() => ctx.track('route_click', { placeId: place.id })}><Icon n="route" s={18} c="currentColor" />Abrir rota</a>
             <button className="pb sec" aria-pressed={isSaved} onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>
@@ -58,7 +59,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
         <span className="ms-sec" style={{ marginTop: 0 }}>Quem indicou</span>
         <div className="prow"><div className="pav" style={{ width: 36, height: 36, fontSize: 16 }}>{initial(creator.displayName)}</div><div className="sp"><b className="sm">{creator.displayName}</b><div className="xs mut">{place.postedOn ? fmtDate(place.postedOn) : 'Indicado pelo criador'}</div></div></div>
         {place.note && <p className="dk-p">“{place.note}”</p>}
-        {(place.tiktokId || place.postUrl) && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}{place.postUrl && <a className={'pb sm sp' + (place.tiktokId ? ' sec' : '')} href={place.postUrl} target="_blank" rel="noopener noreferrer" onClick={() => ctx.track('post_open', { placeId: place.id })}>Abrir post</a>}</div>}
+        {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
       </div>
       <div className="prow">{!creator.demo && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button><span className="xs mut sp">Informações podem estar desatualizadas. Confirme com o estabelecimento.</span></div>
       {others.length > 0 && <section className="dk-sec2"><div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>Outros lugares{hood ? ` em ${hood}` : ''}</b></div><div className="dk-grid">{others.map((p) => <Card key={p.id} p={p} theme={theme} saved={ctx.saved} onOpen={onOpen} />)}</div></section>}
@@ -110,7 +111,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}<Icon n="next" s={20} c="currentColor" /></span></span>
       {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
-  else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
+  else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
   else body = (
     <>

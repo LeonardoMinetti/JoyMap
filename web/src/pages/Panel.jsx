@@ -21,7 +21,7 @@ const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ wi
 const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 import { STATIC } from '../lib/base.js'
 import { resizeImage } from '../lib/image.js'
-import { logoUriFromSvg } from '../../../server/offers.js'
+import { logoUriFromSvg, cleanVideoUrl } from '../../../server/offers.js'
 import { withBase } from '../lib/base.js'
 import { termEmoji } from '../lib/termEmoji.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
@@ -397,6 +397,7 @@ export function Roteiros() {
                   {[...ACCENTS, ...CAT_COLORS].map((col) => <button key={col} type="button" aria-label={`Cor ${col}`} aria-pressed={r.color?.toLowerCase() === col} className={'dotsw' + (r.color?.toLowerCase() === col ? ' on' : '')} style={{ background: col }} onClick={() => set({ color: col })} />)}
                   <label className="chip" style={{ position: 'relative' }}>Outra<input type="color" className="sr" value={r.color || theme.accent} onChange={(e) => set({ color: e.target.value })} aria-label="Outra cor do cartão" /></label></div></div>
               <Field label="Nome do roteiro" id="rn"><div className="in"><input id="rn" value={r.name} maxLength="40" placeholder="Ex.: Domingo de café" onChange={(e) => set({ name: e.target.value })} /></div></Field>
+              <Field label="Vídeo ou postagem do roteiro (opcional)" id="rv"><div className="in"><Icon n="link" s={16} c="#757575" /><input id="rv" type="url" value={r.video || ''} placeholder="Cole o link do Reels, TikTok ou YouTube" onChange={(e) => set({ video: e.target.value })} /></div>{r.video && !cleanVideoUrl(r.video) && <span className="xs" style={{ color: '#b42318' }}>Use um link do Instagram, TikTok ou YouTube começando com https://. Do jeito que está, ele não será salvo.</span>}</Field>
               <Field label="Descrição do roteiro" id="ro"><textarea id="ro" className="in" rows="3" maxLength="240" value={r.note || ''} placeholder="Conte em poucas linhas por que esse roteiro vale o passeio: para quem é, quanto tempo leva e o que torna especial." onChange={(e) => set({ note: e.target.value })} /><span className="xs mut">{(r.note || '').length}/240 · aparece no cartão do roteiro, abaixo do título</span></Field>
             </div>
             <div className="card col" style={{ gap: 10 }}>

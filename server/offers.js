@@ -6,6 +6,13 @@ export const PRICE_MIN = 5
 export const PRICE_MAX = 500
 export const MAX_PRODUCTS = 6
 
+// vídeo ou postagem que explica o roteiro: só links de Instagram, TikTok ou YouTube
+export const cleanVideoUrl = (v) => {
+  try {
+    const u = new URL(String(v || '').trim())
+    return u.protocol === 'https:' && /(^|\.)(instagram\.com|tiktok\.com|youtube\.com|youtu\.be)$/.test(u.hostname) ? u.href.slice(0, 300) : null
+  } catch { return null }
+}
 export const cleanPrice = (v) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= PRICE_MIN && n <= PRICE_MAX ? n : null }
 
 const txt = (v, n) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n)
@@ -61,5 +68,5 @@ export function lockRoute(route, unlocked) {
   if (!route.price || unlocked) return route
   const all = route.stops?.length ? route.stops : route.placeIds.map((placeId) => ({ placeId }))
   const keep = all.slice(0, PREVIEW_STOPS)
-  return { ...route, locked: true, stopCount: all.length, stops: keep, placeIds: [...new Set(keep.map((s) => s.placeId).filter(Boolean))] }
+  return { ...route, video: null, locked: true, stopCount: all.length, stops: keep, placeIds: [...new Set(keep.map((s) => s.placeId).filter(Boolean))] }
 }
