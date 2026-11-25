@@ -272,3 +272,6 @@
 .ig-av .ig-ic{position:absolute;right:-5px;bottom:-3px;width:21px;height:21px;border-radius:50%;background:#171713;color:#fff;box-shadow:0 0 0 2px var(--bg)}.ig-av .ig-ic>*{transform:scale(.8)}
 .ms-top.has-brand{height:96px}
 .ms-top .pt{font-size:17px}
+/* o ponto do selo "Aberto agora" é um ponto, não uma etiqueta: sem o preenchimento que valia para as outras */
+.ms-tags .opn i{width:7px;height:7px;padding:0;border-radius:50%;background:#12b76a;box-shadow:none}
+.ms-tags .opn{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;line-height:1.2}
