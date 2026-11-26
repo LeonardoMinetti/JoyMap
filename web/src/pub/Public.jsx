@@ -99,7 +99,7 @@ function Ficha({ place, data, ctx }) {
   const route = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`
   return (
     <div className="pbody" style={{ gap: 12 }}>
-      <PlacePhoto place={place} theme={theme} style={{ height: 190, width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
+      <PlacePhoto google place={place} theme={theme} style={{ height: 190, width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
       <h1 className="pt" style={{ '--fs': '40px' }}>{place.name}</h1>
       <div className="pchips" style={{ gap: 6 }}><span className="tag2 acc">@{creator.handle}</span><span className="tag2">{cat.name}</span>{(place.neighborhood || place.municipality) && <span className="tag2">{place.neighborhood || place.municipality}</span>}</div>
       <div className="box" style={{ flexDirection: 'row', alignItems: 'center' }}><Icon n="pin" s={20} c="var(--acc)" /><div className="sp"><b className="sm">{place.address || 'Endereço não informado'}</b><div className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</div></div></div>
@@ -216,7 +216,7 @@ export default function Public({ slug, embed }) {
     return page(<><Header title="Roteiros" /><div className="pbody" style={{ flex: 1 }}>
       {data.routes.map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
         <Link key={r.id} to={href(`/roteiros/${r.id}`)} className="box" style={{ padding: 0, overflow: 'hidden', gap: 0 }}>
-          <div style={{ height: 120, pointerEvents: 'none' }}><MapCanvas places={rp} theme={{ ...theme, cluster: false, mapLabels: false }} symbols={creator.symbols} interactive={false} style={{ height: 120 }} /></div>
+          <div style={{ height: 120, pointerEvents: 'none' }}><MapCanvas places={rp} theme={{ ...theme, cluster: false, mapLabels: false, provider: null }} symbols={creator.symbols} interactive={false} style={{ height: 120 }} /></div>
           <div className="prow" style={{ padding: '12px 14px' }}><div className="sp"><b className="pt" style={{ '--fs': '24px' }}>{r.name}</b><div className="xs mut" style={{ marginTop: 4 }}>{r.placeIds.length} lugares{r.note ? ` · ${r.note}` : ''}</div></div><Icon n="next" s={20} c="currentColor" /></div></Link>) })}
       {!data.routes.length && <div className="pstate"><div className="pcircle"><Icon n="route" s={30} c="currentColor" /></div><h2 className="pt" style={{ '--fs': '26px' }}>Sem roteiros ainda</h2><p className="mut sm">Este criador ainda não montou roteiros.</p></div>}
     </div></>, '/roteiros')

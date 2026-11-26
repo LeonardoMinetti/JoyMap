@@ -37,3 +37,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 029 | 2026-11-26 10:22 | ajuste | Busca de enderecos tambem no Gemini, sem OpenAI | `deploy/ajuste/029-busca-de-enderecos-tambem-no-gemini-sem-` |
 | 030 | 2026-11-26 11:33 | admin | Tela Coletas com cada Reel e o que foi encontrado | `deploy/admin/030-tela-coletas-com-cada-reel-e-o-que-foi-e` |
 | 031 | 2026-11-26 12:27 | admin | Coletas por criador com miniaturas e player | `deploy/admin/031-coletas-por-criador-com-miniaturas-e-pla` |
+| 032 | 2026-11-26 15:55 | mapa | Mapa da Nathi com mapa e fotos do Google | `deploy/mapa/032-mapa-da-nathi-com-mapa-e-fotos-do-google` |

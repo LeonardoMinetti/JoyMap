@@ -282,3 +282,9 @@
 .postv-top{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 10px 18px}.postv-top button{border:0;background:#f1f1ee;color:inherit;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
 .postv-box iframe{flex:1;width:100%;border:0;min-height:0;background:#fff}
 .postv-out{display:block;text-align:center;padding:14px;font-weight:700;font-size:14px;color:inherit;border-top:1px solid #e6e6e2}
+/* mapa do Google: camada atrás do Leaflet */
+.leaflet-container.has-gbase{background:transparent}
+.leaflet-container .gbase{position:absolute;inset:0;z-index:0;pointer-events:none}
+.leaflet-container .gbase img{max-width:none!important}
+.pub .gph{position:relative}
+.pub .gph a{position:absolute;right:6px;bottom:6px;max-width:calc(100% - 12px);padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;font:500 10px var(--pf);text-transform:none;letter-spacing:0;text-decoration:none}

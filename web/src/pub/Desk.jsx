@@ -39,7 +39,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
     <div className="dk-fi">
       <button type="button" className="pb sm sec dk-back" onClick={onBack}><Icon n="back" s={14} c="currentColor" />Voltar</button>
       <div className="dk-fi-top">
-        <PlacePhoto place={place} theme={theme} aspect="1/1" style={{ width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
+        <PlacePhoto google place={place} theme={theme} aspect="1/1" style={{ width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
         <div className="dk-fi-info">
           <h1 className="pt" style={{ '--fs': '38px' }}>{place.name}</h1>
           <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}<i>@{creator.handle}</i>{place.ad && <i>Publi</i>}</div>
