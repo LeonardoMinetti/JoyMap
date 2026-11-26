@@ -43,3 +43,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 035 | 2026-11-26 16:44 | conteudo | Mapa da Nathi com 44 lugares aprovados no admin | `deploy/conteudo/035-mapa-da-nathi-com-44-lugares-aprovados-n` |
 | 036 | 2026-11-26 18:01 | admin | Publicar lugares aprovados direto do painel | `deploy/admin/036-publicar-lugares-aprovados-direto-do-pai` |
 | 037 | 2026-11-26 18:33 | mapa | Fotos do Google apenas do proprio estabelecimento | `deploy/mapa/037-fotos-do-google-apenas-do-proprio-estabe` |
+| 038 | 2026-11-26 18:36 | ajuste | Coletor pela API oficial do Instagram, pronto para as chaves | `deploy/ajuste/038-coletor-pela-api-oficial-do-instagram-pr` |
