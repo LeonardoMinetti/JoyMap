@@ -548,3 +548,11 @@ body{background:var(--cream)}.page{background:var(--cream)}
 @media (max-width:900px){.bx-grid{grid-template-columns:1fr}.bx-side{position:static;order:-1}.main .bx-map.card{height:320px}}
 /* muitas abas (admin): a barra do celular rola na horizontal em vez de espremer os nomes */
 @media (max-width:900px){.mtabs{overflow-x:auto;scrollbar-width:none}.mtabs a,.mtabs button{flex:1 0 auto;padding-left:8px;padding-right:8px}.main .pl-note,.main .bx-grid{min-width:0}}
+/* admin · coletas */
+.cl-search{max-width:420px}
+.main .cl-post.card{gap:10px;padding:18px 20px}
+.cl-cap{white-space:pre-line;margin:0;overflow-wrap:anywhere}
+.cl-more{align-self:flex-start;background:none;border:0;padding:0;cursor:pointer}
+.cl-places{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.cl-places li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--soft);border-radius:14px;padding:8px 12px}
+.cl-meta{display:flex;flex-direction:column;gap:2px}.cl-meta a{margin-right:8px}

@@ -142,7 +142,7 @@ export const ExplorerPage = ({ active, children }) => (
 export const PageHead = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 
 // Administração: candidaturas, mapas, lugares, moderação, rede (mapa geral) e métricas
-const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['lugares', 'Lugares', 'pin', '/admin/lugares'], ['miniguias', 'RoteirosJoy', 'route', '/admin/miniguias'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
+const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['coletas', 'Coletas', 'link', '/admin/coletas'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['lugares', 'Lugares', 'pin', '/admin/lugares'], ['miniguias', 'RoteirosJoy', 'route', '/admin/miniguias'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
 export const AdminPage = ({ active, children }) => (
   <Guard need="admin"><RolePanel items={ADM} active={active} label="Administração" loginTo="/entrar"
     banner={<a className="it" href={withBase('/painel')}><Icon n="home" s={18} c="#404040" />Painel de criador</a>}>{children}</RolePanel></Guard>

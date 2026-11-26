@@ -35,3 +35,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 027 | 2026-11-25 22:52 | admin | Base de lugares protegida por senha e visual unificado do admin | `deploy/admin/027-base-de-lugares-protegida-por-senha-e-vi` |
 | 028 | 2026-11-26 10:13 | ajuste | Leitura das legendas passa para o Gemini | `deploy/ajuste/028-leitura-das-legendas-passa-para-o-gemini` |
 | 029 | 2026-11-26 10:22 | ajuste | Busca de enderecos tambem no Gemini, sem OpenAI | `deploy/ajuste/029-busca-de-enderecos-tambem-no-gemini-sem-` |
+| 030 | 2026-11-26 11:33 | admin | Tela Coletas com cada Reel e o que foi encontrado | `deploy/admin/030-tela-coletas-com-cada-reel-e-o-que-foi-e` |

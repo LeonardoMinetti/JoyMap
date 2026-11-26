@@ -1,16 +1,16 @@
 // Administração · Lugares: curadoria da base própria. O arquivo publicado é cifrado e só abre com a senha da equipe.
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
-import { AdminPage, Loading, Note, PageHead, useTitle } from '../lib/ui.jsx'
+import { AdminPage, Note, PageHead, useTitle } from '../lib/ui.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { toast } from '../lib/router.jsx'
 import { withBase } from '../lib/base.js'
 import MapCanvas from '../MapCanvas.jsx'
 import { addBasemap } from '../basemap.js'
-import { open } from '../lib/vault.js'
+import { VaultGate } from '../lib/VaultGate.jsx'
 import { merge, pending, instagramHandle, toCsv } from '../lib/placeEdits.js'
 
-const PASS = 'joymap:base-senha', EDITS = 'joymap:base-alteracoes'
+const EDITS = 'joymap:base-alteracoes'
 const read = (store, k) => { try { return window[store].getItem(k) } catch { return null } }
 const write = (store, k, v) => { try { v == null ? window[store].removeItem(k) : window[store].setItem(k, v); return true } catch { return false } }
 const readEdits = () => { try { return JSON.parse(read('localStorage', EDITS)) || {} } catch { return {} } }
@@ -40,59 +40,10 @@ function download(name, text, type) {
 
 export function AdminPlaces() {
   useTitle('Lugares')
-  const [places, setPlaces] = useState(null)
-  const [state, setState] = useState('loading') // loading | locked | ready | missing
-  const box = useRef(null)
-
-  const unlock = async (password, remember) => {
-    const data = await open(box.current, password)
-    write('sessionStorage', PASS, password)
-    if (remember) write('localStorage', PASS, password)
-    setPlaces(data)
-    setState('ready')
-  }
-  useEffect(() => {
-    (async () => {
-      const r = await fetch(withBase('/base/lugares.enc.json'), { cache: 'no-store' }).catch(() => null)
-      if (!r?.ok) return setState('missing')
-      box.current = await r.json()
-      const saved = read('sessionStorage', PASS) || read('localStorage', PASS)
-      if (saved) { try { return await unlock(saved) } catch { write('sessionStorage', PASS, null); write('localStorage', PASS, null) } }
-      setState('locked')
-    })().catch(() => setState('missing'))
-  }, [])
-  const lock = () => { write('sessionStorage', PASS, null); write('localStorage', PASS, null); setPlaces(null); setState('locked') }
-
   return (
     <AdminPage active="lugares">
-      {state === 'loading' ? <Loading />
-        : state === 'missing' ? <><PageHead title="Lugares" /><Note>O arquivo da base ainda não foi publicado.</Note></>
-          : state === 'locked' ? <Lock unlock={unlock} />
-            : <Curation base={places} lock={lock} />}
+      <VaultGate file="/base/lugares.enc.json" title="Lugares" sub="A base própria do JoyMap é protegida por senha da equipe.">{(data, lock) => <Curation base={data} lock={lock} />}</VaultGate>
     </AdminPage>
-  )
-}
-
-function Lock({ unlock }) {
-  const [pw, setPw] = useState('')
-  const [remember, setRemember] = useState(false)
-  const [msg, setMsg] = useState('')
-  const [busy, setBusy] = useState(false)
-  const go = async (e) => {
-    e.preventDefault(); setBusy(true); setMsg('')
-    try { await unlock(pw.trim(), remember) } catch { setMsg('Senha incorreta.'); setBusy(false) }
-  }
-  return (
-    <>
-      <PageHead title="Lugares" sub="A base própria do JoyMap é protegida por senha da equipe." />
-      <form className="card col bx-lock" onSubmit={go}>
-        <div className="row"><Icon n="lock" s={20} /><b>Abrir a base</b></div>
-        <div><label className="lb" htmlFor="bx-pw">Senha da base</label><input id="bx-pw" className="in" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} /></div>
-        <label className="row sm" style={{ gap: 8 }}><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />Lembrar neste computador</label>
-        {msg && <Note>{msg}</Note>}
-        <button className="btn" disabled={busy || !pw.trim()}>{busy ? 'Abrindo…' : 'Abrir'}</button>
-      </form>
-    </>
   )
 }
 
