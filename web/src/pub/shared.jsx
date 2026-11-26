@@ -1,3 +1,4 @@
+import MapSnippet from '../lib/MapSnippet.jsx'
 import { GKEY, googlePhoto } from '../google.js'
 import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -22,7 +23,7 @@ export const pubVars = (theme) => {
 export const sub = (p, theme) => `${p.neighborhood || p.municipality || 'São Paulo'} · ${catOf(theme, p.category).name}`
 const tint = (c) => `color-mix(in srgb, ${c} 20%, #ffffff)`
 
-// Foto do lugar: ainda não há fonte de fotos licenciadas, então mostramos o espaço reservado do protótipo.
+// Imagem do lugar: foto quando há uma autorizada; senão, um recorte do mapa.
 export function PlacePhoto({ place, theme, size, label = 'foto', style, aspect, google }) {
   const c = catOf(theme, place.category)
   const gid = google && GKEY && theme.provider === 'google' ? place.googlePlaceId : null
@@ -30,6 +31,8 @@ export function PlacePhoto({ place, theme, size, label = 'foto', style, aspect, 
   useEffect(() => { let on = true; setG(null); if (gid) googlePhoto(gid, place.name).then((r) => on && setG(r && { ...r, gid })); return () => { on = false } }, [gid])
   if (g && g.gid === gid) return <div className="pph gph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={g.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /><a href={g.href} target="_blank" rel="noopener noreferrer">Foto: {g.by} · Google Maps</a></div>
   if (place.photo) return <div className="pph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={place.photo} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>
+  // sem foto autorizada: recorte do mapa no lugar
+  if (Number.isFinite(Number(place.lat)) && Number.isFinite(Number(place.lon)) && place.lat !== '' && place.lat != null) return <MapSnippet place={place} theme={theme} size={size} style={style} aspect={aspect} />
   return <div className="pph" style={{ background: tint(c.color), ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>{label}</div>
 }
 

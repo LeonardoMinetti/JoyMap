@@ -288,3 +288,8 @@
 .leaflet-container .gbase img{max-width:none!important}
 .pub .gph{position:relative}
 .pub .gph a{position:absolute;right:6px;bottom:6px;max-width:calc(100% - 12px);padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;font:500 10px var(--pf);text-transform:none;letter-spacing:0;text-decoration:none}
+/* recorte do mapa no lugar da foto */
+.pub .msnip{position:relative;overflow:hidden;padding:0;background:#ecebe6}
+.pub .msnip>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;max-width:none}
+.pub .msnip-pin{position:absolute;left:50%;top:50%;width:0;height:0}
+.pub .msnip small{position:absolute;left:4px;bottom:3px;font:500 8.5px var(--pf);text-transform:none;letter-spacing:0;color:#555;background:rgba(255,255,255,.8);border-radius:6px;padding:1px 5px}

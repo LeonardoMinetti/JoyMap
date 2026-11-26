@@ -44,3 +44,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 036 | 2026-11-26 18:01 | admin | Publicar lugares aprovados direto do painel | `deploy/admin/036-publicar-lugares-aprovados-direto-do-pai` |
 | 037 | 2026-11-26 18:33 | mapa | Fotos do Google apenas do proprio estabelecimento | `deploy/mapa/037-fotos-do-google-apenas-do-proprio-estabe` |
 | 038 | 2026-11-26 18:36 | ajuste | Coletor pela API oficial do Instagram, pronto para as chaves | `deploy/ajuste/038-coletor-pela-api-oficial-do-instagram-pr` |
+| 039 | 2026-11-26 19:29 | mapa | Recorte do mapa no lugar das fotos ilustrativas | `deploy/mapa/039-recorte-do-mapa-no-lugar-das-fotos-ilust` |
