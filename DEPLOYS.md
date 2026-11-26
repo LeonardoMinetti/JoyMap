@@ -39,3 +39,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 031 | 2026-11-26 12:27 | admin | Coletas por criador com miniaturas e player | `deploy/admin/031-coletas-por-criador-com-miniaturas-e-pla` |
 | 032 | 2026-11-26 15:55 | mapa | Mapa da Nathi com mapa e fotos do Google | `deploy/mapa/032-mapa-da-nathi-com-mapa-e-fotos-do-google` |
 | 033 | 2026-11-26 16:10 | admin | Fluxo de selecao com base e IBGE e aprovacao na tela Coletas | `deploy/admin/033-fluxo-de-selecao-com-base-e-ibge-e-aprov` |
+| 034 | 2026-11-26 16:36 | admin | Enderecos buscados na coleta da Nathi para revisar | `deploy/admin/034-enderecos-buscados-na-coleta-da-nathi-pa` |
