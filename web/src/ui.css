@@ -550,7 +550,16 @@ body{background:var(--cream)}.page{background:var(--cream)}
 @media (max-width:900px){.mtabs{overflow-x:auto;scrollbar-width:none}.mtabs a,.mtabs button{flex:1 0 auto;padding-left:8px;padding-right:8px}.main .pl-note,.main .bx-grid{min-width:0}}
 /* admin · coletas */
 .cl-search{max-width:420px}
-.main .cl-post.card{gap:10px;padding:18px 20px}
+.main .cl-post.card{display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;padding:16px;align-items:start}
+.cl-body{gap:10px;min-width:0}
+.cl-thumb{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:9/14;border:0;padding:0;border-radius:16px;overflow:hidden;background:var(--soft);cursor:pointer}
+.cl-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cl-thumb i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-style:normal;font-size:15px}
+.cl-thumb em{position:absolute;left:6px;bottom:6px;font-style:normal;font-size:10px;font-weight:700;background:rgba(0,0,0,.65);color:#fff;padding:3px 8px;border-radius:99px}
+.cl-creators{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.cl-av{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.pb-back{background:none;border:0;padding:0;cursor:pointer;align-self:flex-start}
+@media (max-width:600px){.main .cl-post.card{grid-template-columns:88px minmax(0,1fr);gap:12px}}
 .cl-cap{white-space:pre-line;margin:0;overflow-wrap:anywhere}
 .cl-more{align-self:flex-start;background:none;border:0;padding:0;cursor:pointer}
 .cl-places{list-style:none;margin:0;padding:0;display:grid;gap:6px}

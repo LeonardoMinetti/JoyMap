@@ -35,7 +35,7 @@ export function VaultGate({ file, title, sub, children }) {
   if (state === 'loading') return <Loading />
   if (state === 'missing') return <><PageHead title={title} /><Note>O arquivo ainda não foi publicado.</Note></>
   if (state === 'locked') return <Lock title={title} sub={sub} unlock={unlock} />
-  return children(data, lock)
+  return children(data, lock, read('sessionStorage', PASS))
 }
 
 function Lock({ title, sub, unlock }) {
