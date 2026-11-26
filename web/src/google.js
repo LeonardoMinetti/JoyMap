@@ -1,3 +1,4 @@
+import { ownerPhoto } from './lib/ownerPhoto.js'
 // Mapa do Google: só liga quando o build recebe VITE_GOOGLE_MAPS_KEY e o mapa pede provider "google".
 export const GKEY = import.meta.env?.VITE_GOOGLE_MAPS_KEY || ''
 
@@ -56,12 +57,12 @@ export function addGoogleBase(map, { tone, labels = true, covered = () => 0 } = 
 
 // Foto do Google pedida na hora de exibir (não é guardada), com o crédito de quem enviou.
 const photos = new Map()
-export function googlePhoto(placeId) {
+export function googlePhoto(placeId, name) {
   if (!photos.has(placeId)) photos.set(placeId, loadGoogle().then(async (maps) => {
     const { Place } = await maps.importLibrary('places')
     const place = new Place({ id: placeId })
     await place.fetchFields({ fields: ['photos'] })
-    const ph = place.photos?.[0]
+    const ph = ownerPhoto(place.photos, name) // só as do próprio estabelecimento; sem nenhuma, fica sem foto do Google
     return ph ? { url: ph.getURI({ maxWidth: 900 }), by: ph.authorAttributions?.[0]?.displayName || '', href: ph.authorAttributions?.[0]?.uri || '' } : null
   }).catch(() => { photos.delete(placeId); return null }))
   return photos.get(placeId)

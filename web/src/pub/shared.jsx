@@ -27,7 +27,7 @@ export function PlacePhoto({ place, theme, size, label = 'foto', style, aspect, 
   const c = catOf(theme, place.category)
   const gid = google && GKEY && theme.provider === 'google' ? place.googlePlaceId : null
   const [g, setG] = useState(null)
-  useEffect(() => { let on = true; setG(null); if (gid) googlePhoto(gid).then((r) => on && setG(r && { ...r, gid })); return () => { on = false } }, [gid])
+  useEffect(() => { let on = true; setG(null); if (gid) googlePhoto(gid, place.name).then((r) => on && setG(r && { ...r, gid })); return () => { on = false } }, [gid])
   if (g && g.gid === gid) return <div className="pph gph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={g.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /><a href={g.href} target="_blank" rel="noopener noreferrer">Foto: {g.by} · Google Maps</a></div>
   if (place.photo) return <div className="pph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={place.photo} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>
   return <div className="pph" style={{ background: tint(c.color), ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>{label}</div>
