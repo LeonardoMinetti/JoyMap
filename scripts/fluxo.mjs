@@ -35,6 +35,15 @@ async function run(handle, withSearch) {
   const base = read('data/base/lugares.json')
   const mapFile = `web/public/maps/${handle}.json`
   const map = fs.existsSync(mapFile) ? read(mapFile) : { places: [] }
+  // o que foi publicado pelo painel entra aqui na base
+  let synced = 0
+  for (const m of map.places) {
+    const cidade = m.municipality || 'São Paulo'
+    if (base.some((b) => core(b.nome) === core(m.name) && norm(b.cidade) === norm(cidade))) continue
+    base.push({ id: `map-${core(m.name)}-${base.length}`, nome: m.name.split(' (')[0], endereco: m.address || '', bairro: m.neighborhood || '', cidade, instagram: '', lat: m.lat, lon: m.lon, ponto: 'do mapa do criador', situacao: '', fontes: `mapa @${handle}`, revisar: '' })
+    synced++
+  }
+  if (synced) { await save('lugares', base); console.log(`${synced} lugares do mapa entraram na base`) }
   const before = new Map((c.lugares || []).map((p) => [p.chave, p]))
   const places = gather(c.posts, handle)
 

@@ -41,3 +41,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 033 | 2026-11-26 16:10 | admin | Fluxo de selecao com base e IBGE e aprovacao na tela Coletas | `deploy/admin/033-fluxo-de-selecao-com-base-e-ibge-e-aprov` |
 | 034 | 2026-11-26 16:36 | admin | Enderecos buscados na coleta da Nathi para revisar | `deploy/admin/034-enderecos-buscados-na-coleta-da-nathi-pa` |
 | 035 | 2026-11-26 16:44 | conteudo | Mapa da Nathi com 44 lugares aprovados no admin | `deploy/conteudo/035-mapa-da-nathi-com-44-lugares-aprovados-n` |
+| 036 | 2026-11-26 18:01 | admin | Publicar lugares aprovados direto do painel | `deploy/admin/036-publicar-lugares-aprovados-direto-do-pai` |

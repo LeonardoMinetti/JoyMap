@@ -7,6 +7,9 @@ import { VaultGate } from '../lib/VaultGate.jsx'
 import { open } from '../lib/vault.js'
 import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
+import { publishToMap, hasPoint, REPO } from '../lib/publish.js'
+import { findInMap } from '../../../scripts/lib/fluxo.js'
+import { GKEY } from '../google.js'
 import { instagramHandle } from '../lib/placeEdits.js'
 import { fmtDate, initial } from '../theme.jsx'
 
@@ -163,16 +166,21 @@ function Found({ c }) {
   const [status, setStatus] = useState('pronto')
   const [q, setQ] = useState('')
   const [ok, setOk] = useState(() => read(APPROVED)[c.usuario] || {})
-  const list = c.lugares || []
+  const handle = c.usuario.toLowerCase()
+  const [live, setLive] = useState(null) // mapa publicado agora: quem já está nele aparece como "Já no mapa"
+  const [published, setPublished] = useState([])
+  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => setLive(m.places)).catch(() => setLive(false)) }, [handle])
+  const list = useMemo(() => (c.lugares || []).map((p) => (published.includes(p.chave) || (live && p.situacao !== 'no-mapa' && findInMap(p, live)) ? { ...p, situacao: 'no-mapa', motivo: 'já está no mapa' } : p)), [c, live, published])
   if (!list.length) return <Note>O fluxo de seleção ainda não rodou para este criador.</Note>
   const keep = (next) => { setOk(next); write(APPROVED, { ...read(APPROVED), [c.usuario]: next }) }
   const toggle = (p) => { const next = { ...ok }; if (next[p.chave]) delete next[p.chave]; else next[p.chave] = p.categoria; keep(next) }
   const shown = list.filter((p) => p.situacao === status).filter((p) => !q || fold(`${p.nome} ${p.endereco} ${p.bairro}`).includes(fold(q)))
-  const hasPoint = (p) => p.lat !== undefined && p.lat !== ''
-  const chosen = Object.keys(ok).length
+  // só conta o que ainda pode entrar
+  const pickable = Object.fromEntries(Object.entries(ok).filter(([k]) => list.some((p) => p.chave === k && p.situacao !== 'no-mapa' && hasPoint(p))))
+  const chosen = Object.keys(pickable).length
   const download = () => {
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([JSON.stringify({ usuario: c.usuario.toLowerCase(), aprovados: Object.entries(ok).map(([chave, categoria]) => ({ chave, categoria })) }, null, 1)], { type: 'application/json' }))
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({ usuario: c.usuario.toLowerCase(), aprovados: Object.entries(pickable).map(([chave, categoria]) => ({ chave, categoria })) }, null, 1)], { type: 'application/json' }))
     a.download = `joymap-aprovados-${c.usuario}.json`
     a.click()
     setTimeout(() => URL.revokeObjectURL(a.href), 1000)
@@ -180,15 +188,17 @@ function Found({ c }) {
   const ready = list.filter((p) => p.situacao === 'pronto')
   return (
     <>
-      <Note>Marque o que vai para o mapa e exporte os aprovados. As marcações ficam só neste navegador.</Note>
+      <Note>Marque o que vai para o mapa e publique. As marcações ficam só neste navegador.</Note>
       <div className="row wrap" role="group" aria-label="Situação" style={{ gap: 8 }}>
         {STATUS.map(([k, l]) => <button key={k} type="button" className={'chip' + (status === k ? ' on' : '')} aria-pressed={status === k} onClick={() => setStatus(k)}>{l} · {list.filter((p) => p.situacao === k).length}</button>)}
       </div>
       <div className="row wrap" style={{ gap: 8 }}>
         <div className="in cl-search sp"><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar lugar ou rua" aria-label="Buscar lugar ou rua" /></div>
         {status === 'pronto' && ready.length > 0 && <button type="button" className="btn ln sm" onClick={() => keep({ ...ok, ...Object.fromEntries(ready.map((p) => [p.chave, ok[p.chave] || p.categoria])) })}>Marcar todos os prontos</button>}
-        <button type="button" className="btn sm" disabled={!chosen} onClick={download}>Exportar aprovados ({chosen})</button>
+        <button type="button" className="btn ln sm" disabled={!chosen} onClick={download}>Exportar</button>
       </div>
+      {live === false ? <Note>Este criador ainda não tem mapa publicado.</Note>
+        : <Publish handle={handle} found={list} choices={pickable} onDone={(keys) => { setPublished((v) => [...v, ...keys]); keep(Object.fromEntries(Object.entries(ok).filter(([k]) => !keys.includes(k)))) }} />}
       <div className="col" style={{ gap: 12 }}>
         {shown.map((p) => (
           <div key={p.chave} className="card cl-found">
@@ -205,6 +215,52 @@ function Found({ c }) {
         {!shown.length && <p className="sm mut">Nada neste filtro.</p>}
       </div>
     </>
+  )
+}
+
+const TOKEN = 'joymap:github-chave'
+const getToken = () => { try { return sessionStorage.getItem(TOKEN) || localStorage.getItem(TOKEN) || '' } catch { return '' } }
+const setToken = (v, remember) => { try { sessionStorage.removeItem(TOKEN); localStorage.removeItem(TOKEN); if (v) (remember ? localStorage : sessionStorage).setItem(TOKEN, v) } catch { /* vale só nesta tela */ } }
+
+function Publish({ handle, found, choices, onDone }) {
+  const [token, setTok] = useState(getToken)
+  const [typed, setTyped] = useState('')
+  const [remember, setRemember] = useState(false)
+  const [confirm, setConfirm] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const n = Object.keys(choices).length
+  const connect = (e) => { e.preventDefault(); const v = typed.trim(); if (!v) return; setToken(v, remember); setTok(v); setTyped(''); setMsg('') }
+  const disconnect = () => { setToken(''); setTok(''); setConfirm(false) }
+  const go = async () => {
+    setBusy(true); setMsg('')
+    try {
+      const r = await publishToMap({ token, handle, found, choices, googleKey: GKEY })
+      onDone(Object.keys(choices))
+      setMsg(r.added.length ? `${r.added.length} ${r.added.length > 1 ? 'lugares enviados' : 'lugar enviado'}. O mapa ficará com ${r.total} e se atualiza em alguns minutos.` : 'Todos já estavam no mapa.')
+    } catch (e) { setMsg(e.message || 'Não foi possível publicar.') }
+    setBusy(false); setConfirm(false)
+  }
+  return (
+    <div className="card col cl-publish">
+      {!token ? (
+        <form className="col" onSubmit={connect}>
+          <b>Publicar direto daqui</b>
+          <span className="sm mut">Cole uma chave de acesso do GitHub restrita ao repositório {REPO}, com a permissão “Contents: Read and write” e validade curta. Ela permite alterar o site: use só no seu computador.</span>
+          <a className="link sm" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Criar a chave no GitHub ↗</a>
+          <label className="col" style={{ gap: 4 }}><span className="lb">Chave de acesso</span><input className="in" type="password" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} /></label>
+          <label className="row sm" style={{ gap: 8 }}><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />Lembrar neste computador</label>
+          <button className="btn sm" style={{ alignSelf: 'flex-start' }} disabled={!typed.trim()}>Conectar</button>
+        </form>
+      ) : (
+        <div className="row wrap" style={{ gap: 8 }}>
+          {confirm
+            ? <><span className="sm sp">Publicar {n} {n > 1 ? 'lugares' : 'lugar'} no mapa de @{handle}? Fica visível para qualquer pessoa.</span><button type="button" className="btn sm" disabled={busy} onClick={go}>{busy ? 'Publicando…' : 'Confirmar'}</button><button type="button" className="btn sec sm" disabled={busy} onClick={() => setConfirm(false)}>Cancelar</button></>
+            : <><span className="sm sp">{n ? `${n} marcado${n > 1 ? 's' : ''} para o mapa de @${handle}` : 'Marque os lugares que vão para o mapa.'}</span><button type="button" className="btn sm" disabled={!n} onClick={() => setConfirm(true)}>Publicar no mapa ({n})</button><button type="button" className="btn sec sm" onClick={disconnect}>Desconectar</button></>}
+        </div>
+      )}
+      {msg && <Note>{msg}</Note>}
+    </div>
   )
 }
 

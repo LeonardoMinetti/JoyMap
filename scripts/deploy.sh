@@ -9,6 +9,8 @@ cd "$(dirname "$0")/.."
 CATS="site login criador explorador restaurante admin mapa conteudo ajuste docs"
 CAT="${1:-}"; NOME="${2:-}"
 [[ " $CATS " == *" $CAT "* && -n "$NOME" ]] || { echo "uso: scripts/deploy.sh <categoria> \"<nome>\"   categorias: $CATS"; exit 1; }
+# o painel também grava no repositório (lugares aprovados): traz essas mudanças antes de publicar
+git pull -q --rebase --autostash origin main
 npm test --silent >/dev/null
 N=$(printf '%03d' $(( $(git tag -l 'deploy/*' | wc -l) + 1 )))
 SLUG=$(python3 -c 'import sys,re,unicodedata; t=unicodedata.normalize("NFKD", sys.argv[1]).encode("ascii","ignore").decode().lower(); print(re.sub(r"[^a-z0-9]+","-",t).strip("-")[:40])' "$NOME")
