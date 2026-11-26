@@ -109,7 +109,8 @@ function snapshot(lat, lon, dark) {
   return cache.get(key)
 }
 
-export default function MapSnippet({ place, theme, symbols, size, style, aspect }) {
+export default function MapSnippet({ place, theme, symbols, size, style, aspect, onWatch }) {
+  const showCover = place.cover && (!size || size >= 80)
   const ref = useRef(null)
   const [src, setSrc] = useState('')
   const [seen, setSeen] = useState(false)
@@ -140,10 +141,14 @@ export default function MapSnippet({ place, theme, symbols, size, style, aspect 
   const pin = big ? pinHtml({ color: cat.color, shape: theme.shape, n, sym, size: 70, border: true })
     : `<i style="display:block;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)"></i>`
   return (
-    <div ref={ref} className="pph msnip" role="img" aria-label={`Localização de ${place.name} no mapa`} style={{ ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>
+    <div ref={ref} className="pph msnip" role={onWatch ? 'group' : 'img'} aria-label={`Localização de ${place.name} no mapa`} style={{ ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>
       {src && <img src={src} alt="" />}
       <span className="msnip-pin" dangerouslySetInnerHTML={{ __html: pin }} />
       {big && <small>© OpenStreetMap</small>}
+      {/* capa do post do criador, no canto, para reconhecer o lugar */}
+      {showCover && (onWatch
+        ? <button type="button" className="mcover" onClick={onWatch} aria-label={`Assistir ao post sobre ${place.name}`}><img src={place.cover} alt="" loading="lazy" /><i aria-hidden="true">▶</i></button>
+        : <span className="mcover"><img src={place.cover} alt="" loading="lazy" /></span>)}
     </div>
   )
 }

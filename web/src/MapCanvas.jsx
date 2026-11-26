@@ -3,14 +3,11 @@ import L from 'leaflet'
 import { TONES, catOf, pinHtml, symOf } from './theme.jsx'
 import { addBasemap } from './basemap.js'
 import { useLibVersion } from './iconlib.js'
-import { GKEY, addGoogleBase } from './google.js'
 
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)] }
 
 // Mapa real (Leaflet + base vetorial nativa do OpenFreeMap) com o visual do criador: tom, rótulos, formato/tamanho do pin, agrupamento e pin selecionado.
-export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove, path, covered = 0 }) {
-  const cover = useRef(covered)
-  cover.current = covered
+export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove, path }) {
   const libV = useLibVersion()
   const el = useRef(null)
   const map = useRef(null)
@@ -38,9 +35,7 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
   }, [])
 
   // base vetorial estilizada: tom, rótulos (ligar/desligar) e densidade de rótulos
-  useEffect(() => (GKEY && theme.provider === 'google'
-    ? addGoogleBase(map.current, { tone: theme.tone, labels: theme.mapLabels, covered: () => cover.current })
-    : addBasemap(map.current, theme.tone, { labels: theme.mapLabels, labelOpacity: 0.25 + (theme.labelDensity / 100) * 0.75 })), [theme.tone, theme.mapLabels, theme.labelDensity, theme.provider])
+  useEffect(() => addBasemap(map.current, theme.tone, { labels: theme.mapLabels, labelOpacity: 0.25 + (theme.labelDensity / 100) * 0.75 }), [theme.tone, theme.mapLabels, theme.labelDensity])
 
   draw.current = () => {
     const m = map.current
@@ -138,8 +133,6 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
     extraLayer.current.clearLayers()
     if (extra) L.circleMarker([extra.lat, extra.lon], { radius: 8, color: '#fff', weight: 3, fillColor: '#2d7ff9', fillOpacity: 1 }).addTo(extraLayer.current)
   }, [extra])
-
-  useEffect(() => { map.current?.fire('gbase') }, [covered])
 
   useEffect(() => { const h = setTimeout(() => map.current?.invalidateSize(), 60); return () => clearTimeout(h) })
   return <div ref={el} className={`mapcanvas ${className}`} style={style} role="application" aria-label="Mapa de lugares" />

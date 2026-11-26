@@ -1,7 +1,7 @@
 // Publicar pelo painel, sem servidor: grava o mapa do criador direto no repositório (API do GitHub) e o deploy segue sozinho.
 // A chave de acesso é do administrador, fica só no navegador e é enviada apenas para api.github.com.
 import { toPlace } from '../../../scripts/lib/lugares.js'
-import { findInMap, sameAddress } from '../../../scripts/lib/fluxo.js'
+import { findInMap } from '../../../scripts/lib/fluxo.js'
 
 export const REPO = 'LeonardoMinetti/JoyMap'
 const API = 'https://api.github.com'
@@ -25,21 +25,10 @@ export function addApproved(map, found, choices) {
   return { map: { ...map, places }, added }
 }
 
-// identificador do Google (para a foto na ficha): só o id é guardado, e só quando o endereço confere
-export async function googleIds(places, key, fetcher = fetch) {
-  for (const p of places) {
-    try {
-      const r = await fetcher('https://places.googleapis.com/v1/places:searchText', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'places.id,places.formattedAddress' }, body: JSON.stringify({ textQuery: `${p.name}, ${p.municipality || 'São Paulo'}`, languageCode: 'pt-BR', pageSize: 1 }) })
-      const hit = (await r.json()).places?.[0]
-      if (hit && sameAddress(p.address, hit.formattedAddress.replace(' - ', ', '))) p.googlePlaceId = hit.id
-    } catch { /* sem foto do Google: o lugar entra do mesmo jeito */ }
-  }
-}
-
 const toBase64 = (text) => { const u = new TextEncoder().encode(text); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s) }
 const fromBase64 = (b) => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g, '')), (c) => c.charCodeAt(0)))
 
-export async function publishToMap({ token, handle, found, choices, googleKey, fetcher = fetch }) {
+export async function publishToMap({ token, handle, found, choices, fetcher = fetch }) {
   if (!/^[a-z0-9_.]{2,40}$/.test(handle)) throw new Error('Criador inválido.')
   const url = `${API}/repos/${REPO}/contents/web/public/maps/${handle}.json`
   const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
@@ -52,7 +41,6 @@ export async function publishToMap({ token, handle, found, choices, googleKey, f
   const file = await cur.json()
   const { map, added } = addApproved(JSON.parse(fromBase64(file.content)), found, choices)
   if (!added.length) return { added, total: map.places.length }
-  if (googleKey && map.creator?.theme?.provider === 'google') await googleIds(added, googleKey, fetcher)
   const put = await fetcher(url, { method: 'PUT', headers, body: JSON.stringify({ message: `[conteudo] Mapa de @${handle}: ${added.length} lugares aprovados no admin`, content: toBase64(JSON.stringify(map)), sha: file.sha, branch: 'main' }) })
   if (!put.ok) throw fail(put.status)
   return { added, total: map.places.length }

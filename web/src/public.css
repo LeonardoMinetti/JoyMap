@@ -282,14 +282,14 @@
 .postv-top{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 10px 18px}.postv-top button{border:0;background:#f1f1ee;color:inherit;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
 .postv-box iframe{flex:1;width:100%;border:0;min-height:0;background:#fff}
 .postv-out{display:block;text-align:center;padding:14px;font-weight:700;font-size:14px;color:inherit;border-top:1px solid #e6e6e2}
-/* mapa do Google: camada atrás do Leaflet */
-.leaflet-container.has-gbase{background:transparent}
-.leaflet-container .gbase{position:absolute;inset:0;z-index:0;pointer-events:none}
-.leaflet-container .gbase img{max-width:none!important}
-.pub .gph{position:relative}
-.pub .gph a{position:absolute;right:6px;bottom:6px;max-width:calc(100% - 12px);padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;font:500 10px var(--pf);text-transform:none;letter-spacing:0;text-decoration:none}
 /* recorte do mapa no lugar da foto */
 .pub .msnip{position:relative;overflow:hidden;padding:0;background:#ecebe6}
 .pub .msnip>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;max-width:none}
 .pub .msnip-pin{position:absolute;left:50%;top:50%;width:0;height:0}
 .pub .msnip small{position:absolute;left:4px;bottom:3px;font:500 8.5px var(--pf);text-transform:none;letter-spacing:0;color:#555;background:rgba(255,255,255,.8);border-radius:6px;padding:1px 5px}
+.pub .msnip .mcover{position:absolute;right:6px;bottom:6px;width:27%;min-width:34px;max-width:92px;aspect-ratio:3/4;border:2px solid #fff;border-radius:10px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.3);background:#ddd;padding:0;display:block}
+.pub .msnip .mcover>img{width:100%;height:100%;object-fit:cover;display:block;max-width:none}
+.pub .msnip button.mcover{cursor:pointer}
+.pub .msnip .mcover i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
+/* com a capa no canto de baixo, o coração sobe */
+.pub .ms-th:has(.mcover) .ms-bm,.pub .dk-ph:has(.mcover) .ms-bm{top:6px;bottom:auto}

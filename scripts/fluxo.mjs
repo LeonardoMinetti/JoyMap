@@ -122,7 +122,7 @@ async function apply(file) {
   await save('coletas', all)
   await save('lugares', base)
   console.log(`${added} lugares no mapa de @${usuario} (total ${map.places.length}) · ${intoBase} novos na base`)
-  console.log(`Depois: node scripts/google-ids.mjs ${usuario}   (se o mapa usa o Google) e publicar com scripts/deploy.sh`)
+  console.log(`Depois: node scripts/capas.mjs ${usuario}   e publicar com scripts/deploy.sh`)
 }
 
 const [a, b] = process.argv.slice(2)

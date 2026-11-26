@@ -25,7 +25,7 @@ async function staticApi(path, opts) {
   if (path === '/public/demo') { const r = await fetch(`${BASE}/demo.json`); if (!r.ok) throw NO_SERVER(); const d = await r.json(); return { ...d, places: d.places.map((p) => (p.photo ? { ...p, photo: withBase(p.photo) } : p)) } }
   // outro mapa na versão estática: um arquivo por criador em /maps/<usuario>.json
   const other = path.match(/^\/public\/([a-z0-9_-]{2,40})$/i)
-  if (other) { const r = await fetch(`${BASE}/maps/${other[1]}.json`).catch(() => null); if (r?.ok && /json/.test(r.headers.get('content-type') || '')) { const d = await r.json(); return { ...d, creator: { ...d.creator, avatarUrl: d.creator.avatarUrl ? withBase(d.creator.avatarUrl) : null }, places: d.places.map((p) => (p.photo ? { ...p, photo: withBase(p.photo) } : p)) } } }
+  if (other) { const r = await fetch(`${BASE}/maps/${other[1]}.json`).catch(() => null); if (r?.ok && /json/.test(r.headers.get('content-type') || '')) { const d = await r.json(); return { ...d, creator: { ...d.creator, avatarUrl: d.creator.avatarUrl ? withBase(d.creator.avatarUrl) : null }, places: d.places.map((p) => ({ ...p, ...(p.photo ? { photo: withBase(p.photo) } : {}), ...(p.cover ? { cover: withBase(p.cover) } : {}) })) } } }
   throw NO_SERVER()
 }
 

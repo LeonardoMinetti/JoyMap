@@ -9,7 +9,6 @@ import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
 import { publishToMap, hasPoint, REPO } from '../lib/publish.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
-import { GKEY } from '../google.js'
 import { instagramHandle } from '../lib/placeEdits.js'
 import { fmtDate, initial } from '../theme.jsx'
 
@@ -235,7 +234,7 @@ function Publish({ handle, found, choices, onDone }) {
   const go = async () => {
     setBusy(true); setMsg('')
     try {
-      const r = await publishToMap({ token, handle, found, choices, googleKey: GKEY })
+      const r = await publishToMap({ token, handle, found, choices })
       onDone(Object.keys(choices))
       setMsg(r.added.length ? `${r.added.length} ${r.added.length > 1 ? 'lugares enviados' : 'lugar enviado'}. O mapa ficará com ${r.total} e se atualiza em alguns minutos.` : 'Todos já estavam no mapa.')
     } catch (e) { setMsg(e.message || 'Não foi possível publicar.') }
