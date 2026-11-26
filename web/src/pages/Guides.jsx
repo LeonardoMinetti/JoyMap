@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { AdminPage, Loading, SiteFooter, Top, useTitle } from '../lib/ui.jsx'
+import { AdminPage, Loading, SiteFooter, Top, useTitle, PageHead } from '../lib/ui.jsx'
 import { Floaters, DoodleDefs } from '../landing/doodles.jsx'
 import { withBase } from '../lib/base.js'
 import { contrast } from '../../../server/theme.js'
@@ -81,8 +81,7 @@ export function AdminGuides() {
   const pick = async (g) => { try { await api(`/admin/miniguias/${g.id}`, { method: 'POST', body: { featured: !g.featured } }); toast(g.featured ? 'Saiu dos RoteirosJoy' : 'Entrou nos RoteirosJoy'); load() } catch { toast('Não foi possível salvar.') } }
   return (
     <AdminPage active="miniguias">
-      <div className="row jb wrap"><h1 className="d s44">RoteirosJoy</h1><a className="btn ln sm" href={withBase('/roteirosjoy')} target="_blank" rel="noopener noreferrer">Ver a página</a></div>
-      <p className="sm mut">Aqui só aparecem roteiros que o criador liberou para divulgação. Entra na página apenas o que a equipe escolher.</p>
+      <PageHead title="RoteirosJoy" sub="Aqui só aparecem roteiros que o criador liberou para divulgação. Entra na página apenas o que a equipe escolher." right={<a className="btn ln sm" href={withBase('/roteirosjoy')} target="_blank" rel="noopener noreferrer">Ver a página</a>} />
       {!d ? <Loading /> : <div className="col" style={{ gap: 10 }}>
         {d.guides.map((g) => <div key={g.id} className="card row wrap" style={{ gap: 12 }}>
           <div className="sp" style={{ minWidth: 200 }}><b>{g.name}</b><div className="xs mut">@{g.handle}{g.published ? '' : ' · mapa não publicado'}</div><div className="sm">{g.note}</div></div>

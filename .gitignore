@@ -5,6 +5,8 @@ data/*.sqlite*
 .claude/
 pages-dist/
 data/apify/
+# base própria de lugares (não publicar: o repositório é público)
+data/base/
 
 # extração de lugares (dados de criadores) e arquivos do macOS
 saida/

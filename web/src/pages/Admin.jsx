@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { AdminPage, Loading, Note, useTitle } from '../lib/ui.jsx'
+import { AdminPage, Loading, Note, PageHead, useTitle } from '../lib/ui.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import { num } from '../theme.jsx'
 
@@ -22,7 +22,7 @@ export function Applications() {
   return (
     <Shell active="candidaturas">
       {!d ? <Loading /> : <>
-        <div className="row jb wrap"><h1 className="d s44">Fila de candidaturas</h1><div className="row"><span className="tag">Mínimo atual: {num(d.minFollowers)} seguidores</span><button className="btn ln sm" onClick={adjust}>Ajustar critério</button></div></div>
+        <PageHead title="Candidaturas" sub="Perfis que pediram convite, à espera de conferência e decisão." right={<div className="row wrap" style={{ gap: 8 }}><span className="tag">Mínimo atual: {num(d.minFollowers)} seguidores</span><button className="btn ln sm" onClick={adjust}>Ajustar critério</button></div>} />
         <div className="card" style={{ padding: 8, overflowX: 'auto' }}><table className="tbl admt"><thead><tr><th>Perfil</th><th>Seguidores</th><th>Critério</th><th>Verificação</th><th>Status</th><th /></tr></thead><tbody>
           {d.creators.map((c) => <Row key={c.id} c={c} S={S} C={C} decide={decide} />)}
           {!d.creators.length && <tr><td colSpan="6" className="mut">Nenhuma candidatura ainda.</td></tr>}</tbody></table></div>
@@ -57,7 +57,7 @@ export function MapReview() {
   const act = async (id, body) => { await api(`/admin/places/${id}`, { method: 'POST', body }); toast('Salvo'); load() }
   return (
     <Shell active="mapas">
-      <h1 className="d s44">Revisão de mapas</h1>
+      <PageHead title="Mapas" sub="Lugares dos mapas dos criadores que precisam de revisão." />
       {!d ? <Loading /> : <div className="g3" style={{ gridTemplateColumns: '1fr 1.4fr 1fr' }}>
         <div className="col"><span className="eb">Fila</span><button className={'card click' + (!creator ? ' sel' : '')} onClick={() => setCreator(null)}><b className="sm">Todos os mapas</b></button>{d.queue.map((q) => <button key={q.id} className={'card click' + (creator === q.id ? ' sel' : '')} style={{ gap: 4 }} onClick={() => setCreator(q.id)}><b className="sm">@{q.handle}</b><span className="xs mut">{q.places} lugares · {q.pending} pendentes</span></button>)}</div>
         <div className="col"><span className="eb">Lugares com baixa confiança</span>
@@ -89,7 +89,7 @@ export function Moderation() {
   const CH = [['open', 'Abertas'], ['review', 'Em análise'], ['resolved', 'Resolvidas']]
   return (
     <Shell active="moderacao">
-      <h1 className="d s44">Denúncias</h1>
+      <PageHead title="Moderação" sub="Denúncias sobre lugares e mapas, com o prazo de cada uma." />
       <div className="row wrap">{CH.map(([k, l]) => <button key={k} className={'chip' + (st === k ? ' on' : '')} onClick={() => { setSt(k); setSel(null) }}>{l}{d ? ` (${d.counts[k]})` : ''}</button>)}</div>
       {!d ? <Loading /> : <>
         <div className="card" style={{ padding: 8, overflowX: 'auto' }}><table className="tbl admt"><thead><tr><th>Lugar / mapa</th><th>Motivo</th><th>Denúncias</th><th>Prazo</th><th /></tr></thead><tbody>
@@ -114,7 +114,7 @@ export function Metrics() {
   const pc = (v) => (v == null ? '—' : `${v} %`)
   return (
     <Shell active="metricas">
-      <h1 className="d s44">Métricas do negócio</h1>
+      <PageHead title="Métricas" sub="Indicadores do negócio e do funil de criadores." />
       {!d ? <Loading /> : <>
         <div className="g4"><div className="kpi"><b>—</b><span>receita recorrente mensal (cobrança inativa)</span></div><div className="kpi"><b>{d.funnel[4][1]}</b><span>criadores pagantes</span></div><div className="kpi"><b>—</b><span>cancelamento mensal</span></div><div className="kpi"><b>—</b><span>teste que vira pago</span></div></div>
         <div className="g2">

@@ -537,3 +537,14 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .mg-by img,.mg-by>i{box-shadow:0 0 0 3px #fff}
 .mg-tag,.mg-city{left:12px}.mg-city{left:auto;right:12px}.mg-tag,.mg-city{top:12px}
 .mg-body p,.mg-by small{opacity:1}
+/* admin · base de lugares */
+.bx-lock{max-width:420px}
+.bx-grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:20px;align-items:start}
+.bx-list{min-width:0}.main .bx-item.card{padding:14px 16px;gap:4px}
+.bx-side{position:sticky;top:20px;min-width:0}
+.main .bx-map.card{position:relative;height:min(72vh,720px);padding:0;overflow:hidden}
+.bx-pick{height:240px;border-radius:16px;overflow:hidden;margin:6px 0}
+.bx-pin{display:block;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#171713;border:4px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+@media (max-width:900px){.bx-grid{grid-template-columns:1fr}.bx-side{position:static;order:-1}.main .bx-map.card{height:320px}}
+/* muitas abas (admin): a barra do celular rola na horizontal em vez de espremer os nomes */
+@media (max-width:900px){.mtabs{overflow-x:auto;scrollbar-width:none}.mtabs a,.mtabs button{flex:1 0 auto;padding-left:8px;padding-right:8px}.main .pl-note,.main .bx-grid{min-width:0}}

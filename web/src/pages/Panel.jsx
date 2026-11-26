@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate, toast } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle } from '../lib/ui.jsx'
+import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle, PageHead } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
@@ -18,7 +18,7 @@ const AccountPage = ({ tab, children }) => (
   </PanelPage>
 )
 const Photo = ({ s = 56, label = 'foto' }) => <div className="sq ph" style={{ width: s, height: s }}>{label}</div>
-const Head = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
+const Head = PageHead
 import { STATIC } from '../lib/base.js'
 import { resizeImage } from '../lib/image.js'
 import { logoUriFromSvg, cleanVideoUrl } from '../../../server/offers.js'

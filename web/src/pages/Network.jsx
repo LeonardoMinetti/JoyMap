@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { api } from '../api.js'
 import { Link, navigate } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
-import { Note, Switch, Loading, AdminPage, RestaurantPage, useTitle } from '../lib/ui.jsx'
+import { Note, Switch, Loading, AdminPage, RestaurantPage, PageHead, useTitle } from '../lib/ui.jsx'
 import { useMe } from '../lib/me.jsx'
 import { withBase } from '../lib/base.js'
 import MapCanvas from '../MapCanvas.jsx'
@@ -34,7 +34,7 @@ export function AdminNetwork() {
   const places = shown.map((g) => ({ id: g.key, name: g.name, lat: g.lat, lon: g.lon, category: g.creators.length > 1 ? 'multi' : g.creators[0].slug }))
   return (
     <AdminPage active="rede">
-      <div><h1 className="d s44">Rede</h1><p className="mut sm" style={{ marginTop: 6 }}>Mapa geral: lugares indicados por criadores que escolheram participar. Cada criador decide se aparece aqui.</p></div>
+      <PageHead title="Rede" sub="Mapa geral: lugares indicados por criadores que escolheram participar. Cada criador decide se aparece aqui." />
       <div className="net">
         <div className="net-m"><MapCanvas places={places} theme={theme} selectedId={sel} onSelect={setSel} style={{ position: 'absolute', inset: 0, height: '100%' }} /></div>
         <div className="net-l">

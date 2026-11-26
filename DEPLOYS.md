@@ -32,3 +32,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 024 | 2026-11-24 22:47 | conteudo | Foto de perfil no mapa da Nathi | `deploy/conteudo/024-foto-de-perfil-no-mapa-da-nathi` |
 | 025 | 2026-11-25 01:17 | ajuste | Script que extrai lugares das legendas para revisao | `deploy/ajuste/025-script-que-extrai-lugares-das-legendas-p` |
 | 026 | 2026-11-25 18:06 | site | Lançamento: pedir convite e planos pagos em breve | `deploy/site/026-lancamento-pedir-convite-e-planos-pagos-` |
+| 027 | 2026-11-25 22:52 | admin | Base de lugares protegida por senha e visual unificado do admin | `deploy/admin/027-base-de-lugares-protegida-por-senha-e-vi` |
