@@ -71,7 +71,20 @@ def localizar(linhas, tipo, n, bairro):
         return None  # ruas homônimas distantes: não dá para escolher com segurança
     return ponto, precisao
 
+def avulsos(zip_path):
+    """Lê [{id, endereco, bairro}] da entrada e devolve [{id, lat, lon, precisao}]. Só para a capital."""
+    pedidos = [(p, separar(p['endereco'])) for p in json.load(sys.stdin)]
+    idx = indice(zip_path, {s[1] for _, s in pedidos if s and s[1]})
+    out = []
+    for p, s in pedidos:
+        r = s and s[1] in idx and localizar(idx[s[1]], s[0], s[2], p.get('bairro'))
+        if r:
+            out.append({'id': p['id'], 'lat': round(r[0][0], 6), 'lon': round(r[0][1], 6), 'precisao': r[1]})
+    json.dump(out, sys.stdout)
+
 if __name__ == '__main__':
+    if len(sys.argv) == 3 and sys.argv[1] == '--enderecos':
+        sys.exit(avulsos(sys.argv[2]))
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     base = json.load(open('data/base/lugares.json', encoding='utf-8'))

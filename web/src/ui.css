@@ -565,3 +565,8 @@ body{background:var(--cream)}.page{background:var(--cream)}
 .cl-places{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .cl-places li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--soft);border-radius:14px;padding:8px 12px}
 .cl-meta{display:flex;flex-direction:column;gap:2px}.cl-meta a{margin-right:8px}
+.main .cl-found.card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px}
+.cl-check input{width:22px;height:22px;accent-color:#171713}
+.cl-links{display:flex;flex-wrap:wrap;gap:10px}
+.cl-cat{max-width:220px}
+@media (max-width:600px){.main .cl-found.card{grid-template-columns:auto minmax(0,1fr)}.cl-cat{grid-column:2}}

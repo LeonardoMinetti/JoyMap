@@ -104,6 +104,7 @@ function Home({ data, lock, password }) {
 
 function Collections({ c, lock, password, back }) {
   const [kind, setKind] = useState('')
+  const [tab, setTab] = useState(c.lugares ? 'lugares' : 'posts')
   const [playing, setPlaying] = useState(null)
   const [view, setView] = useState('nada')
   const [q, setQ] = useState('')
@@ -134,6 +135,10 @@ function Collections({ c, lock, password, back }) {
           <Link className="btn ln sm" to="/admin/lugares">Ver Lugares</Link>
           <button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button>
         </div>} />
+      <div className="row" role="group" aria-label="O que mostrar" style={{ gap: 8 }}>
+        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`]].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
+      </div>
+      {tab === 'lugares' ? <Found c={c} /> : <>
       <Note>As marcações ficam guardadas só neste navegador. Lugares que você adicionar aparecem na tela Lugares, para exportar junto com as outras alterações.</Note>
       <div className="row wrap" role="group" aria-label="Filtrar as postagens" style={{ gap: 8 }}>
         {VIEWS.map(([k, l]) => <button key={k} type="button" className={'chip' + (view === k ? ' on' : '')} aria-pressed={view === k} onClick={() => setView(k)}>{l} · {counts[k]}</button>)}
@@ -144,7 +149,61 @@ function Collections({ c, lock, password, back }) {
         {shown.length > limit && <button className="btn ln sm" style={{ alignSelf: 'center' }} onClick={() => setLimit(limit + 50)}>Mostrar mais ({shown.length - limit})</button>}
         {!shown.length && <p className="sm mut">Nada neste filtro.</p>}
       </div>
+      </>}
       {playing && <Player post={playing} onClose={() => setPlaying(null)} />}
+    </>
+  )
+}
+
+const APPROVED = 'joymap:coletas-aprovados'
+const STATUS = [['pronto', 'Prontos', 'ok'], ['revisar', 'Revisar', 'wn'], ['sem-endereco', 'Sem endereço', 'bd2'], ['no-mapa', 'Já no mapa', '']]
+
+// resultado do fluxo (base, IBGE e busca): é aqui que se aprova o que vai para o mapa
+function Found({ c }) {
+  const [status, setStatus] = useState('pronto')
+  const [q, setQ] = useState('')
+  const [ok, setOk] = useState(() => read(APPROVED)[c.usuario] || {})
+  const list = c.lugares || []
+  if (!list.length) return <Note>O fluxo de seleção ainda não rodou para este criador.</Note>
+  const keep = (next) => { setOk(next); write(APPROVED, { ...read(APPROVED), [c.usuario]: next }) }
+  const toggle = (p) => { const next = { ...ok }; if (next[p.chave]) delete next[p.chave]; else next[p.chave] = p.categoria; keep(next) }
+  const shown = list.filter((p) => p.situacao === status).filter((p) => !q || fold(`${p.nome} ${p.endereco} ${p.bairro}`).includes(fold(q)))
+  const hasPoint = (p) => p.lat !== undefined && p.lat !== ''
+  const chosen = Object.keys(ok).length
+  const download = () => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([JSON.stringify({ usuario: c.usuario.toLowerCase(), aprovados: Object.entries(ok).map(([chave, categoria]) => ({ chave, categoria })) }, null, 1)], { type: 'application/json' }))
+    a.download = `joymap-aprovados-${c.usuario}.json`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  }
+  const ready = list.filter((p) => p.situacao === 'pronto')
+  return (
+    <>
+      <Note>Marque o que vai para o mapa e exporte os aprovados. As marcações ficam só neste navegador.</Note>
+      <div className="row wrap" role="group" aria-label="Situação" style={{ gap: 8 }}>
+        {STATUS.map(([k, l]) => <button key={k} type="button" className={'chip' + (status === k ? ' on' : '')} aria-pressed={status === k} onClick={() => setStatus(k)}>{l} · {list.filter((p) => p.situacao === k).length}</button>)}
+      </div>
+      <div className="row wrap" style={{ gap: 8 }}>
+        <div className="in cl-search sp"><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar lugar ou rua" aria-label="Buscar lugar ou rua" /></div>
+        {status === 'pronto' && ready.length > 0 && <button type="button" className="btn ln sm" onClick={() => keep({ ...ok, ...Object.fromEntries(ready.map((p) => [p.chave, ok[p.chave] || p.categoria])) })}>Marcar todos os prontos</button>}
+        <button type="button" className="btn sm" disabled={!chosen} onClick={download}>Exportar aprovados ({chosen})</button>
+      </div>
+      <div className="col" style={{ gap: 12 }}>
+        {shown.map((p) => (
+          <div key={p.chave} className="card cl-found">
+            <label className="cl-check"><input type="checkbox" checked={!!ok[p.chave]} disabled={!hasPoint(p) || p.situacao === 'no-mapa'} onChange={() => toggle(p)} aria-label={`Aprovar ${p.nome}`} /></label>
+            <div className="col" style={{ gap: 4, minWidth: 0 }}>
+              <div className="row wrap" style={{ gap: 8 }}><b>{p.nome}</b>{p.publi && <span className="tag wn">Publi</span>}{p.base && <span className="tag ok">Na base</span>}{!hasPoint(p) && p.situacao !== 'no-mapa' && <span className="tag bd2">Sem ponto</span>}</div>
+              <span className="sm">{[p.endereco || 'Sem endereço', p.bairro, p.cidade !== 'São Paulo' && p.cidade].filter(Boolean).join(' · ')}</span>
+              <span className="xs mut">{p.motivo}</span>
+              <span className="xs mut cl-links">{p.posts.slice(0, 4).map((x) => (safeUrl(x.url) ? <a key={x.url} className="link" href={x.url} target="_blank" rel="noopener noreferrer">{fmtDate(x.data)} ↗</a> : null))}{p.arroba && <a className="link" href={`https://instagram.com/${p.arroba.slice(1)}`} target="_blank" rel="noopener noreferrer">{p.arroba}</a>}
+                <a className="link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.nome} ${p.endereco} ${p.cidade}`)}`} target="_blank" rel="noopener noreferrer">Conferir no Google Maps ↗</a></span>
+            </div>
+            {ok[p.chave] && <select className="selbox cl-cat" aria-label={`Categoria de ${p.nome}`} value={ok[p.chave]} onChange={(e) => keep({ ...ok, [p.chave]: e.target.value })}>{c.categorias.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}</select>}
+          </div>))}
+        {!shown.length && <p className="sm mut">Nada neste filtro.</p>}
+      </div>
     </>
   )
 }
