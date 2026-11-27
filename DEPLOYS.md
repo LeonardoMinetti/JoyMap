@@ -77,3 +77,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 069 | 2026-11-27 19:13 | ajuste | criador nao exporta mais os dados | `deploy/ajuste/069-criador-nao-exporta-mais-os-dados` |
 | 070 | 2026-11-27 19:27 | mapa | bloco fique por dentro em breve nos mapas | `deploy/mapa/070-bloco-fique-por-dentro-em-breve-nos-mapa` |
 | 071 | 2026-11-27 19:56 | conteudo | descricoes completas no mapa demo | `deploy/conteudo/071-descricoes-completas-no-mapa-demo` |
+| 072 | 2026-11-27 20:06 | conteudo | tira do demo quatro lugares que podem ter fechado | `deploy/conteudo/072-tira-do-demo-quatro-lugares-que-podem-te` |
