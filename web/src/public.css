@@ -368,3 +368,13 @@
 .pub .crumbs button:hover{color:var(--fg)}
 .pub .crumbs span{color:var(--fg);padding:6px 0}
 .pub .all-count{background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* aba Lugares: Bairros e Categorias acoplados logo abaixo */
+.dk-subnav,.ms-subnav{display:flex;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ms-subnav{padding:0 16px 10px;flex:none}
+.dk-subnav>button,.ms-subnav>button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border:1.5px solid var(--line);border-radius:99px;background:var(--bg);color:var(--fg);font:700 13px var(--pf);cursor:pointer;min-width:0}
+.ms-subnav>button{flex:1;justify-content:center}
+.ms-subnav>button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-subnav i{font-style:normal;color:var(--mut)}
+.dk-subnav>button:hover,.dk-subnav>button.open{background:var(--soft)}
+.dk-subnav>button.on,.ms-subnav>button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 13%,var(--bg))}

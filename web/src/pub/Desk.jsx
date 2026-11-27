@@ -13,7 +13,6 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 
 // Mapa no computador: painel largo com o conteúdo à esquerda e o mapa à direita (organização inspirada em guias como o Viver SP),
 // com o mesmo design do celular: cores, fonte, cantos, chips e cartões do criador.
-const NAV = [['bairros', 'Bairros', 'map', true], ['categorias', 'Categorias', 'grid', true], ['roteiros', 'Roteiros', 'route']]
 
 function Card({ p, theme, saved, onOpen, preview }) {
   const cat = catOf(theme, p.category)
@@ -75,7 +74,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const newIds = new Set(news.map((p) => p.id))
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const savedPlaces = places.filter((p) => saved.ids.includes(p.id))
-  const [all, setAll] = useState(false) // “ver todos” na chegada
+  const [all, setAll] = useState(() => new URLSearchParams(location.search).get('p') === 'lugares') // lista de lugares (fora da chegada)
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
   // voltar à chegada: tocar no nome do criador
   const home = () => { setPop(null); setAll(false); nav('home'); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false) }
@@ -85,6 +84,11 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   // depois de qualquer filtro, tirar o filtro volta à lista de lugares; o Sobre abre pelo menu ou pelo nome
   useEffect(() => { if (filtered) setAll(true) }, [filtered])
   const about = view === 'home' && !all && !filtered && !fichaPlace
+  const listing = view === 'home' && !about && !fichaPlace // aba Lugares: mostra Bairros e Categorias logo abaixo
+  const routing = (view === 'roteiros' || view === 'route') && !fichaPlace
+  const catName = f.cats.length === 1 ? theme.categories.find((c) => c.id === f.cats[0])?.name : null
+  const sub2 = [['bairros', cityNav ? city || 'Cidades' : hood || 'Bairros', cityNav ? 'globe' : 'map', cityNav ? !!city : !!hood], ['categorias', catName || 'Categorias', 'grid', !!catName]]
+  const tab = (on, icon, label, click) => <button type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={click}><Icon n={icon} s={16} c="currentColor" />{label}</button>
   const others = fichaPlace ? places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) === (fichaPlace.neighborhood || fichaPlace.municipality)).concat(places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) !== (fichaPlace.neighborhood || fichaPlace.municipality) && p.category === fichaPlace.category)).slice(0, 4) : []
   const grid = (arr) => <div className="dk-grid">{arr.map((p) => <Card key={p.id} p={p} theme={theme} saved={saved} onOpen={openFicha} />)}</div>
   const sechead = (title, count, right) => <div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>{title}</b>{count != null && <span className="ms-count">{count}</span>}<span className="sp" />{right}</div>
@@ -134,12 +138,14 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
           <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
             <nav className="dk-nav" aria-label="Navegação do mapa">
-              <button type="button" className={about ? 'on' : ''} aria-current={about ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={home}><Icon n="user" s={16} c="currentColor" />Sobre</button>
-              {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, label, icon, menu]) => [k, cityNav && k === 'bairros' ? 'Cidades' : label, cityNav && k === 'bairros' ? 'globe' : icon, menu]).map(([k, l, ic, menu]) => menu
-                ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
-                : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k) }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
+              {tab(about, 'user', 'Sobre', home)}
+              {tab(listing, 'pin', 'Lugares', showAll)}
+              {data.creator.routesOn !== false && tab(routing, 'route', 'Roteiros', () => { setPop(null); nav('roteiros') })}
               <button type="button" className={'dk-lupa' + (pop === 'busca' || f.q ? ' open' : '')} aria-label="Busca" aria-haspopup="true" aria-expanded={pop === 'busca'} onMouseEnter={() => clearTimeout(closeT.current)} onClick={() => (pop === 'busca' ? setPop(null) : openPop('busca'))}><Icon n="search" s={16} c="currentColor" />Busca</button>
             </nav>
+            {listing && <div className="dk-subnav" role="group" aria-label="Filtrar lugares">
+              {sub2.map(([k, label, icon, on]) => <button key={k} type="button" className={(on ? 'on' : '') + (pop === k ? ' open' : '')} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={icon} s={15} c="currentColor" />{label}<span aria-hidden="true">▾</span></button>)}
+            </div>}
             {pop === 'busca' && <div className="dk-pop dk-find">
               <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} onKeyDown={(e) => e.key === 'Enter' && setPop(null)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
               {f.q && <button type="button" className="all" onClick={() => { f.setQ?.(''); setPop(null) }}>Limpar</button>}

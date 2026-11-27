@@ -15,16 +15,15 @@ import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.
 export const BRAND = 40, HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
-export const NAV_TABS = [['sobre', 'Sobre', 'user'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['busca', 'Busca', 'search']]
+export const NAV_TABS = [['sobre', 'Sobre', 'user'], ['lugares', 'Lugares', 'pin'], ['roteiros', 'Roteiros', 'route'], ['busca', 'Busca', 'search']]
 const KEY = { '/roteiros': 'roteiros' }
-// Abas inferiores (Sobre, Bairros, Categorias, Roteiros, Busca); no mapa, Sobre fica marcada na chegada. Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
+// Abas inferiores (Sobre, Lugares, Roteiros, Busca); Bairros e Categorias abrem dentro de Lugares; no mapa, Sobre fica marcada na chegada. Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
 export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes, cityNav }) {
   const c = KEY[cur] || cur
   return (
     <nav ref={navRef} className="ms-tabs" aria-label="Navegação do mapa">
       {NAV_TABS.filter(([k]) => !(noRoutes && k === 'roteiros')).map(([k, label, icon]) => {
-        const swap = cityNav && k === 'bairros', l = swap ? 'Cidades' : label, ic = swap ? 'globe' : icon
-        const inner = <><Icon n={ic} s={22} c="currentColor" />{l}</>
+        const inner = <><Icon n={icon} s={22} c="currentColor" />{label}</>
         const on = c === k
         if (onOpen || preview) return <button key={k} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} tabIndex={preview ? -1 : 0} onClick={() => onOpen?.(k)}>{inner}</button>
         return <Link key={k} to={href(`/?p=${k}`)} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>{inner}</Link>
@@ -59,7 +58,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const [snap, setSnap] = useState(snap0)
   const [y, setY] = useState(0)
   const [ready, setReady] = useState(false)
-  const [all, setAll] = useState(false) // “ver todos” na chegada
+  const [all, setAll] = useState(() => !preview && new URLSearchParams(location.search).get('p') === 'lugares') // lista de lugares (fora da chegada)
   const [drag, setDrag] = useState(false)
   const tabRef = useRef(null)
   const [tabH, setTabH] = useState(TAB + (preview ? SAFE : 0))
@@ -176,6 +175,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <i className="ms-bar" />
           <div className="ms-sh">{!(arriving && snap === 'full') && <><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span></>}<span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
+        {!preview && !arriving && !route && <div className="ms-subnav" role="group" aria-label="Filtrar lugares">
+          {[['bairros', cityNav ? city || 'Cidades' : hood || 'Bairros', cityNav ? 'globe' : 'map', cityNav ? !!city : !!hood], ['categorias', (f.cats.length === 1 && theme.categories.find((c) => c.id === f.cats[0])?.name) || 'Categorias', 'grid', f.cats.length === 1]].map(([k, label, icon, on]) => <button key={k} type="button" className={on ? 'on' : ''} aria-haspopup="dialog" onClick={() => setPanel(k)}><Icon n={icon} s={15} c="currentColor" /><span>{label}</span><i aria-hidden="true">▾</i></button>)}
+        </div>}
         <div className="ms-scroll">
           {!preview && (route || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <Crumbs items={[
             ['Todos os lugares', showAll],
@@ -230,7 +232,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {saved && <SavedNote saved={saved} slug={creator.slug} />}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </Panel>)}
-      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || (arriving ? 'sobre' : '')} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => (k === 'sobre' ? home('full') : setPanel(panel === k ? null : k))} />}
+      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel === 'busca' || panel === 'roteiros' ? panel : route ? 'roteiros' : arriving ? 'sobre' : 'lugares'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => (k === 'sobre' ? home('full') : k === 'lugares' ? showAll() : setPanel(panel === k ? null : k))} />}
     </div>
   )
 }
