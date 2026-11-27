@@ -144,7 +144,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <div className="ms-map">
         {!ready ? null : fake || !places.length
           ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
-          : <MapCanvas places={shown} path={route ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
+          : <MapCanvas places={shown} follow={preview ? undefined : places} path={route ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
       </div>
       <header className={'ms-top' + (brand ? ' has-brand' : '')}>
         {brand && <div className="jm-strip"><BrandMark preview={preview} /><span className="jm-tag">{BRAND_LINE}</span></div>}

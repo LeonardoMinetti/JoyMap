@@ -169,7 +169,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         </div>
       </section>
       <div className="dk-map">
-        <MapCanvas places={list} path={route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
+        <MapCanvas places={list} follow={places} path={route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
         {multiCity && !cityNav && (
           <div className="dk-cities" onMouseEnter={() => clearTimeout(cityT.current)} onMouseLeave={closeCities}>
             <button type="button" className={'ms-chip' + (city ? ' sel' : '')} aria-haspopup="true" aria-expanded={cityMenu} onMouseEnter={openCities} onClick={openCities}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}<span aria-hidden="true">▾</span></button>

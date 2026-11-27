@@ -7,7 +7,7 @@ import { useLibVersion } from './iconlib.js'
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)] }
 
 // Mapa real (Leaflet + base vetorial nativa do OpenFreeMap) com o visual do criador: tom, rótulos, formato/tamanho do pin, agrupamento e pin selecionado.
-export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove, path }) {
+export default function MapCanvas({ places, theme, symbols, selectedId, onSelect, className = '', style, interactive = true, gentle = false, pop = 0, dim = false, fitPad, zoomPos = 'bottomright', extra, onMove, path, follow }) {
   const libV = useLibVersion()
   const el = useRef(null)
   const map = useRef(null)
@@ -115,10 +115,13 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
   useEffect(() => {
     const m = map.current
     if (!places.length) return
-    const key = `${places.length}:${theme.start}:${theme.startView?.lat}`
+    // com `follow` (lista completa do mapa), o enquadramento acompanha o filtro: cidade, bairro, categoria ou busca
+    if (follow && path) { fitted.current = ''; return }
+    const key = `${follow ? places.map((p) => p.id).join(',') : places.length}:${theme.start}:${theme.startView?.lat}`
     if (fitted.current === key) return
     fitted.current = key
-    if (theme.start === 'pick' && theme.startView) { m.setView([theme.startView.lat, theme.startView.lon], theme.startView.zoom); if (fitPad) m.panBy([-(fitPad.left || 0) / 2, (fitPad.bottom - fitPad.top) / 2], { animate: false }) }
+    if (follow && places.length < follow.length) m.fitBounds(L.latLngBounds(places.map((p) => [p.lat, p.lon])), fitPad ? { paddingTopLeft: [fitPad.left ?? 40, fitPad.top], paddingBottomRight: [40, fitPad.bottom], maxZoom: 14 } : { padding: [60, 60], maxZoom: 14 })
+    else if (theme.start === 'pick' && theme.startView) { m.setView([theme.startView.lat, theme.startView.lon], theme.startView.zoom); if (fitPad) m.panBy([-(fitPad.left || 0) / 2, (fitPad.bottom - fitPad.top) / 2], { animate: false }) }
     else if (theme.start === 'hood') m.setView([median(places.map((p) => p.lat)), median(places.map((p) => p.lon))], 14)
     else m.fitBounds(L.latLngBounds(places.map((p) => [p.lat, p.lon])), fitPad ? { paddingTopLeft: [fitPad.left ?? 40, fitPad.top], paddingBottomRight: [40, fitPad.bottom], maxZoom: 14 } : { padding: [40, 40], maxZoom: 14 })
   }, [places, theme.start, theme.startView])
