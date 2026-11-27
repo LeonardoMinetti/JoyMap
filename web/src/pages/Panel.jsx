@@ -6,7 +6,7 @@ import { PanelPage, Note, Switch, Field, Loading, Tabs, useTitle, PageHead } fro
 import { useMe } from '../lib/me.jsx'
 import { fmtDM, fmtDate, num, onAccent, onColor, TONES, ACCENTS, CAT_COLORS, catOf } from '../theme.jsx'
 import { findGroups, hasCoords, issueOf } from '../lib/places.js'
-import { PlacePhoto, RouteTimeline, SponsorMark, SponsorTag, pubVars } from '../pub/shared.jsx'
+import { PlacePhoto, RouteTimeline, SponsorMark, SponsorTag, pubVars, RouteEmojis } from '../pub/shared.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 
 const ACCOUNT_TABS = [['conta', 'Perfil', 'user', '/painel/conta'], ['contas', 'Contas conectadas', 'link', '/painel/contas'], ['privacidade', 'Privacidade', 'shield', '/painel/privacidade'], ['plano', 'Plano e cobrança', 'card', '/painel/plano']]
@@ -326,7 +326,7 @@ function RoutePreview({ route, places, theme }) {
     <div className="pub" style={{ ...pubVars(theme), background: 'transparent', minHeight: 0 }}>
       <div className={'ms-route' + (spn ? ' has-sp' : '')} style={{ cursor: 'default', marginTop: 0, ...(route.color && !spn ? { background: route.color, color: onColor(route.color) } : {}) }}>
         {spn && <span className="rc-top"><SponsorTag s={spn} /><SponsorMark s={spn} /></span>}
-        <span className="rc-head"><b className="pt">{route.name || 'Nome do roteiro'}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}{!rp.length && <span>Nenhum lugar ainda</span>}<Icon n="next" s={20} c="currentColor" /></span></span>
+        <span className="rc-head"><b className="pt">{route.name || 'Nome do roteiro'}</b><span className="ms-stack"><RouteEmojis places={rp} theme={theme} />{!rp.length && <span>Nenhum lugar ainda</span>}<Icon n="next" s={20} c="currentColor" /></span></span>
         {route.note && <><hr /><p className="rc-note">{route.note}</p></>}
       </div>
     </div>

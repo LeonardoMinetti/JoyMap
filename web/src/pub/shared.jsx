@@ -9,6 +9,7 @@ import { useMe } from '../lib/me.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import FakeMap from '../FakeMap.jsx'
+import { isLib, libHtml, libIcon, useLibVersion } from '../iconlib.js'
 import { STATIC, withBase } from '../lib/base.js'
 import { DEMO_SLUG } from '../demoData.js'
 import logoUrl from '../brand/logo.svg'
@@ -312,6 +313,16 @@ export function HoursBlock({ place }) {
       </details>
     </div>
   )
+}
+// Capa do roteiro: os emojis das categorias dos lugares, sem repetir, os mais frequentes primeiro (até 3).
+const EMOJI = 'lib:fluent3d:'
+// categorias antigas que ainda usam ícone de linha no catálogo
+const PLAIN = { rest: 'fork-and-knife-with-plate', store: 'ticket', pizza: 'pizza', burger: 'hamburger', cafe: 'hot-beverage', bread: 'croissant', cake: 'birthday-cake', bar: 'cocktail-glass' }
+export function RouteEmojis({ places, theme }) {
+  useLibVersion()
+  const count = places.reduce((m, p) => m.set(p.category, (m.get(p.category) || 0) + 1), new Map())
+  const icons = [...new Set([...count].sort((a, b) => b[1] - a[1]).map(([id]) => { const i = catOf(theme, id).icon; return isLib(i) && !i.startsWith('lib:lucide:') ? i : EMOJI + (PLAIN[i] || (i.startsWith('lib:lucide:ice') ? 'soft-ice-cream' : 'round-pushpin')) }))].slice(0, 3)
+  return <span className="rc-emo" aria-hidden="true">{icons.map((id) => { const ic = libIcon(id); return <i key={id} dangerouslySetInnerHTML={{ __html: ic ? libHtml(ic, 28) : '' }} /> })}</span>
 }
 // Roteiro patrocinado: etiqueta e logo da marca parceira, sempre visíveis no cartão
 export const SponsorMark = ({ s }) => s ? <span className="sp-logo" title={`Patrocinado por ${s.brand}`}>{s.logo ? <img src={s.logo} alt={s.brand} /> : <b>{s.brand}</b>}</span> : null

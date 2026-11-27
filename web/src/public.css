@@ -379,3 +379,9 @@
 .rt-bar .rt-seg{margin:0}
 .pub .rt-bar .rt-maps{display:inline-flex;align-items:center;gap:8px;width:auto;margin:0;text-decoration:none}
 .rt-cut{margin:-10px 0 16px}
+/* capa do roteiro em emojis */
+.rc-emo{display:flex;align-items:center;opacity:1}
+.ms-route .rc-emo{opacity:1}
+.rc-emo>i{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;margin-left:-8px;box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.rc-emo>i:first-child{margin-left:0}
+.ms-route .rc-head,.ms-route .ms-stack{opacity:1}

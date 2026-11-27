@@ -5,7 +5,7 @@ import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
-import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
+import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink, RouteEmojis } from './shared.jsx'
 import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.js'
 import VisitButton from './VisitButton.jsx'
 import { googleSearchUrl } from '../../../server/placelinks.js'
@@ -97,7 +97,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   else if (view === 'roteiros') body = <>{(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}<div className="dk-routes">{(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
     <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => { setRouteId(r.id); setView('route') }}>
       {r.sponsor && <span className="rc-top"><SponsorTag s={r.sponsor} /><SponsorMark s={r.sponsor} /></span>}
-      <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}<Icon n="next" s={20} c="currentColor" /></span></span>
+      <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack"><RouteEmojis places={rp} theme={theme} /><Icon n="next" s={20} c="currentColor" /></span></span>
       {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
