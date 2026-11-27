@@ -342,7 +342,7 @@ function RouteProducts({ products, preview }) {
   )
 }
 // Corpo de um roteiro aberto: escolhe como ver (linha do tempo, lista ou, no celular, o mapa)
-export function RouteBody({ route, places, theme, openFicha, renderList, onMap, preview, creator }) {
+export function RouteBody({ route, places, theme, openFicha, renderList, onMap, preview }) {
   const story = hasStory(route)
   const [view, setView] = useState(story ? 'timeline' : 'list')
   useEffect(() => { setView(story ? 'timeline' : 'list') }, [route.id])
@@ -352,9 +352,11 @@ export function RouteBody({ route, places, theme, openFicha, renderList, onMap, 
     <>
       {route.sponsor && <div className="sp-bar"><SponsorTag s={route.sponsor} /><span>Em parceria com <b>{route.sponsor.brand}</b></span><SponsorMark s={route.sponsor} /></div>}
       {route.note && <p className="ms-bio">{route.note}</p>}
-      <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
-      {route.video && <div className="rt-gm"><PostLink url={route.video} creator={creator} preview={preview} className="pb sm" /></div>}
-      {gm && <div className="rt-gm"><a className="pb sec sm" href={gm.url} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}><Icon n="route" s={16} c="currentColor" />Abrir o roteiro no Google Maps</a>{gm.cut > 0 && <span className="xs">O Google Maps recebe as {GMAPS_MAX} primeiras paradas.</span>}</div>}
+      <div className="rt-bar">
+        <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>
+        {gm && <a className="pb sec sm rt-maps" href={gm.url} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => preview && e.preventDefault()}><Icon n="route" s={16} c="currentColor" />Abrir no Google Maps</a>}
+      </div>
+      {gm?.cut > 0 && <p className="xs mut rt-cut">O Google Maps recebe as {GMAPS_MAX} primeiras paradas.</p>}
       {view === 'timeline' ? <RouteTimeline route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} /> : renderList()}
       {route.locked && <RouteLock route={route} preview={preview} />}
       {route.products?.length > 0 && <RouteProducts products={route.products} preview={preview} />}

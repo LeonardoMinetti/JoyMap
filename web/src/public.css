@@ -374,3 +374,8 @@
 .dk-subnav>button{position:relative}
 /* ponte invisível só embaixo do botão aberto, para o mouse alcançar o menu */
 .dk-subnav>button.open::after{content:'';position:absolute;left:0;right:0;top:100%;height:20px}
+/* roteiro aberto: modo de visualização e Google Maps na mesma linha */
+.rt-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 18px}
+.rt-bar .rt-seg{margin:0}
+.pub .rt-bar .rt-maps{display:inline-flex;align-items:center;gap:8px;width:auto;margin:0;text-decoration:none}
+.rt-cut{margin:-10px 0 16px}
