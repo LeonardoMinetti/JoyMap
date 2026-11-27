@@ -273,6 +273,12 @@ export function useMemoColors(theme) {
 // Um roteiro antigo, sem paradas, vira uma linha do tempo só com os lugares na ordem.
 export const routeStops = (route) => (route.stops?.length ? route.stops : route.placeIds.map((id) => ({ placeId: id })))
 export const hasStory = (route) => (route.stops || []).some((s) => s.text || s.title)
+// parada sem lugar no mapa (saída, chegada, volta): um quadro com emoji no espaço da foto
+function PassBox({ emoji }) {
+  useLibVersion()
+  const ic = libIcon(`lib:fluent3d:${emoji || 'round-pushpin'}`)
+  return <div className="tl-pass" aria-hidden="true">{ic && <i dangerouslySetInnerHTML={{ __html: libHtml(ic, 72) }} />}</div>
+}
 export function RouteTimeline({ route, places, theme, openFicha, preview }) {
   const stops = routeStops(route)
   return (
@@ -287,6 +293,7 @@ export function RouteTimeline({ route, places, theme, openFicha, preview }) {
             <div className="tl-b">
               {st.when && <span className="tl-w">{st.when}</span>}
               <h3 className="pt">{title}</h3>
+              {!p && <PassBox emoji={st.emoji} />}
               {p && <button type="button" className="tl-ph" aria-label={`Ver ${p.name}`} tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha?.(p.id)}><PlacePhoto place={p} theme={theme} aspect="16/9" style={{ width: '100%', borderRadius: 14 }} /></button>}
               {st.text && <p>{st.text}</p>}
               {st.tip && <div className="tl-tip"><b>Dica</b>{st.tip}</div>}
