@@ -25,7 +25,7 @@ function tile(x, y) {
 
 const LIGHT = { land: '#f2f0ea', park: '#dcebd3', water: '#c4dcee', building: '#e7e3d8', road: '#ffffff', edge: '#d6d8e0', text: '#6b6b6b', halo: '#f2f0ea' }
 const DARK = { land: '#22211f', park: '#24301f', water: '#17283a', building: '#2d2c29', road: '#45443f', edge: '#33322f', text: '#b4b2ab', halo: '#22211f' }
-const ROAD = { motorway: 30, trunk: 28, primary: 26, secondary: 24, tertiary: 21, minor: 17, service: 8, path: 4 }
+const ROAD = { motorway: 15, trunk: 13, primary: 12, secondary: 11, tertiary: 9, minor: 6.5, service: 3, path: 1.5 }
 
 async function draw(lat, lon, dark) {
   const c = dark ? DARK : LIGHT
@@ -63,7 +63,7 @@ async function draw(lat, lon, dark) {
   area('park', c.park)
   area('water', c.water)
   area('building', c.building)
-  for (const [extra, color] of [[3, c.edge], [0, c.road]]) {
+  for (const [extra, color] of [[2, c.edge], [0, c.road]]) {
     each('transportation', (f, geo) => {
       const w = ROAD[f.properties.class]
       if (f.type !== 2 || !w || f.properties.brunnel === 'tunnel') return

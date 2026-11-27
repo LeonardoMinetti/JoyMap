@@ -1,13 +1,16 @@
-// Ficha do lugar, igual no computador e no celular: imagem à esquerda e informações à direita; descrição e categorias embaixo.
+// Ficha do lugar, igual no computador e no celular: imagem à esquerda; nome, descrição e categorias à direita; endereço, horário e contato embaixo.
 import React from 'react'
 import { PlacePhoto, PostLink, OpenTag } from './shared.jsx'
 import VisitButton from './VisitButton.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { catOf } from '../theme.jsx'
-import { catsOf } from '../../../server/categories.js'
+import { Link } from '../lib/router.jsx'
+import { catsOf, CATEGORIES } from '../../../server/categories.js'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 import { DAYS, ratingOf, reviewsText, phoneLink, httpsLink, todayText } from '../lib/placeInfo.js'
 
+// Chamada ao dono do lugar. Por enquanto só existe a página de restaurantes e bares, então ela aparece para comida e bebida.
+const OWNER_PAGE = { path: '/para-restaurantes', cats: new Set(CATEGORIES.filter((c) => ['Cozinhas', 'Comer', 'Cafés e doces', 'Beber e noite'].includes(c.group) && c.id !== 'party').map((c) => c.id)) }
 const Label = ({ children }) => <span className="fx-label">{children}</span>
 const Out = ({ href, children, onClick }) => <a className="fx-link" href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}>{children}<Icon n="ext" s={13} c="currentColor" /></a>
 
@@ -26,7 +29,7 @@ export default function PlaceFicha({ place, data, ctx }) {
       <div className="fx-top">
         <div className="fx-media">
           <PlacePhoto watch={creator} place={place} theme={theme} aspect="1/1" style={{ width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
-          {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
+          {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb sec ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
         </div>
         <div className="fx-info">
           <h1 className="pt fx-name">{place.name}</h1>
@@ -42,35 +45,38 @@ export default function PlaceFicha({ place, data, ctx }) {
             <button type="button" className="pb sec" aria-label="Compartilhar" onClick={() => ctx.share(place)}><Icon n="share" s={18} c="currentColor" /></button>
             {!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}
           </div>
-          <section>
-            <Label>Endereço</Label>
-            <p>{place.address || 'Endereço não informado'}{place.neighborhood ? ` - ${place.neighborhood}` : ''}{place.municipality ? `, ${place.municipality}` : ''} · <Out href={routeUrl} onClick={() => ctx.track('route_click', { placeId: place.id })}>Abrir rota</Out></p>
-            {place.geoQuality !== 'address_exact' && <span className="fx-note">Localização aproximada (a confirmar)</span>}
-          </section>
-          {hasHours && <section>
-            <Label>Horário de funcionamento</Label>
-            <p>{todayText(place.hours)} <OpenTag place={place} /></p>
-            <details><summary>Ver horários</summary><ul className="hrs">{place.hours.map((h, i) => <li key={i} className={i === today ? 'on' : ''}><span>{DAYS[i]}</span><span>{h ? `${h[0]} às ${h[1]}` : 'Fechado'}</span></li>)}</ul></details>
-          </section>}
-          <section>
-            <Label>Contato</Label>
-            <p className="fx-contacts">
-              {tel && <a className="fx-link" href={tel}>{place.phone}</a>}
-              {site && <Out href={site}>Site oficial</Out>}
-              {place.instagramUrl && <Out href={place.instagramUrl}>Instagram</Out>}
-              <Out href={place.googleUrl || googleSearchUrl(place)}>{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</Out>
-            </p>
-          </section>
+          {place.about && <p className="fx-about">{place.about}</p>}
+          <div className="fx-cats">{cats.map((c) => <span key={c.id}>{c.name}</span>)}</div>
         </div>
       </div>
 
-      {place.about && <p className="fx-about">{place.about}</p>}
-      <div className="fx-cats">{cats.map((c) => <span key={c.id}>{c.name}</span>)}</div>
+      <div className="fx-details">
+        <section>
+          <Label>Endereço</Label>
+          <p>{place.address || 'Endereço não informado'}{place.neighborhood ? ` - ${place.neighborhood}` : ''}{place.municipality ? `, ${place.municipality}` : ''} · <Out href={routeUrl} onClick={() => ctx.track('route_click', { placeId: place.id })}>Abrir rota</Out></p>
+          {place.geoQuality !== 'address_exact' && <span className="fx-note">Localização aproximada (a confirmar)</span>}
+        </section>
+        {hasHours && <section>
+          <Label>Horário de funcionamento</Label>
+          <p>{todayText(place.hours)} <OpenTag place={place} /></p>
+          <details><summary>Ver horários</summary><ul className="hrs">{place.hours.map((h, i) => <li key={i} className={i === today ? 'on' : ''}><span>{DAYS[i]}</span><span>{h ? `${h[0]} às ${h[1]}` : 'Fechado'}</span></li>)}</ul></details>
+        </section>}
+        <section>
+          <Label>Contato</Label>
+          <p className="fx-contacts">
+            {tel && <a className="fx-link" href={tel}>{place.phone}</a>}
+            {site && <Out href={site}>Site oficial</Out>}
+            {place.instagramUrl && <Out href={place.instagramUrl}>Instagram</Out>}
+            <Out href={place.googleUrl || googleSearchUrl(place)}>{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</Out>
+          </p>
+        </section>
+      </div>
 
       {place.note && <p className="fx-quote">“{place.note}”</p>}
       {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><Label>Cupom ou desconto</Label>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
       {place.tiktokId && <button type="button" className="pb sm" style={{ alignSelf: 'flex-start' }} onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}
       <p className="fx-foot">Informações podem estar desatualizadas. Confirme com o estabelecimento. <button type="button" onClick={() => ctx.report(place)}>Informar erro</button></p>
+      {OWNER_PAGE.cats.has(place.category) && <p className="fx-owner"><b>{place.name}</b>, acesse o <Link to={OWNER_PAGE.path}>Painel do Estabelecimento</Link> e conheça as vantagens de gerenciar esta página, sem custo.</p>}
     </article>
   )
 }

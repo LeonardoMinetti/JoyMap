@@ -389,3 +389,8 @@
 .pub .dk-cities .ms-chip.sel{border:1.5px solid var(--acc);background:color-mix(in srgb,var(--acc) 13%,var(--bg))}
 .pub .dk-citypop{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px;min-width:240px;padding:10px}
 .pub .dk-citypop>button{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;flex:none}
+/* ficha: endereço, horário e contato abaixo da imagem; descrição ao lado dela */
+.pub .fx-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px 28px;border-top:1px solid var(--line);padding-top:20px}
+.pub .fx-info .fx-about{font-size:16px;line-height:1.55}
+.pub .fx-owner{margin:0;padding:14px 16px;border-radius:12px;background:var(--soft);font:500 14px/1.5 var(--pf)}
+.pub .fx-owner a{color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:700}

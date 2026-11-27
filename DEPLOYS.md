@@ -67,3 +67,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 059 | 2026-11-27 16:26 | mapa | menu de cidades em coluna com escolha no botao | `deploy/mapa/059-menu-de-cidades-em-coluna-com-escolha-no` |
 | 060 | 2026-11-27 16:31 | mapa | mapa acompanha cidade, bairro, categoria e busca | `deploy/mapa/060-mapa-acompanha-cidade-bairro-categoria-e` |
 | 061 | 2026-11-27 16:33 | ajuste | visao geral da cidade ao escolher | `deploy/ajuste/061-visao-geral-da-cidade-ao-escolher` |
+| 062 | 2026-11-27 16:45 | mapa | ficha invertida, chamada ao estabelecimento e ruas mais finas | `deploy/mapa/062-ficha-invertida-chamada-ao-estabelecimen` |
