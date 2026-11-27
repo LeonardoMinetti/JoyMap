@@ -99,7 +99,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
-  else if (!all && !filtered) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onCategory={(id) => f.setCats([id])} onHood={(h) => f.setHoods([h])} />
+  else if (!all && !filtered) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onHood={(h) => f.setHoods([h])} />
   else body = (
     <>
       {f.cats.length > 0 && (

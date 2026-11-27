@@ -6,7 +6,7 @@ import { latest, highlights, brandsOf, nextEvent } from '../lib/arrival.js'
 
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
-export default function Arrival({ data, theme, onOpen, onCategory, onHood, onAll }) {
+export default function Arrival({ data, theme, onOpen, onHood, onAll }) {
   const { creator, places } = data
   const h = highlights(places, theme.categories)
   const brands = brandsOf(creator)
@@ -31,14 +31,10 @@ export default function Arrival({ data, theme, onOpen, onCategory, onHood, onAll
         <button type="button" className="pb arr-all" onClick={onAll}>Ver todos os {places.length} lugares<Icon n="next" s={16} c="currentColor" /></button>
       </section>
 
-      <section aria-label="Onde mais vai">
-        {h.hoods.length > 1 && <>
-          <h2 className="arr-h">Onde mais vai</h2>
-          <div className="arr-chips">{h.hoods.map((b) => <button key={b.name} type="button" className="arr-chip" onClick={() => onHood(b.name)}><Icon n="pin" s={13} c="currentColor" />{b.name}<em>{b.n}</em></button>)}</div>
-        </>}
-        <span className="arr-sub">O que mais indica</span>
-        <div className="arr-chips">{h.cats.map((c) => <button key={c.id} type="button" className="arr-chip" style={{ '--c': c.color }} onClick={() => onCategory(c.id)}><i />{c.name}<em>{c.n}</em></button>)}</div>
-      </section>
+      {h.hoods.length > 1 && <section aria-label="Onde mais vai">
+        <h2 className="arr-h">Onde mais vai</h2>
+        <div className="arr-chips">{h.hoods.map((b) => <button key={b.name} type="button" className="arr-chip" onClick={() => onHood(b.name)}><Icon n="pin" s={13} c="currentColor" />{b.name}<em>{b.n}</em></button>)}</div>
+      </section>}
 
       {brands.length > 0 && <section aria-label="Marcas parceiras">
         <h2 className="arr-h">Já trabalhou com</h2>

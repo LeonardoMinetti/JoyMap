@@ -311,7 +311,7 @@
 .pub .arr-pl{scroll-snap-align:start;background:none;border:0;padding:0;text-align:left;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-width:0;font:inherit}
 .pub .arr-pl b{font:700 14px/1.3 var(--pf)}.pub .arr-pl span{font:500 12px var(--pf);color:var(--mut)}
 .pub .arr-all{margin-top:14px;width:100%;justify-content:center}
-.pub .arr-bio{margin:0 0 14px;font:500 15px/1.5 var(--pf)}
+.pub .arr-bio{white-space:pre-line;margin:0 0 14px;font:500 15px/1.5 var(--pf)}
 .pub .arr-sub{display:block;font:700 11px var(--pf);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:10px 0 8px}
 .pub .arr-chips{display:flex;flex-wrap:wrap;gap:8px}
 .pub .arr-chip{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line);border-radius:99px;background:var(--bg);color:var(--fg);padding:9px 13px;font:700 13px var(--pf);cursor:pointer;transition:transform .15s}

@@ -80,7 +80,7 @@ export function sanitizeTheme(input = {}, opts = {}) {
     start: 'all', startView: null, // o ponto inicial do mapa não é mais configurável: sempre enquadra todos os lugares
     linkStyle: pick(LINK_STYLES, t.linkStyle, 'fill'),
     social: { instagram: t.social?.instagram !== false, tiktok: !!t.social?.tiktok },
-    bio: String(t.bio || '').slice(0, 160),
+    bio: String(t.bio || '').slice(0, 600),
     layout: { ...DEFAULT_LAYOUT, blocks: DEFAULT_LAYOUT.blocks.map((b) => ({ ...b })) }, // o layout da página é fixo: o criador não o edita
   }
   const given = new Map((Array.isArray(t.categories) ? t.categories : []).map((c) => [String(c?.id), c || {}]))

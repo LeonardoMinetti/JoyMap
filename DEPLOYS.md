@@ -57,3 +57,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 049 | 2026-11-27 13:31 | mapa | Botao para voltar a lista de todos os lugares | `deploy/mapa/049-botao-para-voltar-a-lista-de-todos-os-lu` |
 | 050 | 2026-11-27 14:00 | mapa | Trilha de navegacao no lugar dos botoes de voltar | `deploy/mapa/050-trilha-de-navegacao-no-lugar-dos-botoes-` |
 | 051 | 2026-11-27 15:14 | mapa | aba Sobre, Todos leva a Lugares e mapa demo completo | `deploy/mapa/051-aba-sobre-todos-leva-a-lugares-e-mapa-de` |
+| 052 | 2026-11-27 15:39 | mapa | texto da Nathi, sem O que mais indica e demo igual ao dela | `deploy/mapa/052-texto-da-nathi-sem-o-que-mais-indica-e-d` |

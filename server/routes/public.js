@@ -38,7 +38,7 @@ export default function publicRoutes(app, x) {
     // mapa de demonstração (dados fictícios), aberto a qualquer pessoa, sem cadastro
     if (c.req.param('slug') !== DEMO_SLUG) return next()
     const theme = sanitizeTheme({ ...DEFAULT_THEME, accent: '#FFC400', bg: '#FFFFFF', tone: 'light', shape: 'circle', bio: DEMO_BIO, social: { instagram: true, tiktok: false } })
-    return c.json({ creator: { handle: 'mapa_demo', tiktok: null, slug: DEMO_SLUG, displayName: 'Mapa de demonstração', theme, links: [], cover: false, symbols: {}, demo: true, ...demoArrival() }, places: demoMapPlaces(), routes: DEMO_ROUTES })
+    return c.json({ creator: { handle: 'mapa_demo', tiktok: null, slug: DEMO_SLUG, displayName: 'Mapa de demonstração', theme, links: [], cover: false, symbols: {}, demo: true, showBrand: false, ...demoArrival() }, places: demoMapPlaces(), routes: DEMO_ROUTES })
   })
   app.get('/api/public/:slug', (c) => {
     const row = live(c.req.param('slug'))
