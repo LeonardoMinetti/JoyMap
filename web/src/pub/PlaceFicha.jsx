@@ -1,5 +1,5 @@
 // Ficha do lugar, igual no computador e no celular: imagem à esquerda; nome, descrição e categorias à direita; endereço, horário e contato embaixo.
-import React from 'react'
+import React, { useState } from 'react'
 import { PlacePhoto, PostLink, OpenTag } from './shared.jsx'
 import VisitButton from './VisitButton.jsx'
 import { Icon } from '../lib/icons.jsx'
@@ -13,6 +13,17 @@ import { DAYS, ratingOf, reviewsText, phoneLink, httpsLink, todayText } from '..
 const OWNER_PAGE = { path: '/para-restaurantes', cats: new Set(CATEGORIES.filter((c) => ['Cozinhas', 'Comer', 'Cafés e doces', 'Beber e noite'].includes(c.group) && c.id !== 'party').map((c) => c.id)) }
 const Label = ({ children }) => <span className="fx-label">{children}</span>
 const Out = ({ href, children, onClick }) => <a className="fx-link" href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}>{children}<Icon n="ext" s={13} c="currentColor" /></a>
+
+// Aviso sobre os dados: fica num "i"; abre ao passar o mouse ou tocar, e leva ao "Informar erro".
+function DataTip({ onReport }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <span className="fx-data" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setOpen(false)} onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}>
+      <button type="button" className="fx-data-i" aria-label="Sobre estas informações" aria-expanded={open} onClick={() => setOpen(true)} onFocus={() => setOpen(true)}>i</button>
+      {open && <span className="fx-data-pop"><span>Informações podem estar desatualizadas. Confirme com o estabelecimento. <button type="button" onClick={() => { setOpen(false); onReport() }}>Informar erro</button></span></span>}
+    </span>
+  )
+}
 
 export default function PlaceFicha({ place, data, ctx }) {
   const { creator } = data
@@ -70,12 +81,12 @@ export default function PlaceFicha({ place, data, ctx }) {
             <Out href={place.googleUrl || googleSearchUrl(place)}>{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</Out>
           </p>
         </section>
+        <DataTip onReport={() => ctx.report(place)} />
       </div>
 
       {place.note && <p className="fx-quote">“{place.note}”</p>}
       {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><Label>Cupom ou desconto</Label>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
       {place.tiktokId && <button type="button" className="pb sm" style={{ alignSelf: 'flex-start' }} onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}
-      <p className="fx-foot">Informações podem estar desatualizadas. Confirme com o estabelecimento. <button type="button" onClick={() => ctx.report(place)}>Informar erro</button></p>
       {OWNER_PAGE.cats.has(place.category) && <p className="fx-owner"><b>{place.name}</b>, acesse o <Link to={OWNER_PAGE.path}>Painel do Estabelecimento</Link> e conheça as vantagens de gerenciar esta página, sem custo.</p>}
     </article>
   )
