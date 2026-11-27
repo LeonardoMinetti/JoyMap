@@ -48,3 +48,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 040 | 2026-11-26 19:32 | mapa | Capas dos posts no recorte e fim do mapa do Google | `deploy/mapa/040-capas-dos-posts-no-recorte-e-fim-do-mapa` |
 | 041 | 2026-11-27 12:28 | mapa | Descricoes dos lugares e nova navegacao sem aba Inicio | `deploy/mapa/041-descricoes-dos-lugares-e-nova-navegacao-` |
 | 042 | 2026-11-27 12:43 | mapa | Tela de chegada com ultimos lugares, sobre, marcas e evento | `deploy/mapa/042-tela-de-chegada-com-ultimos-lugares-sobr` |
+| 043 | 2026-11-27 12:56 | mapa | Catalogo amplo de categorias com cozinhas | `deploy/mapa/043-catalogo-amplo-de-categorias-com-cozinha` |

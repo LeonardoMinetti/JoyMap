@@ -49,7 +49,8 @@ export function fromCsv(text) {
   return body.map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? '').replace(/^'(?=[=+@-])/, '')])))
 }
 
-export const CATEGORIES = ['bar', 'cafe', 'cake', 'burger', 'bread', 'tour', 'pizza', 'rest', 'ice']
+import { CATEGORY_IDS } from '../../server/categories.js'
+export const CATEGORIES = CATEGORY_IDS
 export const toPlace = (r, id) => ({
   id, name: r.nome, category: CATEGORIES.includes(r.categoria) ? r.categoria : 'rest', neighborhood: r.bairro || null,
   lat: Number(r.lat), lon: Number(r.lon), photo: null, address: [r.rua, r.numero].filter(Boolean).join(', '), municipality: r.cidade,

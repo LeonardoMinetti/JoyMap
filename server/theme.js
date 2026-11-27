@@ -1,4 +1,6 @@
 // Tema visual do criador: validação de tudo que vem do cliente + saneamento de SVG enviado.
+import { CATEGORIES } from './categories.js'
+export { CATEGORIES }
 export const ICONS = ['rest', 'cafe', 'bar', 'bread', 'cake', 'pizza', 'fish', 'burger', 'heart', 'star', 'flag', 'store', 'clock', 'spark']
 export const BLOCKS = ['header', 'filters', 'map', 'list', 'routes']
 const FONTS = ['sans', 'disp', 'serif', 'fraunces', 'playfair', 'mono']
@@ -12,17 +14,6 @@ const LISTS = ['grid', 'rows']
 const HEX = /^#[0-9a-fA-F]{6}$/
 
 // Categorias fixas do wagli: o criador não adiciona, remove nem renomeia; só escolhe cor e símbolo de cada uma.
-export const CATEGORIES = [
-  { id: 'bar', name: 'Bar & Cervejaria', color: '#7c3aed', icon: 'bar' },
-  { id: 'cafe', name: 'Cafeteria & Comidinhas', color: '#a16207', icon: 'cafe' },
-  { id: 'cake', name: 'Doces & Confeitaria', color: '#ec4899', icon: 'cake' },
-  { id: 'burger', name: 'Hamburgueria & Lanches', color: '#ea580c', icon: 'burger' },
-  { id: 'bread', name: 'Padarias', color: '#f59e0b', icon: 'bread' },
-  { id: 'tour', name: 'Passeios, Experiências e Lojas', color: '#0e9f8e', icon: 'store' },
-  { id: 'pizza', name: 'Pizza', color: '#dc2626', icon: 'pizza' },
-  { id: 'rest', name: 'Restaurante', color: '#ff4b2b', icon: 'rest' },
-  { id: 'ice', name: 'Sorveteria', color: '#2aa6f5', icon: 'lib:lucide:ice-cream-cone' },
-]
 
 export const DEFAULT_LAYOUT = {
   blocks: [{ id: 'header', on: true }, { id: 'filters', on: true }, { id: 'map', on: true }, { id: 'list', on: true }, { id: 'routes', on: false }],

@@ -1,3 +1,4 @@
+import { catsOf } from '../../../server/categories.js'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
@@ -58,7 +59,7 @@ function ReportSheet({ slug, place, creator, onClose }) {
 // E6 · Filtros
 function FiltersSheet({ data, f, onClose }) {
   const theme = data.creator.theme
-  const cats = theme.categories.filter((c) => data.places.some((p) => p.category === c.id))
+  const cats = theme.categories.filter((c) => data.places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const cityNav = byCity(data.places)
   const hoods = cityNav ? citiesOf(data.places).map(([c]) => c) : [...new Set(data.places.map((p) => p.neighborhood || p.municipality).filter(Boolean))].sort().slice(0, 14)
   const [picked, setPicked] = cityNav ? [f.cities, f.setCities] : [f.hoods, f.setHoods]
@@ -161,7 +162,7 @@ export default function Public({ slug, embed }) {
     share: (p) => setOverlay({ kind: 'share', place: p }), report: (p) => setOverlay({ kind: 'report', place: p }),
   }
   const request = () => { t('request', { term: f.q.trim() }); setRequested(true); toast('Pedido enviado, de forma anônima') }
-  const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
+  const usedCats = theme.categories.filter((c) => places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const fichaMatch = rel.match(/^\/lugar\/(\d+)$/)
   const fichaPlace = fichaMatch && places.find((p) => p.id === Number(fichaMatch[1]))
   const routeMatch = rel.match(/^\/roteiros\/(\d+)$/)

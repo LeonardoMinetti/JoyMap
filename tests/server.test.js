@@ -1,3 +1,5 @@
+import { CATEGORIES as ALL_CATS } from '../server/categories.js'
+const CATEGORY_COUNT = ALL_CATS.length
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { openDb } from '../server/db.js'
@@ -47,10 +49,10 @@ test('tema: valida cores, fonte; categorias são fixas (só cor e símbolo mudam
   assert.equal(t.accent, '#ff4b2b')
   assert.equal(t.font, 'sans')
   assert.equal(t.radius, 32)
-  assert.equal(t.categories.length, 9)
+  assert.equal(t.categories.length, CATEGORY_COUNT)
   assert.ok(!t.categories.some((c) => c.id === 'nova'))
   const cafe = t.categories.find((c) => c.id === 'cafe')
-  assert.deepEqual(cafe, { id: 'cafe', name: 'Cafeteria & Comidinhas', color: '#123456', icon: 'cafe' })
+  assert.deepEqual(cafe, { id: 'cafe', name: 'Cafés', group: 'Cafés e doces', color: '#123456', icon: 'cafe' })
 })
 
 test('tema: layout, pins e links têm limites; cabeçalho nunca some; símbolo próprio só como path', () => {
@@ -169,7 +171,7 @@ test('fluxo: candidatura → análise → aprovação → onboarding → posts �
   assert.equal(pub.places.length, 1)
   assert.equal(pub.places[0].tiktokId, '7405595760361737477')
   assert.equal('confidence' in pub.places[0], false) // dados internos não vazam
-  assert.equal(pub.creator.theme.categories.length, 9)
+  assert.equal(pub.creator.theme.categories.length, CATEGORY_COUNT)
 
   // rotas (roteiros) só com lugares do próprio criador
   await call(app, a.cookie, '/api/creator/routes', 'PUT', { routes: [{ name: 'Domingo', placeIds: [carola.id, 99999] }] })
@@ -381,11 +383,11 @@ test('categorias próprias: nome limpo, tipo de base, limite e sem criar novas f
   const mk = (id, name, extra = {}) => ({ id, name, base: 'cafe', color: '#123456', icon: 'cafe', ...extra })
   const ok = sanitizeTheme({ categories: [...DEFAULT_THEME.categories, mk('xabc123', '  Comida   de rua ')] })
   const k = ok.categories.find((c) => c.id === 'xabc123')
-  assert.equal(k.name, 'Comida de rua'); assert.equal(k.custom, true); assert.equal(k.base, 'cafe'); assert.equal(ok.categories.length, 10)
+  assert.equal(k.name, 'Comida de rua'); assert.equal(k.custom, true); assert.equal(k.base, 'cafe'); assert.equal(ok.categories.length, DEFAULT_THEME.categories.length + 1)
   const bad = sanitizeTheme({ categories: [mk('xbad001', 'visite http://x.com'), mk('xbad002', 'a'), mk('xbad003', 'Pizza'), mk('rest', 'Outro'), mk('xdup001', 'Roda'), mk('xdup002', 'roda')] })
-  assert.equal(bad.categories.length, 10); assert.equal(bad.categories.at(-1).id, 'xdup001')
+  assert.equal(bad.categories.length, DEFAULT_THEME.categories.length + 1); assert.equal(bad.categories.at(-1).id, 'xdup001')
   const many = sanitizeTheme({ categories: Array.from({ length: 12 }, (_, i) => mk('xm' + String(i).padStart(4, '0'), 'Cat ' + 'abcdefghijkl'[i])) })
-  assert.equal(many.categories.length, 9 + EXTRA_MAX)
+  assert.equal(many.categories.length, DEFAULT_THEME.categories.length + EXTRA_MAX)
   const lapse = sanitizeTheme({ categories: [mk('xold001', 'Antiga'), mk('xnew001', 'Nova')] }, { only: new Set(['xold001']) })
   assert.deepEqual(lapse.categories.filter((c) => c.custom).map((c) => c.id), ['xold001'])
 })

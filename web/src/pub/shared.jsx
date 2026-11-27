@@ -1,3 +1,4 @@
+import { catsOf } from '../../../server/categories.js'
 import MapSnippet from '../lib/MapSnippet.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -63,7 +64,7 @@ export function useFilters(places, { slug, preview } = {}) {
   useEffect(() => { if (!openNow) return; const h = setInterval(() => setClock((n) => n + 1), 60000); return () => clearInterval(h) }, [openNow])
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase()
-    let list = places.filter((p) => (!cats.length || cats.includes(p.category)) && (!cities.length || cities.includes(cityOf(p))) && (!openNow || openState(p.hours)?.open) && (!hoods.length || hoods.includes(p.neighborhood || p.municipality)) && (!video || p.tiktokId) && (!t || `${p.name} ${p.address || ''} ${p.neighborhood || ''} ${p.municipality || ''}`.toLowerCase().includes(t)))
+    let list = places.filter((p) => (!cats.length || catsOf(p).some((id) => cats.includes(id))) && (!cities.length || cities.includes(cityOf(p))) && (!openNow || openState(p.hours)?.open) && (!hoods.length || hoods.includes(p.neighborhood || p.municipality)) && (!video || p.tiktokId) && (!t || `${p.name} ${p.address || ''} ${p.neighborhood || ''} ${p.municipality || ''}`.toLowerCase().includes(t)))
     if (near) list = list.map((p) => ({ ...p, km: hav(near, p) })).filter((p) => p.km <= NEAR_KM).sort((a, b) => a.km - b.km)
     return list
   }, [places, q, cats, hoods, video, near, cities, openNow, clock])
@@ -208,7 +209,7 @@ export function Home({ data, shown, f, selectedId, onSelect, go, preview, fake, 
   const { creator } = data
   const theme = creator.theme
   const blocks = theme.layout.blocks.filter((b) => b.on)
-  const usedCats = theme.categories.filter((c) => data.places.some((p) => p.category === c.id))
+  const usedCats = theme.categories.filter((c) => data.places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const sel = shown.find((p) => p.id === selectedId)
   const H = { sm: 240, md: 330, lg: 440 }[theme.layout.mapHeight] || 330
   const colors = useMemoColors(theme)

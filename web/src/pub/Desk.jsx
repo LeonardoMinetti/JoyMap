@@ -1,3 +1,4 @@
+import { catsOf } from '../../../server/categories.js'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -88,7 +89,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }) }, [fichaPlace?.id, view, routeId])
   const route = routeId != null ? data.routes.find((r) => r.id === routeId) : null
   const list = route && view === 'route' ? shown.filter((p) => route.placeIds.includes(p.id)) : shown
-  const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
+  const usedCats = theme.categories.filter((c) => places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const cities = useMemo(() => citiesOf(places), [places])
   const multiCity = cities.length > 1
   const cityNav = byCity(places)
@@ -169,7 +170,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
                 ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>
                 : pop === 'bairros'
                 ? <>{hoods.map(([h, n]) => <button key={h} type="button" role="menuitem" className={f.hoods?.length === 1 && f.hoods[0] === h ? 'on' : ''} onClick={() => pickMenu(() => f.setHoods([h]))}>{h}<i>{n}</i></button>)}</>
-                : <>{usedCats.map((c) => <button key={c.id} type="button" role="menuitem" className={f.cats.length === 1 && f.cats[0] === c.id ? 'on' : ''} onClick={() => pickMenu(() => f.setCats([c.id]))}>{c.name}<i>{places.filter((p) => p.category === c.id).length}</i></button>)}</>}
+                : <>{usedCats.map((c) => <button key={c.id} type="button" role="menuitem" className={f.cats.length === 1 && f.cats[0] === c.id ? 'on' : ''} onClick={() => pickMenu(() => f.setCats([c.id]))}>{c.name}<i>{places.filter((p) => catsOf(p).includes(c.id)).length}</i></button>)}</>}
               <button type="button" role="menuitem" className="all" onClick={() => pickMenu(() => (pop === 'bairros' ? (cityNav ? f.setCities([]) : f.setHoods([])) : f.setCats([])))}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
             </div>}
           </div>

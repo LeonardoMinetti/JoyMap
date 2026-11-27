@@ -1,3 +1,4 @@
+import { catsOf } from '../../../server/categories.js'
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
@@ -101,7 +102,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
     setSnap(Object.entries(offs).filter(([k]) => k !== 'low').sort((a, b) => Math.abs(a[1] - v) - Math.abs(b[1] - v))[0][0])
   }
 
-  const usedCats = theme.categories.filter((c) => places.some((p) => p.category === c.id))
+  const usedCats = theme.categories.filter((c) => places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const hoods = Object.entries(places.filter((p) => !f.cities?.length || f.cities.includes(cityOf(p))).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
   const cities = citiesOf(places)
   const multiCity = cities.length > 1
@@ -109,7 +110,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const city = f.cities?.length === 1 ? f.cities[0] : null
   const anyHours = hasHours(places)
   const news = !f.active && !route ? newest(places) : []
-  const catCount = (id) => places.filter((p) => p.category === id).length
+  const catCount = (id) => places.filter((p) => catsOf(p).includes(id)).length
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   // chegada: nada filtrado ainda (as prévias do site continuam mostrando a lista)
   const arriving = !preview && !all && !route && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city

@@ -23,7 +23,7 @@ export const numberOf = (endereco) => String(endereco || '').match(/(?:^|[\s,])(
 const streetOf = (endereco) => norm(String(endereco || '').split(',')[0]).split(' ').filter((w) => w && !['rua', 'r', 'avenida', 'av', 'alameda', 'al', 'praca', 'dr', 'doutor', 'prof', 'professor'].includes(w)).join(' ')
 export const sameAddress = (a, b) => !!numberOf(a) && numberOf(a) === numberOf(b) && streetOf(a) === streetOf(b)
 
-const CAT = [['pizza', /pizz/], ['burger', /burg|hambur|lanche/], ['bread', /padaria|paes|panific/], ['ice', /gelat|sorvet/], ['cake', /doce|confeit|bolo|cake|chocolat|sweet/], ['cafe', /cafe|coffee|bakery|brunch/], ['bar', /\bbar\b|boteco|botequim|cervej|pub/], ['tour', /shopping|outlet|mercado|museu|theatro|teatro|sesc|parque|loja|feir/]]
+const CAT = [['pizza', /pizz/], ['burger', /burg|hambur/], ['snack', /lanche|hot ?dog|sanduic/], ['japa', /sushi|zushi|temaki|japa|izakaya|lamen|ramen/], ['kore', /corean|korea/], ['chin', /chines|dim ?sum/], ['ital', /osteria|trattoria|cantina|forneria|cucina/], ['mexi', /taco|taqueria|mexic/], ['bread', /padaria|paes|panific/], ['ice', /gelat|sorvet|heladeria/], ['cake', /doce|confeit|bolo|cake|chocolat|sweet|patisserie/], ['cafe', /cafe|coffee|bakery/], ['brunch', /brunch/], ['beer', /cervej|brewing|chopp/], ['bar', /\bbar\b|boteco|botequim|pub/], ['park', /parque|praca/], ['theater', /theatro|teatro|cinema/], ['art', /museu|galeria/], ['market', /feir|mercad|hortifruti/], ['shop', /shopping|outlet|loja|center/], ['sport', /academia|studio|club/]]
 export const guessCategory = (nome) => CAT.find(([, re]) => re.test(norm(nome)))?.[0] || 'rest'
 
 // passos 2 e 3 juntos: de menções por post para uma lista de lugares sem repetição
