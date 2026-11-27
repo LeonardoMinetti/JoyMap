@@ -360,13 +360,6 @@
 .pub .ms-panel .ms-opt .sp{text-transform:uppercase;letter-spacing:.02em;font-weight:800;color:color-mix(in srgb,var(--acc) 48%,var(--fg))}
 .pub .dk-find button.all{margin-left:0}
 /* trilha de navegação */
-.pub .crumbs{margin-bottom:12px;min-width:0;flex:none}
-.pub .crumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;font:700 13px var(--pf)}
-.pub .crumbs li{display:flex;align-items:center;min-width:0}
-.pub .crumbs li+li::before{content:'›';margin:0 9px;color:var(--mut);font-size:16px}
-.pub .crumbs button{background:none;border:0;padding:6px 0;color:var(--mut);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.pub .crumbs button:hover{color:var(--fg)}
-.pub .crumbs span{color:var(--fg);padding:6px 0}
 .pub .all-count{background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 
 /* aba Lugares: Bairros e Categorias acoplados logo abaixo */

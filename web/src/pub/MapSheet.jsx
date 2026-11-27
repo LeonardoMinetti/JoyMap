@@ -4,7 +4,6 @@ import { Link } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
-import Crumbs from './Crumbs.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
 import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink } from './shared.jsx'
@@ -179,10 +178,6 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {[['bairros', cityNav ? city || 'Cidades' : hood || 'Bairros', cityNav ? 'globe' : 'map', cityNav ? !!city : !!hood], ['categorias', (f.cats.length === 1 && theme.categories.find((c) => c.id === f.cats[0])?.name) || 'Categorias', 'grid', f.cats.length === 1]].map(([k, label, icon, on]) => <button key={k} type="button" className={on ? 'on' : ''} aria-haspopup="dialog" onClick={() => setPanel(k)}><Icon n={icon} s={15} c="currentColor" /><span>{label}</span><i aria-hidden="true">▾</i></button>)}
         </div>}
         <div className="ms-scroll">
-          {!preview && (route || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <Crumbs items={[
-            ['Todos os lugares', showAll],
-            ...(route ? [['Todos os roteiros', () => setPanel('roteiros')], [route.name]] : [[f.q?.trim() ? 'Busca' : hood || city || (f.cats.length === 1 ? theme.categories.find((c) => c.id === f.cats[0])?.name : 'Filtrados')]]),
-          ]} />}
           {arriving ? <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => { setAll(true); setSnap('full') }} onHood={(h) => { f.setHoods([h]); setSnap('half') }} /> : route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {preview && theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {preview && news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}

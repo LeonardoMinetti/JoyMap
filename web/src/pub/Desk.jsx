@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
-import Crumbs from './Crumbs.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
@@ -161,11 +160,6 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
         </header>
         <div className="dk-scroll" ref={scroller}>
-          {!fichaPlace && view !== 'salvos' && (view !== 'home' || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <Crumbs items={[
-            ['Todos os lugares', showAll],
-            ...(view === 'roteiros' || view === 'route' ? [['Todos os roteiros', () => { setView('roteiros'); setRouteId(null) }]] : []),
-            ...(view === 'route' && route ? [[route.name]] : view === 'home' ? [[f.q?.trim() ? 'Busca' : hood || city || (f.cats.length === 1 ? theme.categories.find((c) => c.id === f.cats[0])?.name : 'Filtrados')]] : []),
-          ]} />}
           {body}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </div>

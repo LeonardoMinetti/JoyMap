@@ -61,3 +61,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 053 | 2026-11-27 15:42 | mapa | tira a contagem de lugares do cabecalho | `deploy/mapa/053-tira-a-contagem-de-lugares-do-cabecalho` |
 | 054 | 2026-11-27 15:51 | mapa | aba Lugares com Bairros e Categorias acoplados | `deploy/mapa/054-aba-lugares-com-bairros-e-categorias-aco` |
 | 055 | 2026-11-27 15:55 | ajuste | menu fecha quando o mouse sai do botao | `deploy/ajuste/055-menu-fecha-quando-o-mouse-sai-do-botao` |
+| 056 | 2026-11-27 15:57 | ajuste | remove o breadcrumb | `deploy/ajuste/056-remove-o-breadcrumb` |
