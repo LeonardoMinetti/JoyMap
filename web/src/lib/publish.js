@@ -78,5 +78,5 @@ export const savePlaceEdits = ({ token, handle, edits, fetcher = fetch }) => upd
   change: (map) => applyPlaceEdits(map, edits) })
 
 // marcas e próximo evento da tela de chegada
-export const saveArrival = ({ token, handle, brands, event, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: () => `[conteudo] Mapa de @${handle}: marcas e evento da chegada`,
-  change: (map) => ({ map: { ...map, creator: { ...map.creator, brands, event } }, count: 1 }) })
+export const saveArrival = ({ token, handle, brands, agenda, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: () => `[conteudo] Mapa de @${handle}: marcas e agenda da chegada`,
+  change: (map) => { const { event, ...creator } = map.creator; return { map: { ...map, creator: { ...creator, brands, agenda } }, count: 1 } } })

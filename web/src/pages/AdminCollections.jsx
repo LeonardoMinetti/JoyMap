@@ -358,23 +358,26 @@ function InfoFields({ place: p, edit, set }) {
 // o que o criador informa para a tela de chegada; blocos vazios não aparecem no mapa
 function ArrivalEditor({ handle }) {
   const [brands, setBrands] = useState(null)
-  const [event, setEvent] = useState({ title: '', date: '', place: '', url: '' })
+  const [agenda, setAgenda] = useState([])
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
-  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => { setBrands(m.creator.brands || []); if (m.creator.event) setEvent({ title: '', date: '', place: '', url: '', ...m.creator.event }) }).catch(() => setBrands([])) }, [handle])
+  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => { setBrands(m.creator.brands || []); setAgenda([...(m.creator.agenda || []), ...(m.creator.event ? [m.creator.event] : [])]) }).catch(() => setBrands([])) }, [handle])
   if (!brands) return <p className="sm mut">Carregando…</p>
   const setBrand = (i, patch) => setBrands(brands.map((b, j) => (j === i ? { ...b, ...patch } : b)))
-  const pickLogo = async (i, file) => { if (!file) return; try { setBrand(i, { logo: await fileToLogo(file) }) } catch { setMsg('Não consegui ler essa imagem. Use PNG, JPG ou WebP.') } }
+  const pickLogo = async (i, file) => { if (!file) return; try { setBrand(i, { logo: await fileToLogo(file) }) } catch (e) { setMsg(e.message || 'Não consegui ler esse arquivo.') } }
+  const setItem = (i, patch) => setAgenda(agenda.map((a, j) => (j === i ? { ...a, ...patch } : a)))
   const save = async () => {
     const token = getToken()
     if (!token) return setMsg('Conecte a chave do GitHub na aba Lugares para salvar.')
     const list = brands.filter((b) => b.name?.trim())
-    if (list.some((b) => b.url && !safeLink(b.url)) || (event.url && !safeLink(event.url))) return setMsg('Os links precisam começar com https://')
-    if (event.title && !event.date) return setMsg('Informe a data do evento.')
+    const events = agenda.filter((a) => a.title?.trim()).sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    if (list.some((b) => b.url && !safeLink(b.url)) || events.some((a) => a.url && !safeLink(a.url))) return setMsg('Os links precisam começar com https://')
+    if (events.some((a) => !a.date)) return setMsg('Informe a data de cada item da agenda.')
     setBusy(true); setMsg('')
     try {
-      await saveArrival({ token, handle, brands: list, event: event.title ? event : null })
+      await saveArrival({ token, handle, brands: list, agenda: events })
       setBrands(list)
+      setAgenda(events)
       setMsg('Salvo. O mapa se atualiza em alguns minutos.')
     } catch (e) { setMsg(e.message) }
     setBusy(false)
@@ -382,24 +385,30 @@ function ArrivalEditor({ handle }) {
   const field = (label, value, onChange, extra) => <label className="col" style={{ gap: 4 }}><span className="lb">{label}</span><input className="in" value={value || ''} onChange={(e) => onChange(e.target.value)} {...extra} /></label>
   return (
     <>
-      <Note>Só inclua marcas com quem o criador trabalhou de fato e que autorizem o uso do logo. O que ficar vazio não aparece.</Note>
+      <Note>Só inclua marcas que apoiam o criador de fato e que autorizem o uso do logo. O que ficar vazio não aparece.</Note>
       <div className="card col">
-        <b>Marcas parceiras</b>
+        <b>Marcas que me apoiam</b>
+        <span className="xs mut">Logo em SVG, com fundo transparente. No mapa ele aparece em uma cor só.</span>
         {brands.map((b, i) => (
           <div key={i} className="col cl-brand">
             <div className="g2">{field('Nome', b.name, (v) => setBrand(i, { name: v }), { maxLength: 40 })}{field('Link (opcional)', b.url, (v) => setBrand(i, { url: v }), { placeholder: 'https://' })}</div>
             <div className="row wrap" style={{ gap: 10 }}>
               {b.logo && <img src={b.logo} alt="" className="cl-logo" />}
-              <label className="btn ln sm">{b.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => pickLogo(i, e.target.files[0])} /></label>
+              <label className="btn ln sm">{b.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept=".svg,image/svg+xml" hidden onChange={(e) => pickLogo(i, e.target.files[0])} /></label>
               <button type="button" className="btn sec sm" onClick={() => setBrands(brands.filter((_, j) => j !== i))}>Remover</button>
             </div>
           </div>))}
         {brands.length < 12 && <button type="button" className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => setBrands([...brands, { name: '', url: '', logo: '' }])}><Icon n="plus" s={14} c="currentColor" />Adicionar marca</button>}
       </div>
       <div className="card col">
-        <b>Próximo evento</b>
-        <div className="g2">{field('Nome do evento', event.title, (v) => setEvent({ ...event, title: v }), { maxLength: 80 })}{field('Data', event.date, (v) => setEvent({ ...event, date: v }), { type: 'date' })}{field('Local', event.place, (v) => setEvent({ ...event, place: v }), { maxLength: 80 })}{field('Link (opcional)', event.url, (v) => setEvent({ ...event, url: v }), { placeholder: 'https://' })}</div>
-        <span className="xs mut">Depois da data, o evento some sozinho.</span>
+        <b>Agenda</b>
+        <span className="xs mut">Eventos e lugares onde o criador vai estar. O mais próximo aparece logo abaixo do Sobre; os que passam somem sozinhos.</span>
+        {agenda.map((a, i) => (
+          <div key={i} className="col cl-brand">
+            <div className="g2">{field('Evento ou lugar', a.title, (v) => setItem(i, { title: v }), { maxLength: 80 })}{field('Data', a.date, (v) => setItem(i, { date: v }), { type: 'date' })}{field('Local', a.place, (v) => setItem(i, { place: v }), { maxLength: 80 })}{field('Link (opcional)', a.url, (v) => setItem(i, { url: v }), { placeholder: 'https://' })}</div>
+            <button type="button" className="btn sec sm" style={{ alignSelf: 'flex-start' }} onClick={() => setAgenda(agenda.filter((_, j) => j !== i))}>Remover</button>
+          </div>))}
+        {agenda.length < 20 && <button type="button" className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => setAgenda([...agenda, { title: '', date: '', place: '', url: '' }])}><Icon n="plus" s={14} c="currentColor" />Adicionar à agenda</button>}
       </div>
       {msg && <Note>{msg}</Note>}
       <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar no mapa'}</button>

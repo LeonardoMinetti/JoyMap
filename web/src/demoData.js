@@ -97,9 +97,23 @@ export const demoMapPlaces = () => {
   })
 }
 // chegada do mapa de demonstração: marcas e evento fictícios (a data fica sempre no futuro)
+// logos inventados, de uma cor, só para a demonstração
+const logo = (mark, word) => `data:image/svg+xml;base64,${btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">${mark}<text x="38" y="26" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">${word}</text></svg>`)}`
+const inDays = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
 export const demoArrival = () => ({
-  brands: ['Marca Exemplo', 'Café Fictício', 'Loja Modelo', 'App Demo', 'Tênis Teste'].map((name) => ({ name })),
-  event: { title: 'Encontro de exemplo (fictício)', date: new Date(Date.now() + 21 * 864e5).toISOString().slice(0, 10), place: 'Praça Exemplo, São Paulo' },
+  brands: [
+    { name: 'Aurora (marca fictícia)', logo: logo('<circle cx="18" cy="20" r="13"/>', 'aurora') },
+    { name: 'Monte (marca fictícia)', logo: logo('<path d="M4 33 18 7l14 26z"/>', 'MONTE') },
+    { name: 'Grão (marca fictícia)', logo: logo('<rect x="6" y="8" width="24" height="24" rx="7"/>', 'grao.co') },
+    { name: 'Onda (marca fictícia)', logo: logo('<path d="M3 26q7-16 15 0t15 0v8H3z"/>', 'onda') },
+    { name: 'Faísca (marca fictícia)', logo: logo('<path d="M20 4 7 23h9l-3 13 16-21h-10z"/>', 'FAISCA') },
+  ],
+  agenda: [
+    { title: 'Encontro de exemplo (fictício)', date: inDays(12), place: 'Praça Exemplo, São Paulo' },
+    { title: 'Feira Gastronômica Exemplo', date: inDays(26), place: 'Pinheiros' },
+    { title: 'Visita à Doceria Exemplo', date: inDays(40), place: 'Jardins' },
+    { title: 'Festival de Café Exemplo', date: inDays(58), place: 'Santos' },
+  ],
 })
 export const DEMO_BIO = 'Mapa de demonstração da JoyMap: comida, café e passeio em São Paulo. Lugares e nomes são fictícios.'
 
