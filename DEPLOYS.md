@@ -64,3 +64,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 056 | 2026-11-27 15:57 | ajuste | remove o breadcrumb | `deploy/ajuste/056-remove-o-breadcrumb` |
 | 057 | 2026-11-27 16:10 | mapa | roteiro sem botao de post e Google Maps ao lado da visualizacao | `deploy/mapa/057-roteiro-sem-botao-de-post-e-google-maps-` |
 | 058 | 2026-11-27 16:19 | mapa | roteiros representados por emojis das categorias | `deploy/mapa/058-roteiros-representados-por-emojis-das-ca` |
+| 059 | 2026-11-27 16:26 | mapa | menu de cidades em coluna com escolha no botao | `deploy/mapa/059-menu-de-cidades-em-coluna-com-escolha-no` |

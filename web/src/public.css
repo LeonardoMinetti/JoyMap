@@ -385,3 +385,7 @@
 .rc-emo>i{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;margin-left:-8px;box-shadow:0 1px 4px rgba(0,0,0,.14)}
 .rc-emo>i:first-child{margin-left:0}
 .ms-route .rc-head,.ms-route .ms-stack{opacity:1}
+/* menu de cidades sobre o mapa: lista em coluna, com a cidade escolhida no botão */
+.pub .dk-cities .ms-chip.sel{border:1.5px solid var(--acc);background:color-mix(in srgb,var(--acc) 13%,var(--bg))}
+.pub .dk-citypop{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px;min-width:240px;padding:10px}
+.pub .dk-citypop>button{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;flex:none}

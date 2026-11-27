@@ -68,6 +68,10 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const city = f.cities?.length === 1 ? f.cities[0] : null
   const anyHours = hasHours(places)
   const [cityMenu, setCityMenu] = useState(false)
+  const cityT = React.useRef(null)
+  const openCities = () => { clearTimeout(cityT.current); setCityMenu(true) }
+  const closeCities = () => { clearTimeout(cityT.current); cityT.current = setTimeout(() => setCityMenu(false), 220) }
+  useEffect(() => { if (!cityMenu) return; const k = (e) => e.key === 'Escape' && setCityMenu(false); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [cityMenu])
   const hoods = useMemo(() => Object.entries(places.filter((p) => !city || cityOf(p) === city).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])), [places, city])
   const news = [] // os últimos lugares agora abrem a tela de chegada
   const newIds = new Set(news.map((p) => p.id))
@@ -167,11 +171,11 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       <div className="dk-map">
         <MapCanvas places={list} path={route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
         {multiCity && !cityNav && (
-          <div className="dk-cities" onMouseLeave={() => setCityMenu(false)}>
-            <button type="button" className="ms-chip" aria-haspopup="true" aria-expanded={cityMenu} onClick={() => setCityMenu(!cityMenu)}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}</button>
+          <div className="dk-cities" onMouseEnter={() => clearTimeout(cityT.current)} onMouseLeave={closeCities}>
+            <button type="button" className={'ms-chip' + (city ? ' sel' : '')} aria-haspopup="true" aria-expanded={cityMenu} onMouseEnter={openCities} onClick={openCities}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}<span aria-hidden="true">▾</span></button>
             {cityMenu && <div className="dk-pop dk-citypop" role="menu" aria-label="Cidades">
-              <button type="button" role="menuitem" className="all" onClick={() => { f.setCities([]); setCityMenu(false) }}>Todas as cidades</button>
-              {cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { f.setCities([c]); f.setHoods?.([]); setCityMenu(false); setView('home'); setRouteId(null); if (fichaPlace) go('/') }}>{c}<i>{n}</i></button>)}
+              <button type="button" role="menuitem" className={'all' + (city ? '' : ' on')} onClick={() => { setCityMenu(false); showAll() }}>Todas as cidades<i>{places.length}</i></button>
+              {cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setCityMenu(false); pickCity(c) }}>{c}<i>{n}</i></button>)}
             </div>}
           </div>)}
         <div className="dk-pills">
