@@ -2,6 +2,7 @@
 // A chave de acesso é do administrador, fica só no navegador e é enviada apenas para api.github.com.
 import { toPlace } from '../../../scripts/lib/lugares.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
+import { cleanInfo } from './placeInfo.js'
 
 export const REPO = 'LeonardoMinetti/JoyMap'
 const API = 'https://api.github.com'
@@ -65,7 +66,9 @@ export function applyPlaceEdits(map, edits) {
     if (e.about !== undefined && e.about.trim() !== (p.about || '')) Object.assign(next, { about: e.about.trim().slice(0, 300), aboutSource: 'editado' })
     if (e.category !== undefined && known.has(e.category)) next.category = e.category
     if (e.tags !== undefined || next.category !== p.category) next.tags = [...new Set((e.tags ?? p.tags ?? []).filter((t) => known.has(t) && t !== next.category))].slice(0, 2)
-    if (JSON.stringify([next.about, next.category, next.tags || []]) === JSON.stringify([p.about, p.category, p.tags || []])) return p
+    for (const [k, v] of Object.entries(cleanInfo(e))) { if (v === null) delete next[k]; else next[k] = v }
+    const view = (x) => JSON.stringify([x.about, x.category, x.tags || [], x.rating ?? null, x.reviews ?? null, x.ratingDate ?? null, x.phone ?? null, x.website ?? null, x.instagramUrl || null, x.hours || null])
+    if (view(next) === view(p)) return p
     count++
     return next
   })

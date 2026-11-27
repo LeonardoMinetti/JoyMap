@@ -2,6 +2,7 @@ import { catsOf } from '../../../server/categories.js'
 import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
+import PlaceFicha from './PlaceFicha.jsx'
 import DeskMap from './Desk.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
@@ -92,29 +93,7 @@ function VideoFull({ place, creator, onClose, onFicha }) {
 
 // E4 · Ficha do lugar
 function Ficha({ place, data, ctx }) {
-  const { creator } = data
-  const theme = creator.theme
-  const cat = catOf(theme, place.category)
-  const exact = place.geoQuality === 'address_exact'
-  const isSaved = ctx.saved.ids.includes(place.id)
-  const route = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`
-  return (
-    <div className="pbody" style={{ gap: 12 }}>
-      <PlacePhoto watch={creator} place={place} theme={theme} style={{ height: 190, width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
-      <h1 className="pt" style={{ '--fs': '40px' }}>{place.name}</h1>
-      {place.about && <p className="pl-about full">{place.about}</p>}
-      <div className="pchips" style={{ gap: 6 }}><span className="tag2">{cat.name}</span>{place.ad && <span className="tag2 publi">Publi</span>}{(place.neighborhood || place.municipality) && <span className="tag2">{place.neighborhood || place.municipality}</span>}</div>
-      <div className="box" style={{ flexDirection: 'row', alignItems: 'center' }}><Icon n="pin" s={20} c="var(--acc)" /><div className="sp"><b className="sm">{place.address || 'Endereço não informado'}</b><div className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</div></div></div>
-      {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
-      <div className="prow"><a className="pb sp" href={route} target="_blank" rel="noopener noreferrer" onClick={() => ctx.track('route_click', { placeId: place.id })}><Icon n="route" s={18} c="currentColor" />Abrir rota</a><button className="pb sec" aria-label="Compartilhar" onClick={() => ctx.share(place)}><Icon n="share" s={18} c="currentColor" /></button></div>
-      <HoursBlock place={place} />
-      {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><span className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cupom ou desconto</span>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
-      <div className="prow"><a className="pb sm sec sp" href={place.googleUrl || googleSearchUrl(place)} target="_blank" rel="noopener noreferrer"><Icon n="ext" s={14} c="currentColor" />{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</a>{place.instagramUrl && <a className="pb sm sec sp" href={place.instagramUrl} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={14} c="currentColor" />Instagram do lugar</a>}</div>
-      {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
-      <div className="prow"><button className="pb sm sec" onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>{!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button></div>
-      <span className="xs mut" style={{ textAlign: 'center' }}>Informações podem estar desatualizadas. Confirme com o estabelecimento.</span>
-    </div>
-  )
+  return <div className="pbody"><PlaceFicha place={place} data={data} ctx={ctx} /></div>
 }
 
 const Tabbar = PubTabs

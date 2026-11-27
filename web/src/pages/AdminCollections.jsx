@@ -8,6 +8,7 @@ import { open } from '../lib/vault.js'
 import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
 import { safeLink } from '../lib/arrival.js'
+import { DAYS, dayText, parseDay, httpsLink } from '../lib/placeInfo.js'
 import { fileToLogo } from '../lib/logo.js'
 import { publishToMap, savePlaceEdits, applyPlaceEdits, saveArrival, hasPoint, REPO } from '../lib/publish.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
@@ -318,12 +319,39 @@ function Abouts({ handle }) {
                 <label className="col" style={{ gap: 4 }}><span className="lb">Extras (até 2)</span><select className="selbox" value="" disabled={v.tags.length >= 2} onChange={(e) => e.target.value && set(p, { tags: [...v.tags, e.target.value] })}><option value="">Adicionar…</option>{cats.filter((c) => c.id !== v.category && !v.tags.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
                 <div className="row wrap" style={{ gap: 6, alignSelf: 'flex-end' }}>{v.tags.map((t) => <button key={t} type="button" className="chip on" aria-label={`Tirar ${name(t)}`} onClick={() => set(p, { tags: v.tags.filter((x) => x !== t) })}>{name(t)} ×</button>)}</div>
               </div>
+              <InfoFields place={p} edit={edits[p.id] || {}} set={(patch) => set(p, patch)} />
             </div>)
         })}
         {shown.length > limit && <button type="button" className="btn ln sm" style={{ alignSelf: 'center' }} onClick={() => setLimit(limit + 60)}>Mostrar mais ({shown.length - limit})</button>}
         {!shown.length && <p className="sm mut">Nada encontrado.</p>}
       </div>
     </>
+  )
+}
+
+// nota do Google (digitada à mão, com a data em que foi vista), contato e horário
+function InfoFields({ place: p, edit, set }) {
+  const val = (k) => edit[k] ?? p[k] ?? ''
+  const days = edit.days ?? DAYS.map((_, i) => dayText(p.hours?.[i]))
+  const input = (k, label, extra) => <label className="col" style={{ gap: 4 }}><span className="lb">{label}</span><input className="in" value={val(k)} onChange={(e) => set({ [k]: e.target.value })} {...extra} /></label>
+  const bad = days.some((d) => parseDay(d) === undefined)
+  const today = new Date().toLocaleDateString('sv-SE')
+  return (
+    <details className="cl-info">
+      <summary>Nota do Google, contato e horário</summary>
+      <div className="col" style={{ gap: 10, marginTop: 10 }}>
+        <div className="g3">
+          {input('rating', 'Nota (0 a 5)', { inputMode: 'decimal', placeholder: '4,5', onChange: (e) => set({ rating: e.target.value, ratingDate: edit.ratingDate || today }) })}
+          {input('reviews', 'Nº de avaliações', { inputMode: 'numeric' })}
+          {input('ratingDate', 'Vista em', { type: 'date' })}
+        </div>
+        <div className="g3">{input('phone', 'Telefone', { placeholder: '(11) 90000-0000' })}{input('website', 'Site', { placeholder: 'https://' })}{input('instagramUrl', 'Instagram do lugar', { placeholder: 'https://instagram.com/…' })}</div>
+        <div className="g2">{DAYS.map((d, i) => <label key={d} className="col" style={{ gap: 4 }}><span className="lb">{d}</span><input className="in" value={days[i]} placeholder="09:00-18:00 ou vazio" onChange={(e) => set({ days: days.map((x, j) => (j === i ? e.target.value : x)) })} /></label>)}</div>
+        {bad && <Note>Não entendi um dos horários. Use o formato 09:00-18:00.</Note>}
+        {[val('website'), val('instagramUrl')].some((u) => u && !httpsLink(u)) && <Note>Os links precisam começar com https://</Note>}
+        <span className="xs mut">A nota só aparece quando tem a data.</span>
+      </div>
+    </details>
   )
 }
 

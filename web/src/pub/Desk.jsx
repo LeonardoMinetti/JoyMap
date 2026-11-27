@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
+import PlaceFicha from './PlaceFicha.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
 import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.js'
@@ -31,37 +32,12 @@ function Card({ p, theme, saved, onOpen, preview }) {
 }
 
 function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
-  const { creator } = data
-  const theme = creator.theme
-  const cat = catOf(theme, place.category)
-  const exact = place.geoQuality === 'address_exact'
-  const isSaved = ctx.saved.ids.includes(place.id)
-  const routeUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`
+  const theme = data.creator.theme
   const hood = place.neighborhood || place.municipality
   return (
     <div className="dk-fi">
       <button type="button" className="pb sm sec dk-back" onClick={onBack}><Icon n="back" s={14} c="currentColor" />Voltar</button>
-      <div className="dk-fi-top">
-        <PlacePhoto watch={creator} place={place} theme={theme} aspect="1/1" style={{ width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
-        <div className="dk-fi-info">
-          <h1 className="pt" style={{ '--fs': '38px' }}>{place.name}</h1>
-          <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}{place.ad && <i>Publi</i>}</div>
-          {place.about && <p className="pl-about full">{place.about}</p>}
-          <div><span className="ms-sec" style={{ marginTop: 0 }}>Endereço</span><p className="dk-p">{place.address || 'Endereço não informado'}</p><span className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</span></div>
-      {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
-          <div className="prow">
-            <a className="pb sp" href={routeUrl} target="_blank" rel="noopener noreferrer" onClick={() => ctx.track('route_click', { placeId: place.id })}><Icon n="route" s={18} c="currentColor" />Abrir rota</a>
-            <button className="pb sec" aria-pressed={isSaved} onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>
-            <button className="pb sec" aria-label="Compartilhar" onClick={() => ctx.share(place)}><Icon n="share" s={18} c="currentColor" /></button>
-          </div>
-          <div className="prow"><a className="pb sm sec sp" href={place.googleUrl || googleSearchUrl(place)} target="_blank" rel="noopener noreferrer"><Icon n="ext" s={14} c="currentColor" />{place.googleUrl ? 'Ver no Google' : 'Buscar no Google'}</a>{place.instagramUrl && <a className="pb sm sec sp" href={place.instagramUrl} target="_blank" rel="noopener noreferrer"><Icon n="insta" s={14} c="currentColor" />Instagram do lugar</a>}</div>
-        </div>
-      </div>
-      <HoursBlock place={place} />
-      {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><span className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cupom ou desconto</span>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
-      {place.note && <p className="dk-p">“{place.note}”</p>}
-      {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
-      <div className="prow">{!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button><span className="xs mut sp">Informações podem estar desatualizadas. Confirme com o estabelecimento.</span></div>
+      <PlaceFicha place={place} data={data} ctx={ctx} />
       {others.length > 0 && <section className="dk-sec2"><div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>Outros lugares{hood ? ` em ${hood}` : ''}</b></div><div className="dk-grid">{others.map((p) => <Card key={p.id} p={p} theme={theme} saved={ctx.saved} onOpen={onOpen} />)}</div></section>}
     </div>
   )

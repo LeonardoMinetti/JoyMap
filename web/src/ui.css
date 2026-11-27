@@ -572,3 +572,4 @@ body{background:var(--cream)}.page{background:var(--cream)}
 @media (max-width:600px){.main .cl-found.card{grid-template-columns:auto minmax(0,1fr)}.cl-cat{grid-column:2}}
 .cl-publish{gap:10px}
 .cl-brand{gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}.cl-logo{height:40px;max-width:120px;object-fit:contain}
+.cl-info summary{cursor:pointer;font:600 13px var(--body)}
