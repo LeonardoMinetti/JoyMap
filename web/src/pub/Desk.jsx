@@ -45,7 +45,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
         <PlacePhoto watch={creator} place={place} theme={theme} aspect="1/1" style={{ width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
         <div className="dk-fi-info">
           <h1 className="pt" style={{ '--fs': '38px' }}>{place.name}</h1>
-          <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}<i>@{creator.handle}</i>{place.ad && <i>Publi</i>}</div>
+          <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}{place.ad && <i>Publi</i>}</div>
           {place.about && <p className="pl-about full">{place.about}</p>}
           <div><span className="ms-sec" style={{ marginTop: 0 }}>Endereço</span><p className="dk-p">{place.address || 'Endereço não informado'}</p><span className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</span></div>
       {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
@@ -59,12 +59,8 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
       </div>
       <HoursBlock place={place} />
       {(place.couponNote || place.couponCode) && <div className="box" style={{ gap: 4 }}><span className="xs mut" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>Cupom ou desconto</span>{place.couponNote && <b className="sm">{place.couponNote}</b>}{place.couponCode && <span className="sm">Código: <b style={{ letterSpacing: '.04em' }}>{place.couponCode}</b></span>}<span className="xs mut">Confirme com o estabelecimento antes de ir.</span></div>}
-      <div className="box">
-        <span className="ms-sec" style={{ marginTop: 0 }}>Quem indicou</span>
-        <div className="prow"><div className="pav" style={{ width: 36, height: 36, fontSize: 16 }}>{initial(creator.displayName)}</div><div className="sp"><b className="sm">{creator.displayName}</b><div className="xs mut">{place.postedOn ? fmtDate(place.postedOn) : 'Indicado pelo criador'}</div></div></div>
-        {place.note && <p className="dk-p">“{place.note}”</p>}
-        {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
-      </div>
+      {place.note && <p className="dk-p">“{place.note}”</p>}
+      {place.tiktokId && <div className="prow">{place.tiktokId && <button className="pb sm sp" onClick={() => ctx.video(place.id)}><Icon n="play" s={14} c="currentColor" />Ver vídeo</button>}</div>}
       <div className="prow">{!creator.demo && !creator.noVisit && <VisitButton slug={creator.slug} placeId={place.id} />}<button className="pb sm sec" onClick={() => ctx.report(place)}>Informar erro</button><span className="xs mut sp">Informações podem estar desatualizadas. Confirme com o estabelecimento.</span></div>
       {others.length > 0 && <section className="dk-sec2"><div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>Outros lugares{hood ? ` em ${hood}` : ''}</b></div><div className="dk-grid">{others.map((p) => <Card key={p.id} p={p} theme={theme} saved={ctx.saved} onOpen={onOpen} />)}</div></section>}
     </div>
