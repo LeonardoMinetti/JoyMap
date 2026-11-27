@@ -1,6 +1,6 @@
 // Administração · Coletas: cada Reel trazido de um criador e o que foi (ou não) encontrado nele.
 import React, { useEffect, useMemo, useState } from 'react'
-import { AdminPage, Note, PageHead, useTitle } from '../lib/ui.jsx'
+import { Note, PageHead } from '../lib/ui.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { Link, toast } from '../lib/router.jsx'
 import { VaultGate } from '../lib/VaultGate.jsx'
@@ -31,13 +31,8 @@ const IN_VIEW = {
   resolvidos: (p, m) => !!m,
 }
 
-export function AdminCollections() {
-  useTitle('Coletas')
-  return (
-    <AdminPage active="coletas">
-      <VaultGate file="/base/coletas.enc.json" title="Coletas" sub="As postagens coletadas são protegidas pela senha da equipe.">{(data, lock, password) => <Home data={data} lock={lock} password={password} />}</VaultGate>
-    </AdminPage>
-  )
+export function Collected({ onOpen }) {
+  return <VaultGate file="/base/coletas.enc.json" title="Criadores" sub="As postagens coletadas são protegidas pela senha da equipe." bare>{(data, lock, password) => <Home data={data} lock={lock} password={password} onOpen={onOpen} />}</VaultGate>
 }
 
 // miniaturas vêm em blocos cifrados, abertos só quando aparecem na tela
@@ -87,14 +82,15 @@ function Avatar({ c }) {
   return c.foto ? <img className="cl-av" src={withBase(c.foto)} alt="" /> : <span className="cl-av">{initial(c.nome || c.usuario)}</span>
 }
 
-function Home({ data, lock, password }) {
+function Home({ data, lock, password, onOpen }) {
   const [who, setWho] = useState(null)
+  useEffect(() => { onOpen?.(!!who); return () => onOpen?.(false) }, [who])
   const marks = read(MARKS)
   if (who && data[who]) return <Collections c={data[who]} lock={lock} password={password} back={() => setWho(null)} />
   const list = Object.entries(data)
   return (
     <>
-      <PageHead title="Coletas" sub={`${list.length} ${list.length === 1 ? 'criador coletado' : 'criadores coletados'}`} right={<button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button>} />
+      <div className="row jb wrap" style={{ gap: 12 }}><p className="sm mut" style={{ margin: 0 }}>{list.length} {list.length === 1 ? 'criador com postagens coletadas' : 'criadores com postagens coletadas'}</p><button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button></div>
       <div className="cl-creators">
         {list.map(([k, c]) => (
           <button key={k} type="button" className="card col click cl-creator" onClick={() => setWho(k)}>

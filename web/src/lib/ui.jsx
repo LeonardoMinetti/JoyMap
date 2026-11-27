@@ -141,11 +141,11 @@ export const ExplorerPage = ({ active, children }) => (
 // Cabeçalho de página dos painéis: título, resumo e ações à direita. Padrão único.
 export const PageHead = ({ title, sub, right }) => <div className="row jb wrap pg-h"><div><h1 className="d s44">{title}</h1>{sub && <p className="sm mut">{sub}</p>}</div>{right}</div>
 
-// Administração: candidaturas, mapas, lugares, moderação, rede (mapa geral) e métricas
-const ADM = [['candidaturas', 'Candidaturas', 'user', '/admin'], ['coletas', 'Coletas', 'link', '/admin/coletas'], ['mapas', 'Mapas', 'map', '/admin/mapas'], ['lugares', 'Lugares', 'pin', '/admin/lugares'], ['miniguias', 'RoteirosJoy', 'route', '/admin/miniguias'], ['moderacao', 'Moderação', 'shield', '/admin/moderacao'], ['rede', 'Rede', 'globe', '/admin/rede'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
+// Administração: o menu segue o trabalho (pendências, quem entra, o que está no mapa, o que dá errado)
+const ADM = [['inicio', 'Início', 'home', '/admin'], ['criadores', 'Criadores', 'user', '/admin/criadores'], ['lugares', 'Lugares', 'pin', '/admin/lugares'], ['denuncias', 'Denúncias', 'shield', '/admin/denuncias'], ['miniguias', 'Vitrine', 'route', '/admin/miniguias'], ['metricas', 'Métricas', 'chart', '/admin/metricas']]
 export const AdminPage = ({ active, children }) => (
   <Guard need="admin"><RolePanel items={ADM} active={active} label="Administração" loginTo="/entrar"
-    banner={<a className="it" href={withBase('/painel')}><Icon n="home" s={18} c="#404040" />Painel de criador</a>}>{children}</RolePanel></Guard>
+    banner={<a className="link xs mut" style={{ padding: '4px 12px' }} href={withBase('/painel')}>Ir ao painel de criador</a>}>{children}</RolePanel></Guard>
 )
 // Restaurante: tipo de conta próprio (sem plano definido ainda)
 const RST = [['visao', 'Visão geral', 'home', '/restaurante'], ['percepcao', 'Percepção', 'shield', '/restaurante/percepcao'], ['lugar', 'Reivindicar', 'pin', '/restaurantes'], ['conta', 'Conta', 'user', '/restaurante/conta']]

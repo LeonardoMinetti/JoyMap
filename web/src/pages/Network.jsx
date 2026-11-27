@@ -21,8 +21,7 @@ export function HardRedirect({ to }) {
 }
 
 // Administração · Rede: mapa geral (só criadores que aceitaram aparecer)
-export function AdminNetwork() {
-  useTitle('Rede')
+export function NetworkView() {
   const [d, setD] = useState(null)
   const [off, setOff] = useState([])
   const [q, setQ] = useState('')
@@ -33,8 +32,8 @@ export function AdminNetwork() {
   const shown = groups.filter((g) => !q || `${g.name} ${g.address || ''} ${g.neighborhood || ''}`.toLowerCase().includes(q.toLowerCase()))
   const places = shown.map((g) => ({ id: g.key, name: g.name, lat: g.lat, lon: g.lon, category: g.creators.length > 1 ? 'multi' : g.creators[0].slug }))
   return (
-    <AdminPage active="rede">
-      <PageHead title="Rede" sub="Mapa geral: lugares indicados por criadores que escolheram participar. Cada criador decide se aparece aqui." />
+    <>
+      <p className="sm mut" style={{ margin: 0 }}>Mapa geral: lugares indicados por criadores que escolheram participar. Cada criador decide se aparece aqui.</p>
       <div className="net">
         <div className="net-m"><MapCanvas places={places} theme={theme} selectedId={sel} onSelect={setSel} style={{ position: 'absolute', inset: 0, height: '100%' }} /></div>
         <div className="net-l">
@@ -50,7 +49,7 @@ export function AdminNetwork() {
           {d && !shown.length && d.places.length > 0 && <p className="sm mut">Nada encontrado.</p>}
         </div>
       </div>
-    </AdminPage>
+    </>
   )
 }
 
@@ -62,8 +61,8 @@ export function AdminNetworkPlace() {
   useEffect(() => { api('/network').then(setD) }, [])
   const g = d?.places.find((p) => p.key === key)
   return (
-    <AdminPage active="rede">
-      <Link className="row sm mut" to="/admin/rede"><Icon n="back" s={18} />Rede</Link>
+    <AdminPage active="lugares">
+      <Link className="row sm mut" to="/admin/lugares?aba=rede"><Icon n="back" s={18} />Rede</Link>
       {!d ? <Loading /> : !g ? <p className="mut">Este lugar não está mais na rede.</p> : <>
         <div><h1 className="d s44">{g.name}</h1><p className="mut sm" style={{ marginTop: 6 }}>{g.address || 'Endereço não informado'}{g.neighborhood ? ` · ${g.neighborhood}` : ''} · {g.quality === 'address_exact' ? 'endereço exato' : 'localização aproximada (a confirmar)'}</p></div>
         <span className="eb">{g.creators.length} {g.creators.length > 1 ? 'criadores indicaram' : 'criador indicou'}</span>

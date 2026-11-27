@@ -15,14 +15,12 @@ import Saved from './pages/Saved.jsx'
 import { Guides, AdminGuides } from './pages/Guides.jsx'
 import { RestaurantsLanding } from './landing/restaurants.jsx'
 import Public from './pub/Public.jsx'
-import { AdminPlaces } from './pages/AdminPlaces.jsx'
-import { AdminCollections } from './pages/AdminCollections.jsx'
 import { STATIC } from './lib/base.js'
 import { api } from './api.js'
 import { TIERS, TIER_NAMES } from '../../server/plans.js'
 import { isCreatorPath } from './lib/demoCreator.js'
 
-const STATIC_OK = new Set(['/', '/roteirosjoy', '/miniguias', '/admin/miniguias', '/admin/lugares', '/admin/coletas', '/entrar', '/candidatura', '/rede', '/rede/lugar', '/admin/rede', '/admin/rede/lugar', '/restaurante/conta', '/painel-teste-restaurante', '/painel-teste-admin', '/restaurantes', '/restaurante', '/restaurante/percepcao', '/voo', '/admin', '/admin/mapas', '/admin/moderacao', '/admin/metricas', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
+const STATIC_OK = new Set(['/', '/roteirosjoy', '/miniguias', '/admin/miniguias', '/admin/lugares', '/admin/coletas', '/entrar', '/candidatura', '/rede', '/rede/lugar', '/admin/rede', '/admin/rede/lugar', '/restaurante/conta', '/painel-teste-restaurante', '/painel-teste-admin', '/restaurantes', '/restaurante', '/restaurante/percepcao', '/voo', '/admin', '/admin/mapas', '/admin/moderacao', '/admin/metricas', '/admin/criadores', '/admin/denuncias', '/painel-teste-usuario', '/painel-teste-explorador', '/salvos', '/salvos/criadores', '/salvos/conta', '/para-restaurantes', '/planos', '/perguntas', '/exemplos', '/termos', '/indisponivel'])
 
 const ST = (el) => <St.StudioRoute>{el}</St.StudioRoute>
 const ROUTES = {
@@ -35,8 +33,8 @@ const ROUTES = {
   '/painel/roteiros': <Pn.Roteiros />, '/painel/listas': <Redirect to="/painel/roteiros" />, '/painel/contas': <Pn.Accounts />, '/painel/privacidade': <Pn.Privacy />, '/painel/plano': <Pn.Billing />, '/painel/conta': <Pn.Account />,
   '/estudio': ST(<St.StudioHome />), '/estudio/modelos': <Redirect to="/estudio" />, '/estudio/cores': ST(<St.StudioColors />), '/estudio/categorias': ST(<St.StudioCategories />), '/estudio/simbolos': <Redirect to="/estudio/pins" />,
   '/estudio/mapa': ST(<St.StudioMap />), '/estudio/pins': ST(<St.StudioPins />), '/estudio/layout': <Redirect to="/estudio" />, '/estudio/links': <Redirect to="/estudio" />, '/estudio/endereco': <Redirect to="/painel/divulgar" />,
-  '/rede': <Net.HardRedirect to="/admin/rede" />, '/rede/lugar': <Net.HardRedirect to="/admin/rede/lugar" />, '/admin/rede': <Net.AdminNetwork />, '/admin/rede/lugar': <Net.AdminNetworkPlace />, '/restaurante/conta': <Net.RestaurantAccount />, '/painel-teste-restaurante': <Au.TestEntry kind="restaurante" />, '/painel-teste-admin': <Au.TestEntry kind="admin" />, '/restaurantes': <Net.Claim />, '/para-restaurantes': <RestaurantsLanding />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
-  '/admin': <Ad.Applications />, '/admin/mapas': <Ad.MapReview />, '/admin/lugares': <AdminPlaces />, '/admin/coletas': <AdminCollections />, '/admin/miniguias': <AdminGuides />, '/roteirosjoy': <Guides />, '/miniguias': <Redirect to="/roteirosjoy" />, '/admin/moderacao': <Ad.Moderation />, '/admin/metricas': <Ad.Metrics />,
+  '/rede': <Net.HardRedirect to="/admin/rede" />, '/rede/lugar': <Net.HardRedirect to="/admin/rede/lugar" />, '/admin/rede': <Redirect to="/admin/lugares?aba=rede" />, '/admin/rede/lugar': <Net.AdminNetworkPlace />, '/restaurante/conta': <Net.RestaurantAccount />, '/painel-teste-restaurante': <Au.TestEntry kind="restaurante" />, '/painel-teste-admin': <Au.TestEntry kind="admin" />, '/restaurantes': <Net.Claim />, '/para-restaurantes': <RestaurantsLanding />, '/restaurante': <Net.RestaurantPanel />, '/restaurante/percepcao': <Net.Perception />,
+  '/admin': <Ad.Home />, '/admin/criadores': <Ad.Creators />, '/admin/lugares': <Ad.Places />, '/admin/denuncias': <Ad.Reports />, '/admin/mapas': <Redirect to="/admin/lugares?aba=revisar" />, '/admin/coletas': <Redirect to="/admin/criadores?aba=coletados" />, '/admin/miniguias': <AdminGuides />, '/roteirosjoy': <Guides />, '/miniguias': <Redirect to="/roteirosjoy" />, '/admin/moderacao': <Redirect to="/admin/denuncias" />, '/admin/metricas': <Ad.Metrics />,
 }
 
 // Páginas do site: entram com um fade curto (as telas do painel e do estúdio ficam como estão, para não perder estado)
@@ -67,7 +65,7 @@ function DemoBar() {
   return (
     <>
     <div role="status" className="demobar" style={{ position: 'fixed', left: '50%', bottom: 14, transform: 'translateX(-50%)', zIndex: 60, maxWidth: 'calc(100vw - 24px)', background: '#171717', color: '#fff', borderRadius: 999, padding: '8px 10px 8px 16px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, boxShadow: '0 10px 30px rgba(0,0,0,.25)' }}>
-      <span><b>Demonstração.</b> {path === '/admin/lugares' || path === '/admin/coletas' ? 'Aqui os dados são reais; as alterações ficam neste navegador.' : 'Dados fictícios, salvos só nesta aba.'}</span>
+      <span><b>Demonstração.</b> {(path === '/admin/lugares' && /^(|\?aba=base)$/.test(location.search)) || (path === '/admin/criadores' && location.search.includes('coletados')) ? 'Aqui os dados são reais; as alterações ficam neste navegador.' : 'Dados fictícios, salvos só nesta aba.'}</span>
       {me.creator?.plan && <label className="row" style={{ gap: 6 }}><span>Plano</span><select aria-label="Plano na demonstração" value={me.creator.plan.tier} onChange={async (e) => { await api('/creator/plan-demo', { method: 'PUT', body: { tier: e.target.value } }); await reload() }} style={{ background: '#3a3a3a', color: '#fff', border: 0, borderRadius: 999, padding: '6px 10px', font: 'inherit' }}>{TIERS.map((t) => <option key={t} value={t}>{TIER_NAMES[t]}</option>)}</select></label>}
     </div>
     </>

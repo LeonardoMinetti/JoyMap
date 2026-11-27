@@ -9,7 +9,7 @@ const PASS = 'joymap:base-senha'
 const read = (store, k) => { try { return window[store].getItem(k) } catch { return null } }
 const write = (store, k, v) => { try { v == null ? window[store].removeItem(k) : window[store].setItem(k, v) } catch { /* sem armazenamento */ } }
 
-export function VaultGate({ file, title, sub, children }) {
+export function VaultGate({ file, title, sub, bare, children }) {
   const [data, setData] = useState(null)
   const [state, setState] = useState('loading') // loading | locked | ready | missing
   const box = useRef(null)
@@ -33,12 +33,12 @@ export function VaultGate({ file, title, sub, children }) {
   }, [file])
   const lock = () => { forget(); setData(null); setState('locked') }
   if (state === 'loading') return <Loading />
-  if (state === 'missing') return <><PageHead title={title} /><Note>O arquivo ainda não foi publicado.</Note></>
-  if (state === 'locked') return <Lock title={title} sub={sub} unlock={unlock} />
+  if (state === 'missing') return <>{!bare && <PageHead title={title} />}<Note>O arquivo ainda não foi publicado.</Note></>
+  if (state === 'locked') return <Lock title={title} sub={sub} bare={bare} unlock={unlock} />
   return children(data, lock, read('sessionStorage', PASS))
 }
 
-function Lock({ title, sub, unlock }) {
+function Lock({ title, sub, bare, unlock }) {
   const [pw, setPw] = useState('')
   const [remember, setRemember] = useState(false)
   const [msg, setMsg] = useState('')
@@ -49,7 +49,7 @@ function Lock({ title, sub, unlock }) {
   }
   return (
     <>
-      <PageHead title={title} sub={sub} />
+      {bare ? <p className="sm mut" style={{ margin: 0 }}>{sub}</p> : <PageHead title={title} sub={sub} />}
       <form className="card col bx-lock" onSubmit={go}>
         <div className="row"><Icon n="lock" s={20} /><b>Abrir com a senha</b></div>
         <div><label className="lb" htmlFor="bx-pw">Senha da base</label><input id="bx-pw" className="in" type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} /></div>

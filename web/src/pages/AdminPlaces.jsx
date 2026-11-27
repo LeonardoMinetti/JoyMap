@@ -1,7 +1,7 @@
 // Administração · Lugares: curadoria da base própria. O arquivo publicado é cifrado e só abre com a senha da equipe.
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
-import { AdminPage, Note, PageHead, useTitle } from '../lib/ui.jsx'
+import { Note } from '../lib/ui.jsx'
 import { Icon } from '../lib/icons.jsx'
 import { toast } from '../lib/router.jsx'
 import { withBase } from '../lib/base.js'
@@ -38,13 +38,8 @@ function download(name, text, type) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000)
 }
 
-export function AdminPlaces() {
-  useTitle('Lugares')
-  return (
-    <AdminPage active="lugares">
-      <VaultGate file="/base/lugares.enc.json" title="Lugares" sub="A base própria do JoyMap é protegida por senha da equipe.">{(data, lock) => <Curation base={data} lock={lock} />}</VaultGate>
-    </AdminPage>
-  )
+export function PlacesBase() {
+  return <VaultGate file="/base/lugares.enc.json" title="Lugares" sub="A base própria do JoyMap é protegida por senha da equipe." bare>{(data, lock) => <Curation base={data} lock={lock} />}</VaultGate>
 }
 
 function Curation({ base, lock }) {
@@ -80,13 +75,15 @@ function Curation({ base, lock }) {
 
   return (
     <>
-      <PageHead title="Lugares" sub={`${counts.todos} lugares na base · ${counts.pendentes} a revisar · ${counts.conferidos} conferidos`}
-        right={<div className="row wrap" style={{ gap: 8 }}>
+      <div className="row jb wrap" style={{ gap: 12 }}>
+        <p className="sm mut" style={{ margin: 0 }}>{counts.todos} lugares na base · {counts.pendentes} a revisar · {counts.conferidos} conferidos</p>
+        <div className="row wrap" style={{ gap: 8 }}>
           <button className="btn sm" onClick={() => pick('novo')}><Icon n="plus" s={14} c="currentColor" />Novo lugar</button>
           <button className="btn ln sm" onClick={() => download('joymap-lugares.csv', toCsv(all.filter(IN_VIEW.todos)), 'text/csv;charset=utf-8')}>Exportar CSV</button>
           <button className="btn ln sm" disabled={!changed} onClick={() => download('joymap-alteracoes.json', JSON.stringify({ alteracoes: edits }, null, 1), 'application/json')}>Exportar alterações ({changed})</button>
           <button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar base</button>
-        </div>} />
+        </div>
+      </div>
       <Note>Suas alterações ficam guardadas só neste navegador. Exporte as alterações para não perdê-las e para aplicar à base.</Note>
 
       <div className="row wrap" role="group" aria-label="Filtrar a base" style={{ gap: 8 }}>

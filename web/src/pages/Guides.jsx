@@ -74,14 +74,14 @@ export function Guides() {
 }
 
 export function AdminGuides() {
-  useTitle('RoteirosJoy')
+  useTitle('Vitrine')
   const [d, setD] = useState(null)
   const load = useCallback(() => api('/admin/miniguias').then(setD), [])
   useEffect(() => { load() }, [load])
   const pick = async (g) => { try { await api(`/admin/miniguias/${g.id}`, { method: 'POST', body: { featured: !g.featured } }); toast(g.featured ? 'Saiu dos RoteirosJoy' : 'Entrou nos RoteirosJoy'); load() } catch { toast('Não foi possível salvar.') } }
   return (
     <AdminPage active="miniguias">
-      <PageHead title="RoteirosJoy" sub="Aqui só aparecem roteiros que o criador liberou para divulgação. Entra na página apenas o que a equipe escolher." right={<a className="btn ln sm" href={withBase('/roteirosjoy')} target="_blank" rel="noopener noreferrer">Ver a página</a>} />
+      <PageHead title="Vitrine" sub="RoteirosJoy: aqui só aparecem roteiros que o criador liberou para divulgação. Entra na página apenas o que a equipe escolher." right={<a className="btn ln sm" href={withBase('/roteirosjoy')} target="_blank" rel="noopener noreferrer">Ver a página</a>} />
       {!d ? <Loading /> : <div className="col" style={{ gap: 10 }}>
         {d.guides.map((g) => <div key={g.id} className="card row wrap" style={{ gap: 12 }}>
           <div className="sp" style={{ minWidth: 200 }}><b>{g.name}</b><div className="xs mut">@{g.handle}{g.published ? '' : ' · mapa não publicado'}</div><div className="sm">{g.note}</div></div>
