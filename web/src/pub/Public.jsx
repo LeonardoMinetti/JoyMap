@@ -101,6 +101,7 @@ function Ficha({ place, data, ctx }) {
     <div className="pbody" style={{ gap: 12 }}>
       <PlacePhoto watch={creator} place={place} theme={theme} style={{ height: 190, width: '100%', borderRadius: 'var(--r)' }} label="Foto do lugar" />
       <h1 className="pt" style={{ '--fs': '40px' }}>{place.name}</h1>
+      {place.about && <p className="pl-about full">{place.about}</p>}
       <div className="pchips" style={{ gap: 6 }}><span className="tag2 acc">@{creator.handle}</span><span className="tag2">{cat.name}</span>{(place.neighborhood || place.municipality) && <span className="tag2">{place.neighborhood || place.municipality}</span>}</div>
       <div className="box" style={{ flexDirection: 'row', alignItems: 'center' }}><Icon n="pin" s={20} c="var(--acc)" /><div className="sp"><b className="sm">{place.address || 'Endereço não informado'}</b><div className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</div></div></div>
       {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
@@ -185,7 +186,7 @@ export default function Public({ slug, embed }) {
 
   // E12 · computador: painel largo à esquerda e mapa à direita (organização de guia), com o design do celular
   if (desk) {
-    const initialView = rel.startsWith('/salvos') ? 'salvos' : rel.startsWith('/roteiros') ? 'roteiros' : ['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : 'home'
+    const initialView = rel.startsWith('/salvos') ? 'salvos' : rel.startsWith('/roteiros') ? 'roteiros' : ['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? (['roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : 'home') : 'home'
     return (
       <div className="pub" style={{ ...wrapStyle, width: '100%' }}>
         <DeskMap data={data} f={f} shown={f.shown} openFicha={openFicha} go={go} saved={saved} ctx={ctx} fichaPlace={fichaPlace} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} initialView={initialView} initialRouteId={route ? route.id : null} />
@@ -233,7 +234,7 @@ export default function Public({ slug, embed }) {
   return (
     <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}>
       <div className="pub msroot" style={{ ...wrapStyle, width: '100%', maxWidth: 460, height: '100dvh', boxShadow: '0 0 0 1px var(--line)' }}>
-        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
+        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
         {overlays}
       </div>
     </div>

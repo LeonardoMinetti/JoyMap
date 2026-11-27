@@ -28,7 +28,8 @@ export function addApproved(map, found, choices) {
 const toBase64 = (text) => { const u = new TextEncoder().encode(text); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s) }
 const fromBase64 = (b) => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g, '')), (c) => c.charCodeAt(0)))
 
-export async function publishToMap({ token, handle, found, choices, fetcher = fetch }) {
+// lê o mapa publicado no repositório, aplica a mudança e grava; sem mudança, nada é gravado
+export async function updateMap({ token, handle, change, message, fetcher = fetch }) {
   if (!/^[a-z0-9_.]{2,40}$/.test(handle)) throw new Error('Criador inválido.')
   const url = `${API}/repos/${REPO}/contents/web/public/maps/${handle}.json`
   const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }
@@ -39,9 +40,23 @@ export async function publishToMap({ token, handle, found, choices, fetcher = fe
   const cur = await fetcher(`${url}?ref=main`, { headers, cache: 'no-store' })
   if (!cur.ok) throw fail(cur.status)
   const file = await cur.json()
-  const { map, added } = addApproved(JSON.parse(fromBase64(file.content)), found, choices)
-  if (!added.length) return { added, total: map.places.length }
-  const put = await fetcher(url, { method: 'PUT', headers, body: JSON.stringify({ message: `[conteudo] Mapa de @${handle}: ${added.length} lugares aprovados no admin`, content: toBase64(JSON.stringify(map)), sha: file.sha, branch: 'main' }) })
+  const { map, count } = change(JSON.parse(fromBase64(file.content)))
+  if (!count) return { map, count }
+  const put = await fetcher(url, { method: 'PUT', headers, body: JSON.stringify({ message: message(count), content: toBase64(JSON.stringify(map)), sha: file.sha, branch: 'main' }) })
   if (!put.ok) throw fail(put.status)
+  return { map, count }
+}
+
+export async function publishToMap({ token, handle, found, choices, fetcher = fetch }) {
+  let added = []
+  const { map } = await updateMap({ token, handle, fetcher, message: (n) => `[conteudo] Mapa de @${handle}: ${n} lugares aprovados no admin`,
+    change: (current) => { const r = addApproved(current, found, choices); added = r.added; return { map: r.map, count: r.added.length } } })
   return { added, total: map.places.length }
 }
+
+export const saveAbouts = ({ token, handle, texts, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: (n) => `[conteudo] Mapa de @${handle}: ${n} descrições editadas no admin`,
+  change: (map) => {
+    let count = 0
+    const places = map.places.map((p) => { const t = texts[p.id]; if (t === undefined || t.trim() === (p.about || '')) return p; count++; return { ...p, about: t.trim().slice(0, 300), aboutSource: 'editado' } })
+    return { map: { ...map, places }, count }
+  } })

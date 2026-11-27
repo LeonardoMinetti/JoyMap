@@ -7,7 +7,7 @@ import { VaultGate } from '../lib/VaultGate.jsx'
 import { open } from '../lib/vault.js'
 import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
-import { publishToMap, hasPoint, REPO } from '../lib/publish.js'
+import { publishToMap, saveAbouts, hasPoint, REPO } from '../lib/publish.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
 import { instagramHandle } from '../lib/placeEdits.js'
 import { fmtDate, initial } from '../theme.jsx'
@@ -138,9 +138,9 @@ function Collections({ c, lock, password, back }) {
           <button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button>
         </div>} />
       <div className="row" role="group" aria-label="O que mostrar" style={{ gap: 8 }}>
-        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`]].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
+        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`], ['textos', 'Descrições']].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
       </div>
-      {tab === 'lugares' ? <Found c={c} /> : <>
+      {tab === 'lugares' ? <Found c={c} /> : tab === 'textos' ? <Abouts handle={c.usuario.toLowerCase()} /> : <>
       <Note>As marcações ficam guardadas só neste navegador. Lugares que você adicionar aparecem na tela Lugares, para exportar junto com as outras alterações.</Note>
       <div className="row wrap" role="group" aria-label="Filtrar as postagens" style={{ gap: 8 }}>
         {VIEWS.map(([k, l]) => <button key={k} type="button" className={'chip' + (view === k ? ' on' : '')} aria-pressed={view === k} onClick={() => setView(k)}>{l} · {counts[k]}</button>)}
@@ -260,6 +260,50 @@ function Publish({ handle, found, choices, onDone }) {
       )}
       {msg && <Note>{msg}</Note>}
     </div>
+  )
+}
+
+// descrições que aparecem no mapa: saem em nome do criador, por isso passam por revisão
+function Abouts({ handle }) {
+  const [places, setPlaces] = useState(null)
+  const [texts, setTexts] = useState({})
+  const [q, setQ] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [limit, setLimit] = useState(30)
+  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => setPlaces(m.places)).catch(() => setPlaces([])) }, [handle])
+  if (!places) return <p className="sm mut">Carregando…</p>
+  const changed = Object.keys(texts).filter((id) => texts[id].trim() !== (places.find((p) => String(p.id) === id)?.about || ''))
+  const shown = places.filter((p) => !q || fold(`${p.name} ${p.about}`).includes(fold(q)))
+  const save = async () => {
+    const token = getToken()
+    if (!token) return setMsg('Conecte a chave do GitHub na aba Lugares para salvar.')
+    setBusy(true); setMsg('')
+    try {
+      const { count } = await saveAbouts({ token, handle, texts })
+      setPlaces(places.map((p) => (texts[p.id] !== undefined ? { ...p, about: texts[p.id].trim(), aboutSource: 'editado' } : p)))
+      setTexts({})
+      setMsg(`${count} descrições enviadas. O mapa se atualiza em alguns minutos.`)
+    } catch (e) { setMsg(e.message) }
+    setBusy(false)
+  }
+  return (
+    <>
+      <Note>Escritas pela IA só com o que está nas legendas. “Básica” quer dizer que a legenda não dizia nada sobre o lugar.</Note>
+      <div className="row wrap" style={{ gap: 8 }}>
+        <div className="in cl-search sp"><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar lugar" aria-label="Buscar lugar" /></div>
+        <button type="button" className="btn sm" disabled={!changed.length || busy} onClick={save}>{busy ? 'Salvando…' : `Salvar no mapa (${changed.length})`}</button>
+      </div>
+      {msg && <Note>{msg}</Note>}
+      <div className="col" style={{ gap: 12 }}>
+        {shown.slice(0, limit).map((p) => (
+          <label key={p.id} className="card col" style={{ gap: 8 }}>
+            <div className="row" style={{ gap: 8 }}><b className="sm sp">{p.name}</b><span className={'tag ' + (p.aboutSource === 'basico' ? 'wn' : p.aboutSource === 'editado' ? 'ok' : '')}>{p.aboutSource === 'basico' ? 'Básica' : p.aboutSource === 'editado' ? 'Editada' : 'Pelas legendas'}</span></div>
+            <textarea className="in" rows={2} maxLength={300} value={texts[p.id] ?? p.about ?? ''} onChange={(e) => setTexts({ ...texts, [p.id]: e.target.value })} />
+          </label>))}
+        {shown.length > limit && <button type="button" className="btn ln sm" style={{ alignSelf: 'center' }} onClick={() => setLimit(limit + 60)}>Mostrar mais ({shown.length - limit})</button>}
+      </div>
+    </>
   )
 }
 

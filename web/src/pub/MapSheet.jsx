@@ -12,9 +12,9 @@ import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.
 export const BRAND = 40, HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
-export const NAV_TABS = [['inicio', 'Início', 'store'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route']]
-const KEY = { '/': 'inicio', '/roteiros': 'roteiros' }
-// Abas inferiores (Início, Bairros, Categorias, Roteiros). Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
+export const NAV_TABS = [['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['busca', 'Busca', 'search']]
+const KEY = { '/roteiros': 'roteiros' }
+// Abas inferiores (Bairros, Categorias, Roteiros, Busca); nada vem selecionado. Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
 export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes, cityNav }) {
   const c = KEY[cur] || cur
   return (
@@ -24,19 +24,19 @@ export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes, cityNav 
         const inner = <><Icon n={ic} s={22} c="currentColor" />{l}</>
         const on = c === k
         if (onOpen || preview) return <button key={k} type="button" className={on ? 'on' : ''} aria-current={on ? 'page' : undefined} tabIndex={preview ? -1 : 0} onClick={() => onOpen?.(k)}>{inner}</button>
-        return <Link key={k} to={href(k === 'inicio' ? '/' : `/?p=${k}`)} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>{inner}</Link>
+        return <Link key={k} to={href(`/?p=${k}`)} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}>{inner}</Link>
       })}
     </nav>
   )
 }
 
 // Painel que sobe da base (Bairros, Categorias, Roteiros, Salvos)
-function Panel({ title, onClose, children, tall, bottom = TAB }) {
+function Panel({ title, onClose, children, tall, full, bottom = TAB }) {
   useEffect(() => { const k = (e) => e.key === 'Escape' && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [onClose])
   return (
     <>
       <div className="ms-ovl" onClick={onClose} aria-hidden="true" />
-      <section className={'ms-panel' + (tall ? ' tall' : '')} style={{ bottom }} role="dialog" aria-label={title}>
+      <section className={'ms-panel' + (tall ? ' tall' : '') + (full ? ' full' : '')} style={{ bottom }} role="dialog" aria-label={title}>
         <div className="ms-ph"><b className="pt">{title}</b><button type="button" className="ms-ib" aria-label="Fechar" onClick={onClose}><Icon n="close" s={20} c="currentColor" /></button></div>
         <div className="ms-pb">{children}</div>
       </section>
@@ -57,7 +57,6 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const [y, setY] = useState(0)
   const [ready, setReady] = useState(false)
   const [drag, setDrag] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
   const tabRef = useRef(null)
   const [tabH, setTabH] = useState(TAB + (preview ? SAFE : 0))
   const [panel, setPanel] = useState(panel0)
@@ -111,6 +110,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const catCount = (id) => places.filter((p) => p.category === id).length
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
+  // voltar à chegada: tocar no nome do criador
+  const home = () => { setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); setSnap('half') }
+  const found = f.q?.trim() ? shown0 : []
   const visible = hs - y
   const fitPad = { top: CHIPS_BOTTOM + head - HEAD, bottom: Math.max(40, hc - head - (drag ? y : offs[snap])) }
   const isSaved = (id) => saved?.ids.includes(id)
@@ -121,7 +123,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <div key={p.id} className="ms-row" role="button" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)} onKeyDown={(e) => e.key === 'Enter' && !preview && openFicha(p.id)}>
         <div className="sp">
           <b className="ms-n">{p.name}</b>
-          <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span>
+          {p.about ? <p className="pl-about">{p.about}</p> : <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span>}
           <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.neighborhood || p.municipality) && <i>{p.neighborhood || p.municipality}</i>}<OpenTag place={p} /></span>
         </div>
         <span className="ms-th"><PlacePhoto place={p} theme={theme} size={88} />
@@ -138,13 +140,10 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       </div>
       <header className={'ms-top' + (brand ? ' has-brand' : '')}>
         {brand && <div className="jm-strip"><BrandMark preview={preview} /><span className="jm-tag">{BRAND_LINE}</span></div>}
-        {searchOpen
-          ? <><label className="psearch sp"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label><button type="button" className="ms-ib" aria-label="Fechar busca" onClick={() => { setSearchOpen(false); f.setQ?.('') }}><Icon n="close" s={20} c="currentColor" /></button></>
-          : <><InstaLink creator={creator} preview={preview} className="ig-av">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}</InstaLink><div className="sp"><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></div>
-            <button type="button" className="ms-ib" aria-label="Buscar" tabIndex={preview ? -1 : 0} onClick={() => !preview && setSearchOpen(true)}><Icon n="search" s={20} c="currentColor" /></button>
-            <button type="button" className="ms-ib" aria-label="Salvos" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel(panel === 'salvos' ? null : 'salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
-            <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button>
-            <AccountBtn slug={creator.slug} preview={preview} /></>}
+        <InstaLink creator={creator} preview={preview} className="ig-av">{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}</InstaLink><button type="button" className="sp ms-who" tabIndex={preview ? -1 : 0} onClick={() => !preview && home()}><b className="pt">{creator.displayName}</b><span className="ms-hs">@{creator.handle}</span></button>
+        <button type="button" className="ms-ib" aria-label="Salvos" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel(panel === 'salvos' ? null : 'salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
+        <button type="button" className="ms-ib" aria-label="Compartilhar" tabIndex={preview ? -1 : 0} onClick={() => !preview && onShare?.()}><Icon n="share" s={20} c="currentColor" /></button>
+        <AccountBtn slug={creator.slug} preview={preview} />
       </header>
       <div style={brand ? { top: 66 + BRAND } : undefined} className="ms-chips" role="group" aria-label="Filtros">
         {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
@@ -170,7 +169,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <div className="ms-scroll">
           {route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {theme.bio && <p className="ms-bio">{theme.bio}</p>}
-          {news.length > 0 && <section className="ms-new" aria-label="Novidades"><div className="ms-sec" style={{ marginTop: 0 }}>Novidades</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
+          {news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
           {shown.length === 0 && !preview && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
             : <div className="ms-list">{shown.map(row)}</div>}</>}
@@ -192,8 +191,15 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <button type="button" className={'ms-opt' + (!f.cats.length ? ' on' : '')} onClick={() => pick(() => f.setCats([]))}><span className="sp">Todas as categorias</span><i>{places.length}</i></button>
           {usedCats.map((c) => { const { n, sym } = symOf(c, creator.symbols); return <button key={c.id} type="button" className={'ms-opt' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => pick(() => f.setCats([c.id]))}><span className="ms-oi" style={{ background: c.color }}><Icon n={n} sym={sym} s={16} c="#fff" /></span><span className="sp">{c.name}</span><i>{catCount(c.id)}</i></button> })}
         </Panel>)}
+      {panel === 'busca' && (
+        <Panel bottom={tabs ? tabH : 0} title="Busca" onClose={() => setPanel(null)} tall>
+          <label className="psearch"><Icon n="search" s={18} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => f.setQ?.(e.target.value)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
+          {found.slice(0, 30).map((p) => <button key={p.id} type="button" className="ms-opt" onClick={() => { setPanel(null); openFicha?.(p.id) }}><PlacePhoto place={p} theme={theme} size={40} /><span className="sp">{p.name}</span></button>)}
+          {f.q?.trim() && !found.length && <p className="ms-empty">Nada encontrado.</p>}
+          {f.q && <button type="button" className="ms-opt" onClick={() => f.setQ?.('')}><span className="sp">Limpar a busca</span></button>}
+        </Panel>)}
       {panel === 'roteiros' && (
-        <Panel bottom={tabs ? tabH : 0} title="Roteiros" onClose={() => setPanel(null)}>
+        <Panel bottom={tabs ? tabH : 0} title="Roteiros" onClose={() => setPanel(null)} full>
           {(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}
           {(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
             <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
@@ -210,7 +216,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {saved && <SavedNote saved={saved} slug={creator.slug} />}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </Panel>)}
-      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || 'inicio'} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => { if (k === 'inicio') { setPanel(null); setRouteId(null); f.clear?.(); setSnap('half') } else setPanel(panel === k ? null : k) }} />}
+      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || ''} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => setPanel(panel === k ? null : k)} />}
     </div>
   )
 }

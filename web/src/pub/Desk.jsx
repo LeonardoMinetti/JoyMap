@@ -9,7 +9,7 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 
 // Mapa no computador: painel largo com o conteúdo à esquerda e o mapa à direita (organização inspirada em guias como o Viver SP),
 // com o mesmo design do celular: cores, fonte, cantos, chips e cartões do criador.
-const NAV = [['home', 'Início', 'store'], ['bairros', 'Bairros', 'map', true], ['categorias', 'Categorias', 'grid', true], ['roteiros', 'Roteiros', 'route']]
+const NAV = [['bairros', 'Bairros', 'map', true], ['categorias', 'Categorias', 'grid', true], ['roteiros', 'Roteiros', 'route']]
 
 function Card({ p, theme, saved, onOpen, preview }) {
   const cat = catOf(theme, p.category)
@@ -21,6 +21,7 @@ function Card({ p, theme, saved, onOpen, preview }) {
         <button type="button" className={'ms-bm' + (on ? ' on' : '')} aria-label={on ? 'Remover dos salvos' : 'Salvar'} aria-pressed={!!on} onClick={(e) => { e.stopPropagation(); saved?.toggle(p.id) }}><Icon n="heart" s={16} c="currentColor" /></button>
       </div>
       <b className="pt dk-t">{p.name}</b>
+      {p.about && <p className="pl-about">{p.about}</p>}
       <span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}{p.km != null ? ` · ${p.km.toFixed(1).replace('.', ',')} km` : ''}</span>
       <span className="ms-tags"><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{(p.couponNote || p.couponCode) && <i>Cupom</i>}<OpenTag place={p} /></span>
     </article>
@@ -43,6 +44,7 @@ function DeskFicha({ place, data, ctx, others, onOpen, onBack }) {
         <div className="dk-fi-info">
           <h1 className="pt" style={{ '--fs': '38px' }}>{place.name}</h1>
           <div className="ms-tags" style={{ marginTop: 0 }}><i style={{ background: cat.color, color: '#fff' }}>{cat.name}</i>{hood && <i>{hood}</i>}<i>@{creator.handle}</i>{place.ad && <i>Publi</i>}</div>
+          {place.about && <p className="pl-about full">{place.about}</p>}
           <div><span className="ms-sec" style={{ marginTop: 0 }}>Endereço</span><p className="dk-p">{place.address || 'Endereço não informado'}</p><span className="xs mut">{exact ? 'Endereço exato' : 'Localização aproximada (a confirmar)'}</span></div>
       {place.postUrl && <PostLink url={place.postUrl} creator={creator} className="pb ficha-post" onOpen={() => ctx.track('post_open', { placeId: place.id })} />}
           <div className="prow">
@@ -75,10 +77,10 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const [routeId, setRouteId] = useState(initialRouteId)
   const [dw, setDw] = useState(() => Math.round(Math.min(860, Math.max(560, innerWidth * 0.54))))
   useEffect(() => { const r = () => setDw(Math.round(Math.min(860, Math.max(560, innerWidth * 0.54)))); window.addEventListener('resize', r); return () => window.removeEventListener('resize', r) }, [])
-  const [pop, setPop] = useState(null) // menu aberto: 'bairros' | 'categorias'
+  const [pop, setPop] = useState(null) // menu aberto: 'bairros' | 'categorias' | 'busca'
   const closeT = React.useRef(null)
   const openPop = (k) => { clearTimeout(closeT.current); setPop(k) }
-  const closePop = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setPop(null), 160) }
+  const closePop = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setPop((k) => (k === 'busca' ? k : null)), 160) }
   useEffect(() => { if (!pop) return; const k = (e) => e.key === 'Escape' && setPop(null); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [pop])
   const pickMenu = (fn) => { fn(); setPop(null); setView('home'); setRouteId(null); if (fichaPlace) go('/') }
   const scroller = React.useRef(null)
@@ -99,6 +101,8 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const savedPlaces = places.filter((p) => saved.ids.includes(p.id))
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
+  // voltar à chegada: tocar no nome do criador
+  const home = () => { setPop(null); nav('home'); f.clear?.(); f.setHoods?.([]) }
   const others = fichaPlace ? places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) === (fichaPlace.neighborhood || fichaPlace.municipality)).concat(places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) !== (fichaPlace.neighborhood || fichaPlace.municipality) && p.category === fichaPlace.category)).slice(0, 4) : []
   const grid = (arr) => <div className="dk-grid">{arr.map((p) => <Card key={p.id} p={p} theme={theme} saved={saved} onOpen={openFicha} />)}</div>
   const sechead = (title, count, right) => <div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>{title}</b>{count != null && <span className="ms-count">{count}</span>}<span className="sp" />{right}</div>
@@ -122,7 +126,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         </div>
       )}
       {news.length > 0 && <>
-        {sechead('Novidades', null, anyHours && <button type="button" className="ms-chip" aria-pressed={f.openNow} onClick={() => f.setOpenNow(true)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>)}
+        {sechead('Últimos lugares', null, anyHours && <button type="button" className="ms-chip" aria-pressed={f.openNow} onClick={() => f.setOpenNow(true)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>)}
         {grid(news)}
       </>}
       {f.openNow && <div className="dk-chips" role="group" aria-label="Filtro ativo"><button type="button" className="ms-chip on" onClick={() => f.setOpenNow(false)} aria-label="Tirar filtro Abertos agora"><span className="opn"><i aria-hidden="true" />Abertos agora</span> ×</button></div>}
@@ -137,11 +141,11 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         <header className="dk-head">
           {creator.showBrand !== false && <div className="jm-row">
             <div className="jm-col"><BrandMark /><span className="jm-tag">{BRAND_LINE}</span></div>
-            <div className="jm-own"><div><h1 className="pt">{creator.displayName}</h1><span className="ms-hs">@{creator.handle}</span><InstaLink creator={creator} className="ig-link" /></div>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}</div>
+            <div className="jm-own"><div><h1 className="pt jm-home" role="button" tabIndex={0} onClick={home} onKeyDown={(e) => e.key === 'Enter' && home()}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle}</span><InstaLink creator={creator} className="ig-link" /></div>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}</div>
           </div>}
           <div className={'dk-id' + (creator.showBrand !== false ? ' dk-tools' : '')}>
             {creator.showBrand !== false ? <span className="sp ms-hs">{places.length} lugares</span> : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}
-            <div className="sp"><h1 className="pt" style={{ '--fs': '28px' }}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle} · {places.length} lugares</span><InstaLink creator={creator} className="ig-link" /></div></>}
+            <div className="sp"><h1 className="pt jm-home" style={{ '--fs': '28px' }} role="button" tabIndex={0} onClick={home} onKeyDown={(e) => e.key === 'Enter' && home()}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle} · {places.length} lugares</span><InstaLink creator={creator} className="ig-link" /></div></>}
             <button type="button" className="ms-ib" aria-label="Salvos" onClick={() => nav('salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
             <button type="button" className="ms-ib" aria-label="Compartilhar" onClick={onShare}><Icon n="share" s={20} c="currentColor" /></button>
             <AccountBtn slug={creator.slug} />
@@ -150,10 +154,14 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
             <nav className="dk-nav" aria-label="Navegação do mapa">
               {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, label, icon, menu]) => [k, cityNav && k === 'bairros' ? 'Cidades' : label, cityNav && k === 'bairros' ? 'globe' : icon, menu]).map(([k, l, ic, menu]) => menu
                 ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
-                : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k); if (k === 'home') { f.clear?.(); f.setHoods?.([]) } }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
-              <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
+                : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k) }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
+              <button type="button" className={'dk-lupa' + (pop === 'busca' || f.q ? ' open' : '')} aria-label="Busca" aria-haspopup="true" aria-expanded={pop === 'busca'} onMouseEnter={() => clearTimeout(closeT.current)} onClick={() => (pop === 'busca' ? setPop(null) : openPop('busca'))}><Icon n="search" s={16} c="currentColor" />Busca</button>
             </nav>
-            {pop && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
+            {pop === 'busca' && <div className="dk-pop dk-find">
+              <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} onKeyDown={(e) => e.key === 'Enter' && setPop(null)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
+              {f.q && <button type="button" className="all" onClick={() => { f.setQ?.(''); setPop(null) }}>Limpar</button>}
+            </div>}
+            {pop && pop !== 'busca' && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
               {pop === 'bairros' && cityNav
                 ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>
                 : pop === 'bairros'
