@@ -17,7 +17,7 @@ export default function Arrival({ data, theme, onOpen, onHood, onAll }) {
   return (
     <div className="arr">
       <section aria-label={`Sobre ${creator.displayName}`}>
-        <h2 className="arr-h">{creator.demo ? 'Sobre este mapa' : `Sobre ${first}`}</h2>
+        <h2 className="arr-h">{creator.demo && !creator.realProfile ? 'Sobre este mapa' : `Sobre ${first}`}</h2>
         {theme.bio && <p className="arr-bio">{theme.bio}</p>}
       </section>
 
@@ -30,7 +30,7 @@ export default function Arrival({ data, theme, onOpen, onHood, onAll }) {
       <section aria-label="Últimos lugares">
         <h2 className="arr-h">Últimos lugares</h2>
         <div className="arr-last">
-          {latest(places).map((p) => (
+          {latest(places, 3).map((p) => (
             <button key={p.id} type="button" className="arr-pl" onClick={() => onOpen(p.id)}>
               <PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} />
               <b>{p.name}</b><span>{p.neighborhood || p.municipality || 'São Paulo'}</span>

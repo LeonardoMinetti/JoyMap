@@ -304,14 +304,15 @@ test('símbolo próprio passa por aprovação; domínio próprio só ativa com C
   assert.equal((await call(app, s.cookie, '/api/creator/cover', 'PUT', { mime: 'image/png', data: Buffer.from('png').toString('base64') })).status, 200)
 })
 
-test('mapa de demonstração: público, sem login, dados fictícios e slug reservado', async () => {
+test('mapa de demonstração: público, sem login, sem dados inventados sobre lugares e slug reservado', async () => {
   const db = openDb(':memory:')
   const app = createApp(db, { baseUrl: 'http://x.test', dev: true })
   const r = await app.request('/api/public/demo')
   assert.equal(r.status, 200)
   const d = await r.json()
   assert.equal(d.creator.demo, true)
-  assert.ok(d.places.length >= 8 && d.places.every((p) => /Exemplo/.test(p.name)))
+  // lugares reais sem nada inventado sobre eles: nem nota, telefone ou cupom
+  assert.ok(d.places.length >= 8 && d.places.every((p) => !p.rating && !p.phone && !p.couponCode))
   assert.ok(d.creator.theme.categories.some((c) => /^lib:fluent3d:/.test(c.icon)))
   assert.ok(d.routes.length >= 2 && d.routes.every((r) => r.placeIds.every((id) => d.places.some((p) => p.id === id))))
 })

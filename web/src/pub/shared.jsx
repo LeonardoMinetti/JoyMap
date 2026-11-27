@@ -144,7 +144,7 @@ export function AccountBtn({ slug, preview }) {
 // Instagram do dono do mapa (respeita a opção do criador no estúdio). Na demonstração o perfil é fictício e não abre nada.
 export function InstaLink({ creator, preview, className, children }) {
   if (creator.theme?.social?.instagram === false) return children || null
-  const off = preview || creator.demo
+  const off = preview || (creator.demo && !creator.realProfile)
   return <a className={className} aria-label={`Instagram de ${creator.displayName}`} title={`@${creator.handle} no Instagram`} href={off ? '#' : `https://instagram.com/${creator.handle}`} target="_blank" rel="noopener noreferrer" tabIndex={preview ? -1 : 0} onClick={(e) => { if (!off) return; e.preventDefault(); if (!preview) toast('Perfil fictício da demonstração') }}>{children}<span className="ig-ic" aria-hidden="true"><Icon n="insta" s={16} c="currentColor" /></span></a>
 }
 // Postagem do criador (lugar ou roteiro). Na demonstração os links são ilustrativos e não abrem nada.

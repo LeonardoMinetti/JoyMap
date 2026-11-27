@@ -70,3 +70,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 062 | 2026-11-27 16:45 | mapa | ficha invertida, chamada ao estabelecimento e ruas mais finas | `deploy/mapa/062-ficha-invertida-chamada-ao-estabelecimen` |
 | 063 | 2026-11-27 16:49 | mapa | aviso dos dados vira icone de informacao | `deploy/mapa/063-aviso-dos-dados-vira-icone-de-informacao` |
 | 064 | 2026-11-27 16:55 | mapa | marcas que me apoiam, proximo evento no topo e agenda | `deploy/mapa/064-marcas-que-me-apoiam-proximo-evento-no-t` |
+| 065 | 2026-11-27 17:18 | mapa | demo com perfil do Leonardo, 80 lugares da base e tres colunas | `deploy/mapa/065-demo-com-perfil-do-leonardo-80-lugares-d` |
