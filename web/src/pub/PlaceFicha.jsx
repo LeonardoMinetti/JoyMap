@@ -30,13 +30,12 @@ export default function PlaceFicha({ place, data, ctx }) {
         </div>
         <div className="fx-info">
           <h1 className="pt fx-name">{place.name}</h1>
-          {(rating || place.ad) && <div className="fx-rating">
-            {rating && <>
+          {rating && <div className="fx-rating">
+            <>
               <span className="fx-star" aria-hidden="true">★</span><b>{rating.value}</b>
               <span>({rating.reviews ? `${reviewsText(rating.reviews)} no Google` : 'no Google'})</span>
               <span className="fx-tip"><button type="button" aria-label={`Nota vista no Google em ${rating.date}`}>i</button><span role="tooltip">Nota vista no Google em {rating.date}. Pode ter mudado.</span></span>
-            </>}
-            {place.ad && <span className="fx-publi">Publi</span>}
+            </>
           </div>}
           <div className="fx-actions">
             <button type="button" className="pb sec" aria-pressed={isSaved} onClick={() => ctx.saved.toggle(place.id)}><Icon n="heart" s={16} c={isSaved ? '#d93a1c' : 'currentColor'} />{isSaved ? 'Salvo' : 'Salvar'}</button>

@@ -338,7 +338,6 @@
 .pub .fx-tip>button{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;background:none;color:inherit;font:700 11px var(--pf);padding:0;cursor:help}
 .pub .fx-tip>span{position:absolute;bottom:calc(100% + 8px);right:-12px;width:max-content;max-width:220px;background:#171713;color:#fff;font:500 12px/1.4 var(--pf);padding:9px 11px;border-radius:10px;opacity:0;visibility:hidden;transition:opacity .15s;z-index:20;pointer-events:none}
 .pub .fx-tip:hover>span,.pub .fx-tip>button:focus+span{opacity:1;visibility:visible}
-.pub .fx-publi{font:700 11px var(--pf);text-transform:uppercase;letter-spacing:.05em;border:1.5px solid currentColor;border-radius:8px;padding:2px 8px;color:var(--fg)}
 .pub .fx-actions{display:flex;flex-wrap:wrap;gap:8px}
 .pub .fx section{min-width:0}
 .pub .fx-label{display:block;font:700 11px var(--pf);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:5px}
