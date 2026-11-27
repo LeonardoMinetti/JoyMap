@@ -3,7 +3,7 @@
 // e, no voo, no sessionStorage. Os nomes e números são inventados.
 import { DEMO_GUIDES } from '../demoGuides.js'
 import { withBase } from './base.js'
-import { DEMO_PLACES } from '../demoData.js'
+import { DEMO_PLACES, DEMO_ALL } from '../demoData.js'
 import { ICON_PATHS } from './icons.jsx'
 import { PERSONALITIES, XP_PER_VISIT, levelOf, nextOf } from '../levels.js'
 
@@ -79,7 +79,7 @@ const voo = () => {
 const saveVoo = (v) => { try { sessionStorage.setItem(VK, JSON.stringify(v)) } catch { /* ok */ } }
 const vooState = (v) => {
   const xp = v.visits.length * XP_PER_VISIT, lv = levelOf(xp), nx = nextOf(xp)
-  const recent = [...v.visits].reverse().slice(0, 5).map((id) => ({ name: DEMO_PLACES.find((p) => p.id === id)?.name || 'Lugar', slug: 'demo', creator: 'Mapa de demonstração' }))
+  const recent = [...v.visits].reverse().slice(0, 5).map((id) => ({ name: DEMO_ALL.find((p) => p.id === id)?.name || 'Lugar', slug: 'demo', creator: 'Mapa de demonstração' }))
   return { personality: v.personality, xp, visits: v.visits.length, level: lv.n, levelName: lv.name, next: nx ? { level: nx.n, name: nx.name, at: nx.min, missing: nx.min - xp } : null, recent }
 }
 
@@ -138,7 +138,7 @@ export async function demoExtrasApi(path, { method = 'GET', body = {} } = {}) {
   if ((m = p.match(/^\/voo\/visited\/([\w-]+)$/))) return { ids: m[1] === 'demo' ? voo().visits : [] }
   if (p === '/voo/visits' && method === 'POST') {
     const v = voo(), before = vooState(v), id = Number(body.placeId)
-    if (body.slug !== 'demo' || !DEMO_PLACES.some((x) => x.id === id)) throw err('lugar_indisponivel', 404)
+    if (body.slug !== 'demo' || !DEMO_ALL.some((x) => x.id === id)) throw err('lugar_indisponivel', 404)
     if (!v.visits.includes(id)) v.visits.push(id)
     saveVoo(v)
     const after = vooState(v)

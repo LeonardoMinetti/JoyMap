@@ -30,7 +30,7 @@ export function PlacePhoto({ place, theme, size, label = 'foto', style, aspect, 
   if (place.photo) return <div className="pph" style={{ background: tint(c.color), overflow: 'hidden', padding: 0, ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}><img src={place.photo} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /></div>
   // sem foto autorizada: recorte do mapa no lugar
   if (Number.isFinite(Number(place.lat)) && Number.isFinite(Number(place.lon)) && place.lat !== '' && place.lat != null) return <>
-    <MapSnippet place={place} theme={theme} size={size} style={style} aspect={aspect} onWatch={watch && embedOf(place.postUrl) ? () => setPlaying(true) : undefined} />
+    <MapSnippet place={place} theme={theme} size={size} style={style} aspect={aspect} onWatch={watch && embedOf(place.postUrl) ? () => (watch.demo ? toast('Postagem ilustrativa da demonstração') : setPlaying(true)) : undefined} />
     {playing && <PostPlayer embed={embedOf(place.postUrl)} url={place.postUrl} creator={watch} onClose={() => setPlaying(false)} />}
   </>
   return <div className="pph" style={{ background: tint(c.color), ...(size ? { width: size, height: size } : {}), ...(aspect ? { aspectRatio: aspect } : {}), ...style }}>{label}</div>

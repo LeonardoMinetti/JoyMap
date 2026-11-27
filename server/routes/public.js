@@ -1,7 +1,7 @@
 import { serveStatic } from '@hono/node-server/serve-static'
 import { readFileSync, existsSync } from 'node:fs'
 import { sha, j, placeKey } from '../lib.js'
-import { DEMO_SLUG, DEMO_ROUTES, demoPlaces } from '../../web/src/demoData.js'
+import { DEMO_SLUG, DEMO_ROUTES, DEMO_BIO, demoMapPlaces, demoArrival } from '../../web/src/demoData.js'
 import { DEFAULT_THEME, sanitizeTheme } from '../theme.js'
 import { can } from '../plans.js'
 import { lockRoute } from '../offers.js'
@@ -37,9 +37,8 @@ export default function publicRoutes(app, x) {
   app.get('/api/public/:slug', (c, next) => {
     // mapa de demonstração (dados fictícios), aberto a qualquer pessoa, sem cadastro
     if (c.req.param('slug') !== DEMO_SLUG) return next()
-    const theme = sanitizeTheme({ ...DEFAULT_THEME, accent: '#FFC400', bg: '#FFFFFF', tone: 'light', shape: 'circle', bio: 'Mapa de demonstração da JoyMap. Os lugares e os nomes são fictícios.', social: { instagram: true, tiktok: false },
-      categories: [{ id: 'rest', name: 'Restaurantes', color: '#FF4B2B', icon: 'lib:fluent3d:fork-and-knife-with-plate' }, { id: 'cafe', name: 'Cafés', color: '#A16207', icon: 'lib:fluent3d:hot-beverage' }, { id: 'bar', name: 'Drinks', color: '#7C3AED', icon: 'lib:fluent3d:cocktail-glass' }, { id: 'bread', name: 'Padarias', color: '#F59E0B', icon: 'lib:fluent3d:croissant' }, { id: 'cake', name: 'Doces', color: '#EC4899', icon: 'lib:fluent3d:birthday-cake' }, { id: 'pizza', name: 'Pizza', color: '#DC2626', icon: 'lib:fluent3d:pizza' }, { id: 'fish', name: 'Japonês', color: '#2D7FF9', icon: 'lib:fluent3d:sushi' }, { id: 'burger', name: 'Lanches', color: '#EA580C', icon: 'lib:fluent3d:hamburger' }] })
-    return c.json({ creator: { handle: 'mapa_demo', tiktok: null, slug: DEMO_SLUG, displayName: 'Mapa de demonstração', theme, links: [], cover: false, symbols: {}, demo: true }, places: demoPlaces(), routes: DEMO_ROUTES })
+    const theme = sanitizeTheme({ ...DEFAULT_THEME, accent: '#FFC400', bg: '#FFFFFF', tone: 'light', shape: 'circle', bio: DEMO_BIO, social: { instagram: true, tiktok: false } })
+    return c.json({ creator: { handle: 'mapa_demo', tiktok: null, slug: DEMO_SLUG, displayName: 'Mapa de demonstração', theme, links: [], cover: false, symbols: {}, demo: true, ...demoArrival() }, places: demoMapPlaces(), routes: DEMO_ROUTES })
   })
   app.get('/api/public/:slug', (c) => {
     const row = live(c.req.param('slug'))

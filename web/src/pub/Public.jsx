@@ -212,7 +212,7 @@ export default function Public({ slug, embed }) {
   return (
     <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}>
       <div className="pub msroot" style={{ ...wrapStyle, width: '100%', maxWidth: 460, height: '100dvh', boxShadow: '0 0 0 1px var(--line)' }}>
-        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
+        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' || search.get('p') === 'sobre' ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
         {overlays}
       </div>
     </div>

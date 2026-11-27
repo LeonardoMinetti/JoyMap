@@ -7,7 +7,7 @@ import { cleanGoogleUrl, cleanInstagramUrl } from '../../../server/placelinks.js
 import { cleanStops } from '../../../server/stops.js'
 import { planView, TIERS, can, limitStats, roomFor } from '../../../server/plans.js'
 import { cleanOffer, lockRoute, cleanVideoUrl } from '../../../server/offers.js'
-import { DEMO_PLACES, DEMO_ROUTES, DEMO_SLUG, DEMO_HOURS } from '../demoData.js'
+import { DEMO_ALL, DEMO_ROUTES, DEMO_SLUG, DEMO_HOURS, demoMapPlaces, demoArrival } from '../demoData.js'
 import { cleanHours } from '../../../server/hours.js'
 import { BASE, withBase } from './base.js'
 
@@ -41,8 +41,8 @@ const mk = (o) => ({ name: null, address: null, municipality: 'São Paulo', neig
 
 function seed(d) {
   const photo = {}
-  d.places.forEach((p) => { photo[p.id] = withBase(p.photo) })
-  const places = DEMO_PLACES.map((p, i) => mk({ id: p.id, name: p.name, category: p.category, neighborhood: p.neighborhood, municipality: p.municipality || 'São Paulo', hours: DEMO_HOURS[p.id] || null, lat: p.lat, lon: p.lon, address: 'Endereço ilustrativo (demonstração)', geoStatus: 'found', geoQuality: i % 3 === 2 ? 'street_approx' : 'address_exact', postedOn: iso(-12 - i * 9), snippet: `Post de exemplo sobre ${p.name} (fictício).` }))
+  d.places.forEach((p) => { photo[p.id] = withBase(p.photo || p.cover) })
+  const places = DEMO_ALL.map((p, i) => mk({ id: p.id, name: p.name, category: p.category, neighborhood: p.neighborhood, municipality: p.municipality || 'São Paulo', hours: DEMO_HOURS[p.id] || null, lat: p.lat, lon: p.lon, address: 'Endereço ilustrativo (demonstração)', geoStatus: 'found', geoQuality: i % 3 === 2 ? 'street_approx' : 'address_exact', postedOn: iso(-12 - i * 4), snippet: `Post de exemplo sobre ${p.name} (fictício).` }))
   places.push(
     mk({ id: 13, name: 'Sushi Exemplo', category: 'rest', neighborhood: 'Aclimação', address: 'Rua Exemplo, 100', lat: -23.5731, lon: -46.6342, geoStatus: 'found', geoQuality: 'street_approx', confidence: 'medium', status: 'pending', postedOn: iso(-3), snippet: 'Rodízio novo na Aclimação, vale a visita (post fictício).' }),
     mk({ id: 14, name: 'Hamburgueria Exemplo', category: 'burger', neighborhood: 'Pinheiros', address: 'Rua Exemplo, 250', lat: -23.5663, lon: -46.6838, geoStatus: 'found', geoQuality: 'address_exact', confidence: 'high', status: 'pending', postedOn: iso(-2), snippet: 'Smash burger com batata na brasa (post fictício).' }),
@@ -222,9 +222,10 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === `/public/${DEMO_SLUG}`) {
     const live = s.places.filter((x) => x.status === 'confirmed' && x.geoStatus === 'found' && x.lat != null && !x.hidden)
     const ids = new Set(live.map((x) => x.id))
+    const story = new Map(demoMapPlaces().map((x) => [x.id, { ...x, cover: withBase(x.cover) }]))
     return {
-      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, routesOn: cr.plan.can.roteiros, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true },
-      places: live.map((x) => ({ ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], sponsor: can(cr.plan.tier, 'sponsoredRoteiros') ? r.sponsor || null : null, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => cr.plan.can.roteiros && (r.placeIds.length || r.stops.length)).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
+      creator: { handle: cr.handle, tiktok: null, slug: cr.slug, displayName: cr.displayName, theme: cr.theme, showBrand: !cr.plan.can.removeBrand, routesOn: cr.plan.can.roteiros, links: [], cover: false, symbols: Object.fromEntries(cr.symbols.filter((v) => v.status === 'approved').map((v) => [v.id, { d: v.d, vb: v.vb, mode: v.mode }])), demo: true, ...demoArrival() },
+      places: live.map((x) => (story.has(x.id) ? { ...story.get(x.id), ...pub(x) } : { ...pub(x), photo: s.photo[x.id] })), routes: s.routes.map((r) => ({ ...r, price: can(cr.plan.tier, 'sellRoteiros') ? r.price || null : null, products: can(cr.plan.tier, 'products') ? r.products || [] : [], sponsor: can(cr.plan.tier, 'sponsoredRoteiros') ? r.sponsor || null : null, placeIds: r.placeIds.filter((i) => ids.has(i)), stops: (r.stops || []).map((v) => ({ ...v, placeId: ids.has(v.placeId) ? v.placeId : null })).filter((v) => v.placeId || v.title || v.text) })).filter((r) => cr.plan.can.roteiros && (r.placeIds.length || r.stops.length)).map((r) => lockRoute(r, (s.unlocked || []).includes(r.id))),
     }
   }
   // compra simulada: na demonstração não existe cobrança, só o efeito de desbloquear o roteiro

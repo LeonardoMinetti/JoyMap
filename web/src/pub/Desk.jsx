@@ -78,9 +78,13 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const [all, setAll] = useState(false) // “ver todos” na chegada
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
   // voltar à chegada: tocar no nome do criador
-  const home = () => { setPop(null); setAll(false); nav('home'); f.clear?.(); f.setHoods?.([]) }
+  const home = () => { setPop(null); setAll(false); nav('home'); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false) }
   // lista completa com um toque: sai do roteiro e limpa filtros e busca
   const showAll = () => { setPop(null); setAll(true); nav('home'); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false) }
+  const filtered = !!(f.active || f.openNow || f.near || f.q || f.cats.length || hood || city)
+  // depois de qualquer filtro, tirar o filtro volta à lista de lugares; o Sobre abre pelo menu ou pelo nome
+  useEffect(() => { if (filtered) setAll(true) }, [filtered])
+  const about = view === 'home' && !all && !filtered && !fichaPlace
   const others = fichaPlace ? places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) === (fichaPlace.neighborhood || fichaPlace.municipality)).concat(places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) !== (fichaPlace.neighborhood || fichaPlace.municipality) && p.category === fichaPlace.category)).slice(0, 4) : []
   const grid = (arr) => <div className="dk-grid">{arr.map((p) => <Card key={p.id} p={p} theme={theme} saved={saved} onOpen={openFicha} />)}</div>
   const sechead = (title, count, right) => <div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>{title}</b>{count != null && <span className="ms-count">{count}</span>}<span className="sp" />{right}</div>
@@ -95,10 +99,9 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
-  else if (!all && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onCategory={(id) => f.setCats([id])} onHood={(h) => f.setHoods([h])} />
+  else if (!all && !filtered) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onCategory={(id) => f.setCats([id])} onHood={(h) => f.setHoods([h])} />
   else body = (
     <>
-      {theme.bio && <p className="dk-lead">{theme.bio}</p>}
       {f.cats.length > 0 && (
         <div className="dk-chips" role="group" aria-label="Filtro ativo">
           {usedCats.filter((c) => f.cats.includes(c.id)).map((c) => <button key={c.id} type="button" className="ms-chip on" aria-label={`Tirar filtro ${c.name}`} onClick={() => f.setCats([])}><span className="ms-dot" style={{ background: c.color }} />{c.name} ×</button>)}
@@ -131,6 +134,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
           <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
             <nav className="dk-nav" aria-label="Navegação do mapa">
+              <button type="button" className={about ? 'on' : ''} aria-current={about ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={home}><Icon n="user" s={16} c="currentColor" />Sobre</button>
               {NAV.filter(([k]) => !(k === 'roteiros' && data.creator.routesOn === false)).map(([k, label, icon, menu]) => [k, cityNav && k === 'bairros' ? 'Cidades' : label, cityNav && k === 'bairros' ? 'globe' : icon, menu]).map(([k, l, ic, menu]) => menu
                 ? <button key={k} type="button" className={pop === k ? 'open' : ''} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={ic} s={16} c="currentColor" />{l}</button>
                 : <button key={k} type="button" className={(view === k || (view === 'route' && k === 'roteiros')) && !fichaPlace ? 'on' : ''} aria-current={view === k && !fichaPlace ? 'page' : undefined} onMouseEnter={() => closePop()} onClick={() => { setPop(null); nav(k) }}><Icon n={ic} s={16} c="currentColor" />{l}</button>)}
@@ -141,7 +145,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
               {f.q && <button type="button" className="all" onClick={() => { f.setQ?.(''); setPop(null) }}>Limpar</button>}
             </div>}
             {pop && pop !== 'busca' && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
-              <button type="button" role="menuitem" className={'all' + ((pop === 'bairros' ? (cityNav ? !city : !f.hoods?.length) : !f.cats.length) ? ' on' : '')} onClick={() => pickMenu(() => (pop === 'bairros' ? (cityNav ? f.setCities([]) : f.setHoods([])) : f.setCats([])))}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
+              <button type="button" role="menuitem" className={'all' + ((pop === 'bairros' ? (cityNav ? !city : !f.hoods?.length) : !f.cats.length) ? ' on' : '')} onClick={showAll}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
               {pop === 'bairros' && cityNav
                 ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>
                 : pop === 'bairros'

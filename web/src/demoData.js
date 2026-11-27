@@ -30,6 +30,79 @@ const PHOTO = { 1: 'sushi', 2: 'brunch', 3: 'massa', 4: 'latte', 5: 'burger', 6:
 export const demoPlaces = () => DEMO_PLACES.map((p) => ({
   ...p, photo: `${(typeof globalThis !== 'undefined' && globalThis.__WAGLI_BASE__) || ''}/photos/${PHOTO[p.id]}.jpg`, address: 'Endereço ilustrativo (demonstração)', municipality: p.municipality || 'São Paulo', hours: DEMO_HOURS[p.id] || null, geoQuality: 'approx', postUrl: 'https://www.instagram.com/p/exemplo-ilustrativo/', postedOn: null, ad: false, tiktokId: null,
 }))
+// Mapa público /@demo: os lugares acima e mais os abaixo, com o mesmo visual dos mapas reais (recorte do mapa,
+// quadro do vídeo no canto, descrição, categorias extras, nota e contato). Tudo fictício.
+// Os ids vão de 24 a 99 para não colidir com o painel de demonstração (13 a 15 e 100 em diante).
+const M = (id, name, category, neighborhood, lat, lon, municipality) => ({ id, name: `${name} Exemplo`, category, neighborhood, lat, lon, ...(municipality ? { municipality } : {}) })
+export const DEMO_MORE = [
+  M(24, 'Trattoria', 'ital', 'Pinheiros', -23.5655, -46.6852), M(25, 'Taqueria', 'mexi', 'Pinheiros', -23.5632, -46.6903),
+  M(26, 'Bistrô', 'fren', 'Jardins', -23.5668, -46.6672), M(27, 'Empório Árabe', 'arab', 'Paulista', -23.5702, -46.6458),
+  M(28, 'Parrilla', 'arge', 'Itaim Bibi', -23.5868, -46.6812), M(29, 'Sushi Bar', 'japa', 'Liberdade', -23.5572, -46.6348),
+  M(30, 'Cozinha Coreana', 'kore', 'Bom Retiro', -23.5262, -46.6402), M(31, 'Dumplings', 'chin', 'Liberdade', -23.5601, -46.6331),
+  M(32, 'Ceviche', 'peru', 'Vila Madalena', -23.5561, -46.6871), M(33, 'Feijoada', 'braz', 'Vila Mariana', -23.5893, -46.6346),
+  M(34, 'Verde Cozinha', 'veg', 'Vila Mariana', -23.5841, -46.6381), M(35, 'Brunch da Praça', 'brunch', 'Santa Cecília', -23.5389, -46.6512),
+  M(36, 'Boteco da Esquina', 'petisco', 'Santana', -23.5009, -46.6262), M(37, 'Padaria Fermento', 'bread', 'Santana', -23.4978, -46.6291),
+  M(38, 'Pizzaria Forno', 'pizza', 'Santana', -23.5041, -46.6249), M(39, 'Sorveteria', 'ice', 'Pinheiros', -23.5641, -46.6934),
+  M(40, 'Taproom', 'beer', 'Vila Madalena', -23.5538, -46.6932), M(41, 'Adega', 'wine', 'Jardins', -23.5651, -46.6706),
+  M(42, 'Coquetelaria', 'drink', 'Centro', -23.5452, -46.6421), M(43, 'Café Livraria', 'books', 'Paulista', -23.5585, -46.6601),
+  M(44, 'Galeria', 'art', 'Centro', -23.5468, -46.6376), M(45, 'Mercado', 'market', 'Mooca', -23.5562, -46.6012),
+  M(46, 'Praça', 'park', 'Moema', -23.5972, -46.6612), M(47, 'Cantina da Mooca', 'ital', 'Mooca', -23.5581, -46.5951),
+  M(48, 'Smash Burger', 'burger', 'Santana', -23.4992, -46.6233), M(49, 'Doceria Fina', 'cake', 'Moema', -23.6031, -46.6628),
+  M(50, 'Churrasco', 'meat', 'Tatuapé', -23.5402, -46.5761), M(51, 'Padoca', 'bread', 'Tatuapé', -23.5431, -46.5724),
+  M(52, 'Loja de Plantas', 'deco', 'Vila Madalena', -23.5529, -46.6889), M(53, 'Samba e Petisco', 'party', 'Bela Vista', -23.5551, -46.6442),
+  M(54, 'Quiosque da Orla', 'sea', 'Gonzaga', -23.9684, -46.3351, 'Santos'), M(55, 'Café do Centro', 'cafe', 'Cambuí', -22.8949, -47.0551, 'Campinas'),
+]
+export const DEMO_ALL = [...DEMO_PLACES, ...DEMO_MORE]
+// por lugar: [quadro do vídeo, categorias extras, descrição]
+const DEMO_STORY = {
+  1: ['sushi', ['japa'], 'Balcão pequeno, espetinhos na brasa e sushi feito na hora.'], 2: ['brunch', ['brunch'], 'Brunch sem pressa, com pão de fermentação longa.'],
+  3: ['massa', ['ital'], 'Massa fresca e mesa grande para almoço de domingo.'], 4: ['latte', ['pet'], 'Latte bem tirado, tomada na mesa e quintal que aceita cachorro.'],
+  5: ['burger', [], 'Burger alto, batata crocante e cozinha aberta até tarde.'], 6: ['bolo', ['cafe'], 'Vitrine de doces que muda toda semana.'],
+  7: ['drink', ['drink'], 'Balcão antigo no centro, bom para a primeira rodada.'], 8: ['croissant', ['cafe'], 'Pão na chapa e croissant saindo do forno cedo.'],
+  9: ['pizza', ['ital'], 'Forno a lenha, massa fina de borda alta.'], 10: ['petisco', ['braz'], 'Tapioca na chapa para fechar a noite.'],
+  11: ['ramen', ['japa'], 'Caldo longo e ovo marinado: vale a fila.'], 12: ['espresso', [], 'Expresso de balcão no meio da avenida.'],
+  21: ['ostras', ['sea'], 'Peixe do dia e vista para o canal.'], 22: ['sobremesa', ['ice'], 'Doce gelado depois da praia.'], 23: ['cafe', [], 'Café coado e bolo caseiro no Cambuí.'],
+  24: ['massa', ['wine'], 'Nhoque às quintas e carta curta de vinhos.'], 25: ['tacos', ['drink'], 'Tacos al pastor e margarita na calçada.'],
+  26: ['vieira', ['wine'], 'Menu curto de almoço, com clássicos franceses.'], 27: ['salada', ['veg'], 'Mezze para dividir e esfiha folhada.'],
+  28: ['carne', ['meat'], 'Corte no ponto, chimichurri da casa.'], 29: ['sushi2', [], 'Omakase no balcão, com reserva.'],
+  30: ['feijoada', [], 'Panelas na mesa e muitos acompanhamentos.'], 31: ['coxinha2', [], 'Guioza na chapa, feita à mão.'],
+  32: ['ostras2', ['sea'], 'Ceviche fresco e pisco sour.'], 33: ['feijoada', [], 'Feijoada completa às quartas e sábados.'],
+  34: ['salada', ['brunch'], 'Pratos do dia sem carne, bem servidos.'], 35: ['panqueca', ['cafe', 'pet'], 'Panqueca alta na calçada, aceita pet.'],
+  36: ['pastel', ['bar'], 'Pastel de feira, cerveja gelada e mesa na rua.'], 37: ['paodequeijo', ['cafe'], 'Pão de queijo grande e sonho de creme.'],
+  38: ['pizza2', [], 'Rodízio de bairro que lota na sexta.'], 39: ['sorvete', ['cake'], 'Sabores de fruta da estação.'],
+  40: ['drink2', ['bar'], 'Doze torneiras e provinha antes de escolher.'], 41: ['vinho', ['bar'], 'Taça do dia e tábua para dividir.'],
+  42: ['drink', ['party'], 'Coquetel autoral e som baixo para conversar.'], 43: ['matcha', ['cafe'], 'Matcha entre as estantes.'],
+  44: ['cafe', ['tour'], 'Exposições curtas, entrada gratuita e café na saída.'], 45: ['rua2', ['tour'], 'Bancas para beliscar no sábado de manhã.'],
+  46: ['acai', ['pet', 'sport'], 'Sombra, pista de caminhada e açaí na saída.'], 47: ['massa', [], 'Receita de família e porção para três.'],
+  48: ['burger2', [], 'Smash com queijo derretido e pão macio.'], 49: ['confeitaria', ['cafe'], 'Torta por fatia e café passado na mesa.'],
+  50: ['carne2', ['arge'], 'Costela lenta no fim de semana.'], 51: ['croissant2', [], 'Padaria de esquina com almoço rápido.'],
+  52: ['matcha', ['shop'], 'Vasos, mudas e um café no fundo.'], 53: ['coxinha', ['bar', 'braz'], 'Roda de samba aos domingos.'],
+  54: ['ostras', [], 'Isca de peixe de frente para o mar.'], 55: ['espresso', ['bread'], 'Parada rápida no caminho.'],
+}
+const WEEK = [['11:00', '23:00'], null, ['11:00', '23:00'], ['11:00', '23:00'], ['11:00', '23:00'], ['11:00', '00:00'], ['11:00', '00:00']]
+const dayAgo = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
+export const demoMapPlaces = () => {
+  const base = typeof globalThis !== 'undefined' && globalThis.__WAGLI_BASE__ || ''
+  const known = new Map(demoPlaces().map((p) => [p.id, p]))
+  return DEMO_ALL.map((p, i) => {
+    const [frame, tags, about] = DEMO_STORY[p.id]
+    const { photo, ...from } = known.get(p.id) || {}
+    return {
+      address: 'Endereço ilustrativo (demonstração)', municipality: 'São Paulo', geoQuality: 'approx', ad: false, tiktokId: null,
+      ...p, ...from, hours: DEMO_HOURS[p.id] || WEEK, postUrl: 'https://www.instagram.com/p/exemplo-ilustrativo/', postedOn: dayAgo(3 + ((i * 11) % DEMO_ALL.length) * 4),
+      cover: `${base}/photos/${frame}.jpg`, tags, about, aboutSource: 'editado',
+      rating: 4.3 + (p.id % 7) / 10, reviews: 90 + ((p.id * 137) % 1900), ratingDate: dayAgo(10), phone: `(11) 5555-01${String(p.id).padStart(2, '0')}`, website: 'https://example.com',
+      ...(p.id % 9 === 0 ? { couponNote: 'Sobremesa de cortesia (exemplo)', couponCode: 'DEMO10' } : {}),
+    }
+  })
+}
+// chegada do mapa de demonstração: marcas e evento fictícios (a data fica sempre no futuro)
+export const demoArrival = () => ({
+  brands: ['Marca Exemplo', 'Café Fictício', 'Loja Modelo', 'App Demo', 'Tênis Teste'].map((name) => ({ name })),
+  event: { title: 'Encontro de exemplo (fictício)', date: new Date(Date.now() + 21 * 864e5).toISOString().slice(0, 10), place: 'Praça Exemplo, São Paulo' },
+})
+export const DEMO_BIO = 'Mapa de demonstração da JoyMap: comida, café e passeio em São Paulo. Lugares e nomes são fictícios.'
+
 // Três identidades de demonstração (comida de rua, cafeterias e alta gastronomia).
 const cat = (id, name, color, icon) => ({ id, name, color, icon })
 // Criadores de demonstração (fictícios): dois casais e um criador solo. Cada um usa um MODELO do estúdio (tpl) e personaliza só o que o painel permite: nome, foto de perfil, bio e cor principal.
@@ -72,5 +145,15 @@ export const DEMO_ROUTES = [
     { placeId: 9, when: 'Sexta · 21h', title: 'Pizza que sai em dois minutos', text: 'O forno é a lenha, a massa é fina de borda alta e a primeira fatia some antes de a conversa recomeçar. Dividi com três amigos e ainda sobrou espaço para o resto da noite, que era o plano.', tip: 'Peça meio a meio: dá para provar dois sabores sem briga.' },
     { placeId: 6, when: 'Sexta · 23h', title: 'Sobremesa tarde, que vale mais', text: 'A vitrine ainda está cheia e a mousse de chocolate com sal é a que entra em todo roteiro meu. Comer doce depois da meia-noite tem outro sabor, e aqui ninguém olha o relógio.', tip: 'Os doces de vitrine acabam por volta de 23h30.' },
     { placeId: 10, when: 'Sábado · 1h', title: 'Fecha com uma tapioca', text: 'Final de noite honesto: tapioca na chapa, queijo coalho derretendo e a rua ainda acesa. Pago a conta, volto a pé até o carro e a noite termina do jeito que começou, sem pressa.', tip: 'Leve dinheiro trocado: a chapa é pequena e o caixa é simples.' },
+  ] },
+  { id: 4, name: 'Padarias para o café de domingo', note: 'Três fornadas em três bairros, para escolher a sua.', placeIds: [37, 8, 51], stops: [
+    { placeId: 37, when: 'Domingo · 8h', title: 'Santana primeiro', text: 'O pão de queijo sai grande e quente logo cedo.', tip: 'Vá antes das 9h.' },
+    { placeId: 8, when: 'Domingo · 10h', title: 'Croissant na Mooca', text: 'Pão na chapa para quem chegou com fome.', tip: '' },
+    { placeId: 51, when: 'Domingo · 12h', title: 'Almoço de esquina', text: 'Fecha com o prato do dia no Tatuapé.', tip: '' },
+  ] },
+  { id: 5, name: 'Sexta em Pinheiros e Vila Madalena', note: 'Tacos, torneiras de chope e sorvete, tudo perto.', placeIds: [25, 40, 39], stops: [
+    { placeId: 25, when: '19h', title: 'Tacos na calçada', text: 'Comece leve, dividindo.', tip: '' },
+    { placeId: 40, when: '21h', title: 'Doze torneiras', text: 'Peça a provinha antes de escolher.', tip: '' },
+    { placeId: 39, when: '23h', title: 'Sorvete para voltar a pé', text: 'Os sabores da estação acabam primeiro.', tip: '' },
   ] },
 ]

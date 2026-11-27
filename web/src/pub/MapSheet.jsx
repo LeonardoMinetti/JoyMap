@@ -15,9 +15,9 @@ import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.
 export const BRAND = 40, HEAD = 56, TAB = 56, SAFE = 24, PEEK = 112, CHIPS_BOTTOM = 108 // SAFE: faixa do indicador de início do iPhone, para as abas não ficarem cortadas
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
 
-export const NAV_TABS = [['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['busca', 'Busca', 'search']]
+export const NAV_TABS = [['sobre', 'Sobre', 'user'], ['bairros', 'Bairros', 'map'], ['categorias', 'Categorias', 'grid'], ['roteiros', 'Roteiros', 'route'], ['busca', 'Busca', 'search']]
 const KEY = { '/roteiros': 'roteiros' }
-// Abas inferiores (Bairros, Categorias, Roteiros, Busca); nada vem selecionado. Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
+// Abas inferiores (Sobre, Bairros, Categorias, Roteiros, Busca); no mapa, Sobre fica marcada na chegada. Na tela do mapa abrem painéis; nas demais páginas voltam ao mapa.
 export function PubTabs({ cur, href, onOpen, preview, navRef, noRoutes, cityNav }) {
   const c = KEY[cur] || cur
   return (
@@ -119,7 +119,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   // voltar à chegada: tocar no nome do criador
   // lista completa com um toque
   const showAll = () => { setAll(true); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap('full') }
-  const home = () => { setAll(false); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); setSnap('half') }
+  const home = (to = 'half') => { setAll(false); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap(to) }
+  const filtered = !!(f.active || f.openNow || f.near || f.q || f.cats.length || f.hoods?.length === 1 || f.cities?.length === 1)
+  useEffect(() => { if (filtered) setAll(true) }, [filtered])
   const found = f.q?.trim() ? shown0 : []
   const visible = hs - y
   const fitPad = { top: CHIPS_BOTTOM + head - HEAD, bottom: Math.max(40, hc - head - (drag ? y : offs[snap])) }
@@ -172,7 +174,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: head, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
         <div className="ms-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="button" tabIndex={preview ? -1 : 0} aria-label="Arrastar para abrir ou fechar a lista" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek') }}>
           <i className="ms-bar" />
-          <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
+          <div className="ms-sh">{!(arriving && snap === 'full') && <><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span></>}<span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
           {!preview && (route || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <Crumbs items={[
@@ -190,17 +192,17 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       </section>
       {panel === 'bairros' && !cityNav && (
         <Panel bottom={tabs ? tabH : 0} title="Bairros" onClose={() => setPanel(null)}>
-          <button type="button" className={'ms-opt' + (!hood ? ' on' : '')} onClick={() => pick(() => f.setHoods([]))}><span className="sp">Todos os bairros</span><i>{places.length}</i></button>
+          <button type="button" className={'ms-opt' + (!hood ? ' on' : '')} onClick={showAll}><span className="sp">Todos os bairros</span><i>{places.length}</i></button>
           {hoods.map(([h, n]) => <button key={h} type="button" className={'ms-opt' + (hood === h ? ' on' : '')} onClick={() => pick(() => f.setHoods([h]))}><span className="sp">{h}</span><i>{n}</i></button>)}
         </Panel>)}
       {(panel === 'cidades' || (panel === 'bairros' && cityNav)) && (
         <Panel bottom={tabs ? tabH : 0} title="Cidades" onClose={() => setPanel(null)}>
-          <button type="button" className={'ms-opt' + (!city ? ' on' : '')} onClick={() => pick(() => f.setCities([]))}><span className="sp">Todas as cidades</span><i>{places.length}</i></button>
+          <button type="button" className={'ms-opt' + (!city ? ' on' : '')} onClick={showAll}><span className="sp">Todas as cidades</span><i>{places.length}</i></button>
           {cities.map(([c, n]) => <button key={c} type="button" className={'ms-opt' + (city === c ? ' on' : '')} onClick={() => pick(() => { f.setCities([c]); f.setHoods?.([]) })}><span className="sp">{c}</span><i>{n}</i></button>)}
         </Panel>)}
       {panel === 'categorias' && (
         <Panel bottom={tabs ? tabH : 0} title="Categorias" onClose={() => setPanel(null)}>
-          <button type="button" className={'ms-opt' + (!f.cats.length ? ' on' : '')} onClick={() => pick(() => f.setCats([]))}><span className="sp">Todas as categorias</span><i>{places.length}</i></button>
+          <button type="button" className={'ms-opt' + (!f.cats.length ? ' on' : '')} onClick={showAll}><span className="sp">Todas as categorias</span><i>{places.length}</i></button>
           {usedCats.map((c) => { const { n, sym } = symOf(c, creator.symbols); return <button key={c.id} type="button" className={'ms-opt' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} onClick={() => pick(() => f.setCats([c.id]))}><span className="ms-oi" style={{ background: c.color }}><Icon n={n} sym={sym} s={16} c="#fff" /></span><span className="sp">{c.name}</span><i>{catCount(c.id)}</i></button> })}
         </Panel>)}
       {panel === 'busca' && (
@@ -228,7 +230,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           {saved && <SavedNote saved={saved} slug={creator.slug} />}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </Panel>)}
-      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || ''} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => setPanel(panel === k ? null : k)} />}
+      {tabs && <PubTabs cityNav={cityNav} noRoutes={data.creator.routesOn === false} navRef={tabRef} cur={panel || (arriving ? 'sobre' : '')} href={href || ((q) => q)} preview={preview} onOpen={preview ? undefined : (k) => (k === 'sobre' ? home('full') : setPanel(panel === k ? null : k))} />}
     </div>
   )
 }
