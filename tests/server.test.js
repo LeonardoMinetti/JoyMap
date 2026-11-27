@@ -52,7 +52,7 @@ test('tema: valida cores, fonte; categorias são fixas (só cor e símbolo mudam
   assert.equal(t.categories.length, CATEGORY_COUNT)
   assert.ok(!t.categories.some((c) => c.id === 'nova'))
   const cafe = t.categories.find((c) => c.id === 'cafe')
-  assert.deepEqual(cafe, { id: 'cafe', name: 'Cafés', group: 'Cafés e doces', color: '#123456', icon: 'cafe' })
+  assert.deepEqual(cafe, { id: 'cafe', name: 'Cafés', group: 'Cafés e doces', color: '#123456', icon: 'lib:fluent3d:hot-beverage' })
 })
 
 test('tema: layout, pins e links têm limites; cabeçalho nunca some; símbolo próprio só como path', () => {
