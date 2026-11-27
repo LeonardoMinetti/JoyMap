@@ -359,3 +359,6 @@
 .pub .dk-pop button.on{background:var(--acc);color:var(--onacc)}
 .pub .ms-panel .ms-opt .sp{text-transform:uppercase;letter-spacing:.02em;font-weight:800;color:color-mix(in srgb,var(--acc) 48%,var(--fg))}
 .pub .dk-find button.all{margin-left:0}
+/* voltar para a lista completa */
+.pub .all-back{align-self:flex-start;margin-bottom:12px}
+.pub .all-count{background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}

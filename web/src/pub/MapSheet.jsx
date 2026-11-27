@@ -116,6 +116,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const arriving = !preview && !all && !route && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
   // voltar à chegada: tocar no nome do criador
+  // lista completa com um toque
+  const showAll = () => { setAll(true); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap('full') }
   const home = () => { setAll(false); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); setSnap('half') }
   const found = f.q?.trim() ? shown0 : []
   const visible = hs - y
@@ -172,6 +174,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
+          {!preview && (route || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <button type="button" className="pb sm sec all-back" onClick={showAll}><Icon n="back" s={14} c="currentColor" />Todos os {places.length} lugares</button>}
           {arriving ? <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => { setAll(true); setSnap('full') }} onCategory={(id) => { f.setCats([id]); setSnap('half') }} onHood={(h) => { f.setHoods([h]); setSnap('half') }} /> : route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {preview && theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {preview && news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}

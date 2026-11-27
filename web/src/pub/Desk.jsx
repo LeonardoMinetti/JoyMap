@@ -78,6 +78,8 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
   // voltar à chegada: tocar no nome do criador
   const home = () => { setPop(null); setAll(false); nav('home'); f.clear?.(); f.setHoods?.([]) }
+  // lista completa com um toque: sai do roteiro e limpa filtros e busca
+  const showAll = () => { setPop(null); setAll(true); nav('home'); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false) }
   const others = fichaPlace ? places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) === (fichaPlace.neighborhood || fichaPlace.municipality)).concat(places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) !== (fichaPlace.neighborhood || fichaPlace.municipality) && p.category === fichaPlace.category)).slice(0, 4) : []
   const grid = (arr) => <div className="dk-grid">{arr.map((p) => <Card key={p.id} p={p} theme={theme} saved={saved} onOpen={openFicha} />)}</div>
   const sechead = (title, count, right) => <div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>{title}</b>{count != null && <span className="ms-count">{count}</span>}<span className="sp" />{right}</div>
@@ -120,8 +122,8 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
             <div className="jm-own"><div><h1 className="pt jm-home" role="button" tabIndex={0} onClick={home} onKeyDown={(e) => e.key === 'Enter' && home()}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle}</span><InstaLink creator={creator} className="ig-link" /></div>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}</div>
           </div>}
           <div className={'dk-id' + (creator.showBrand !== false ? ' dk-tools' : '')}>
-            {creator.showBrand !== false ? <span className="sp ms-hs">{places.length} lugares</span> : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}
-            <div className="sp"><h1 className="pt jm-home" style={{ '--fs': '28px' }} role="button" tabIndex={0} onClick={home} onKeyDown={(e) => e.key === 'Enter' && home()}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle} · {places.length} lugares</span><InstaLink creator={creator} className="ig-link" /></div></>}
+            {creator.showBrand !== false ? <span className="sp"><button type="button" className="ms-hs all-count" onClick={showAll}>{places.length} lugares</button></span> : <>{creator.avatarUrl ? <img className="pav" src={creator.avatarUrl} alt="" /> : <span className="pav">{initial(creator.displayName)}</span>}
+            <div className="sp"><h1 className="pt jm-home" style={{ '--fs': '28px' }} role="button" tabIndex={0} onClick={home} onKeyDown={(e) => e.key === 'Enter' && home()}>{creator.displayName}</h1><span className="ms-hs">@{creator.handle} · <button type="button" className="ms-hs all-count" onClick={showAll}>{places.length} lugares</button></span><InstaLink creator={creator} className="ig-link" /></div></>}
             <button type="button" className="ms-ib" aria-label="Salvos" onClick={() => nav('salvos')}><Icon n="heart" s={20} c="currentColor" /></button>
             <button type="button" className="ms-ib" aria-label="Compartilhar" onClick={onShare}><Icon n="share" s={20} c="currentColor" /></button>
             <AccountBtn slug={creator.slug} />
@@ -148,6 +150,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
         </header>
         <div className="dk-scroll" ref={scroller}>
+          {!fichaPlace && view !== 'salvos' && (view !== 'home' || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <button type="button" className="pb sm sec all-back" onClick={showAll}><Icon n="back" s={14} c="currentColor" />Todos os {places.length} lugares</button>}
           {body}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </div>
