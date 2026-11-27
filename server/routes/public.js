@@ -13,7 +13,7 @@ const PAYMENTS = process.env.PAYMENTS === 'on'
 // marcas, agenda, fotos dos "vídeos" e links de postagem são ilustrativos
 const DEMO_MAP = JSON.parse(readFileSync(new URL('../demo-map.json', import.meta.url), 'utf8'))
 const DEMO_BIO = "Aqui estão os lugares de São Paulo que eu mais gosto: onde tomo café sem pressa, onde levo quem vem de fora e onde volto sempre que bate a vontade de comer bem.\n\nTem padaria de bairro, restaurante para um jantar mais caprichado, bar para encontrar os amigos e alguns passeios. Escolha um e vá.\n\nMapa de demonstração: marcas, agenda e vídeos são ilustrativos."
-const EVENTS = new Set(['session', 'search', 'place_open', 'route_click', 'post_open', 'video_open', 'request', 'route_view', 'route_save', 'route_share', 'route_day', 'route_place', 'sponsor_click', 'product_click', 'coupon_copy'])
+const EVENTS = new Set(['session', 'search', 'place_open', 'route_click', 'post_open', 'video_open', 'request'])
 const REPORT_REASONS = ['Informação errada', 'Sou o dono e quero corrigir', 'Conteúdo enganoso ou sem aviso de publicidade', 'Spam ou abuso']
 const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]))
 

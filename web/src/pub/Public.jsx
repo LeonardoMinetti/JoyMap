@@ -3,14 +3,13 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
-import { isGuided } from './GuidedRoute.jsx'
 import { useOwnerIcon } from '../lib/favicon.js'
 import DeskMap from './Desk.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
 import { api, track } from '../api.js'
 import { BASE, STATIC } from '../lib/base.js'
-import { byCity, citiesOf } from './extras.js'
+import { byCity, citiesOf, withExtras } from './extras.js'
 import { Link, navigate, toast, useLocation } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
@@ -184,20 +183,21 @@ export default function Public({ slug, embed }) {
     if (!fichaPlace) return page(<><Header title="Lugar não encontrado" back={href('/')} /><div className="pbody"><p className="mut">Este lugar não está mais no mapa.</p></div></>)
     return page(<><Header back={href('/mapa')} title="Voltar ao mapa" right={<button className="picon" aria-label="Salvar" style={{ border: 0 }} onClick={() => saved.toggle(fichaPlace.id)}><Icon n="heart" s={22} c={saved.ids.includes(fichaPlace.id) ? '#d93a1c' : 'currentColor'} /></button>} /><div style={{ flex: 1 }}><Ficha place={fichaPlace} data={data} ctx={ctx} /></div></>)
   }
-  if (route && !isGuided(route)) {
-    const list = route ? route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean) : f.shown
+  if (route) {
+    const all = withExtras(places, route)
+    const list = route ? route.placeIds.map((id) => all.find((p) => p.id === id)).filter(Boolean) : f.shown
     return page(<>
       <Header back={route ? href('/roteiros') : undefined} title={route ? route.name : `${list.length} lugares`} right={!route && <><Link to={href('/lista')} className="tag2 acc">Lista</Link><Link to={href('/mapa')} className="tag2">Mapa</Link></>} />
       <div className="pbody" style={{ flex: 1 }}>
         {!route && <label className="psearch"><Icon n="search" s={18} c="currentColor" /><input value={f.q} onChange={(e) => f.setQ(e.target.value)} placeholder="Buscar neste mapa" aria-label="Buscar neste mapa" /></label>}
-        {route ? <RouteBody creator={data.creator} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => <div className="pgrid">{list.map((p) => <button key={p.id} className="pcard" onClick={() => openFicha(p.id)}><PlacePhoto place={p} theme={theme} /><b className="pt" style={{ '--fs': '17px' }}>{p.name}</b><span className="xs mut">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div>} />
+        {route ? <RouteBody creator={data.creator} route={route} places={all} theme={theme} openFicha={openFicha} renderList={() => <div className="pgrid">{list.map((p) => <button key={p.id} className="pcard" onClick={() => openFicha(p.id)}><PlacePhoto place={p} theme={theme} /><b className="pt" style={{ '--fs': '17px' }}>{p.name}</b><span className="xs mut">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div>} />
         : list.length === 0 ? <NoResult term={f.q.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q.trim() ? request : null} requested={requested} />
           : <div className="pgrid">{list.map((p) => <button key={p.id} className="pcard" onClick={() => openFicha(p.id)}><PlacePhoto place={p} theme={theme} /><b className="pt" style={{ '--fs': '17px' }}>{p.name}</b><span className="xs mut">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div>}
       </div></>, '/lista')
   }
   if (rel === '/roteiros') {
     return page(<><Header title="Roteiros" /><div className="pbody" style={{ flex: 1 }}>
-      {data.routes.map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
+      {data.routes.map((r) => { const rp = r.placeIds.map((id) => withExtras(places, r).find((p) => p.id === id)).filter(Boolean); return (
         <Link key={r.id} to={href(`/roteiros/${r.id}`)} className="box" style={{ padding: 0, overflow: 'hidden', gap: 0 }}>
           <div style={{ height: 120, pointerEvents: 'none' }}><MapCanvas places={rp} theme={{ ...theme, cluster: false, mapLabels: false }} symbols={creator.symbols} interactive={false} style={{ height: 120 }} /></div>
           <div className="prow" style={{ padding: '12px 14px' }}><div className="sp"><b className="pt" style={{ '--fs': '24px' }}>{r.name}</b><div className="xs mut" style={{ marginTop: 4 }}>{r.placeIds.length} lugares{r.note ? ` · ${r.note}` : ''}</div></div><Icon n="next" s={20} c="currentColor" /></div></Link>) })}
@@ -216,7 +216,7 @@ export default function Public({ slug, embed }) {
   return (
     <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}>
       <div className="pub msroot" style={{ ...wrapStyle, width: '100%', maxWidth: 460, height: '100dvh', boxShadow: '0 0 0 1px var(--line)' }}>
-        <MapSheet routeId0={isGuided(route) ? route.id : null} data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' || ['sobre', 'lugares'].includes(search.get('p')) ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
+        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' || ['sobre', 'lugares'].includes(search.get('p')) ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
         {overlays}
       </div>
     </div>

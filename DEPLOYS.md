@@ -79,3 +79,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 071 | 2026-11-27 19:56 | conteudo | descricoes completas no mapa demo | `deploy/conteudo/071-descricoes-completas-no-mapa-demo` |
 | 072 | 2026-11-27 20:06 | conteudo | tira do demo quatro lugares que podem ter fechado | `deploy/conteudo/072-tira-do-demo-quatro-lugares-que-podem-te` |
 | 073 | 2026-11-27 20:20 | conteudo | roteiro canions e cachoeiras com patrocinio demonstrativo | `deploy/conteudo/073-roteiro-canions-e-cachoeiras-com-patroci` |
+| 074 | 2026-11-27 20:28 | ajuste | roteiro canions volta ao padrao dos roteiros patrocinados | `deploy/ajuste/074-roteiro-canions-volta-ao-padrao-dos-rote` |

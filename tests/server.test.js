@@ -314,7 +314,7 @@ test('mapa de demonstração: público, sem login, sem dados inventados sobre lu
   // lugares reais sem nada inventado sobre eles: nem nota, telefone ou cupom
   assert.ok(d.places.length >= 8 && d.places.every((p) => !p.rating && !p.phone && !p.couponCode))
   assert.ok(d.creator.theme.categories.some((c) => /^lib:fluent3d:/.test(c.icon)))
-  assert.ok(d.routes.length >= 2 && d.routes.every((r) => r.placeIds.every((id) => d.places.some((p) => p.id === id))))
+  assert.ok(d.routes.length >= 2 && d.routes.every((r) => r.placeIds.every((id) => [...d.places, ...(r.extraPlaces || [])].some((p) => p.id === id))))
 })
 
 test('mapa de demonstração: eventos não geram métricas e não dão erro', async () => {

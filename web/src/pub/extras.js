@@ -11,6 +11,8 @@ export const byCity = (places) => {
   const hoods = new Set(places.filter((p) => cityOf(p) === cities[0][0] && p.neighborhood).map((p) => p.neighborhood))
   return cities.length > hoods.size
 }
+// paradas que existem só no roteiro (não entram nos lugares do perfil)
+export const withExtras = (list, route) => (route?.extraPlaces ? [...list, ...route.extraPlaces] : list)
 export const routePath = (route) => (route.stops?.length ? route.stops : route.placeIds.map((placeId) => ({ placeId }))).map((s, i) => ({ id: s.placeId, n: i + 1 })).filter((s) => s.id != null)
 // o Google Maps aceita origem, destino e até 9 paradas no meio
 export const GMAPS_MAX = 11

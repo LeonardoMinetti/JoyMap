@@ -325,7 +325,7 @@ export function RouteEmojis({ places, theme }) {
   return <span className="rc-emo" aria-hidden="true">{icons.map((id) => { const ic = libIcon(id); return <i key={id} dangerouslySetInnerHTML={{ __html: ic ? libHtml(ic, 28) : '' }} /> })}</span>
 }
 // Roteiro patrocinado: etiqueta e logo da marca parceira, sempre visíveis no cartão
-export const SponsorMark = ({ s }) => s ? <span className="sp-logo" title={`Patrocinado por ${s.brand}`}>{s.logo ? <img src={s.logo} alt={s.brand} /> : <b>{s.brand}</b>}</span> : null
+export const SponsorMark = ({ s }) => s ? <span className="sp-logo" title={`Patrocinado por ${s.brand}`}>{s.logo ? <img src={withBase(s.logo)} alt={s.brand} /> : <b>{s.brand}</b>}</span> : null
 export const SponsorTag = ({ s }) => s ? <span className="sp-tag">Roteiro patrocinado</span> : null
 // Roteiro pago: o seguidor vê só as primeiras paradas. A cobrança ainda não existe; na demonstração a compra é simulada.
 function RouteLock({ route, preview }) {
