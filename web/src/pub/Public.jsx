@@ -3,6 +3,7 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
+import { useOwnerIcon } from '../lib/favicon.js'
 import DeskMap from './Desk.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
@@ -103,6 +104,7 @@ const PlaceRow = ({ p, theme, onClick, right }) => <div className="pin" role="bu
 export default function Public({ slug, embed }) {
   const { path, search } = useLocation()
   const st = usePubData(slug)
+  useOwnerIcon(embed ? null : st.data?.creator?.avatarUrl)
   const places = st.data?.places || []
   const f = useFilters(places, { slug })
   const saved = useSaved(slug)

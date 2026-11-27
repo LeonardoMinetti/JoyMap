@@ -72,3 +72,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 064 | 2026-11-27 16:55 | mapa | marcas que me apoiam, proximo evento no topo e agenda | `deploy/mapa/064-marcas-que-me-apoiam-proximo-evento-no-t` |
 | 065 | 2026-11-27 17:18 | mapa | demo com perfil do Leonardo, 80 lugares da base e tres colunas | `deploy/mapa/065-demo-com-perfil-do-leonardo-80-lugares-d` |
 | 066 | 2026-11-27 17:23 | mapa | todos os icones de categoria em emoji | `deploy/mapa/066-todos-os-icones-de-categoria-em-emoji` |
+| 067 | 2026-11-27 18:39 | site | favicon do site e foto do dono nos mapas | `deploy/site/067-favicon-do-site-e-foto-do-dono-nos-mapas` |
