@@ -378,3 +378,6 @@
 .ms-subnav i{font-style:normal;color:var(--mut)}
 .dk-subnav>button:hover,.dk-subnav>button.open{background:var(--soft)}
 .dk-subnav>button.on,.ms-subnav>button.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 13%,var(--bg))}
+.dk-subnav>button{position:relative}
+/* ponte invisível só embaixo do botão aberto, para o mouse alcançar o menu */
+.dk-subnav>button.open::after{content:'';position:absolute;left:0;right:0;top:100%;height:20px}

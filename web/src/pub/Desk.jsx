@@ -54,7 +54,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const [pop, setPop] = useState(null) // menu aberto: 'bairros' | 'categorias' | 'busca'
   const closeT = React.useRef(null)
   const openPop = (k) => { clearTimeout(closeT.current); setPop(k) }
-  const closePop = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setPop((k) => (k === 'busca' ? k : null)), 160) }
+  const closePop = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setPop((k) => (k === 'busca' ? k : null)), 220) }
   useEffect(() => { if (!pop) return; const k = (e) => e.key === 'Escape' && setPop(null); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k) }, [pop])
   const pickMenu = (fn) => { fn(); setPop(null); setView('home'); setRouteId(null); if (fichaPlace) go('/') }
   const scroller = React.useRef(null)
@@ -136,7 +136,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
             <button type="button" className="ms-ib" aria-label="Compartilhar" onClick={onShare}><Icon n="share" s={20} c="currentColor" /></button>
             <AccountBtn slug={creator.slug} />
           </div>
-          <div className="dk-navwrap" onMouseLeave={closePop} onMouseEnter={() => clearTimeout(closeT.current)}>
+          <div className="dk-navwrap">
             <nav className="dk-nav" aria-label="Navegação do mapa">
               {tab(about, 'user', 'Sobre', home)}
               {tab(listing, 'pin', 'Lugares', showAll)}
@@ -144,13 +144,13 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
               <button type="button" className={'dk-lupa' + (pop === 'busca' || f.q ? ' open' : '')} aria-label="Busca" aria-haspopup="true" aria-expanded={pop === 'busca'} onMouseEnter={() => clearTimeout(closeT.current)} onClick={() => (pop === 'busca' ? setPop(null) : openPop('busca'))}><Icon n="search" s={16} c="currentColor" />Busca</button>
             </nav>
             {listing && <div className="dk-subnav" role="group" aria-label="Filtrar lugares">
-              {sub2.map(([k, label, icon, on]) => <button key={k} type="button" className={(on ? 'on' : '') + (pop === k ? ' open' : '')} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={icon} s={15} c="currentColor" />{label}<span aria-hidden="true">▾</span></button>)}
+              {sub2.map(([k, label, icon, on]) => <button key={k} type="button" className={(on ? 'on' : '') + (pop === k ? ' open' : '')} aria-haspopup="true" aria-expanded={pop === k} onMouseEnter={() => openPop(k)} onMouseLeave={closePop} onFocus={() => openPop(k)} onClick={() => (pop === k ? setPop(null) : openPop(k))}><Icon n={icon} s={15} c="currentColor" />{label}<span aria-hidden="true">▾</span></button>)}
             </div>}
             {pop === 'busca' && <div className="dk-pop dk-find">
               <label className="dk-search"><Icon n="search" s={16} c="currentColor" /><input autoFocus value={f.q} onChange={(e) => { f.setQ?.(e.target.value); if (view !== 'home') { setView('home'); setRouteId(null) } if (fichaPlace) go('/') }} onKeyDown={(e) => e.key === 'Enter' && setPop(null)} placeholder="Buscar restaurante, bairro ou rua" aria-label="Buscar neste mapa" /></label>
               {f.q && <button type="button" className="all" onClick={() => { f.setQ?.(''); setPop(null) }}>Limpar</button>}
             </div>}
-            {pop && pop !== 'busca' && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
+            {pop && pop !== 'busca' && <div className="dk-pop" onMouseEnter={() => clearTimeout(closeT.current)} onMouseLeave={closePop} role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
               <button type="button" role="menuitem" className={'all' + ((pop === 'bairros' ? (cityNav ? !city : !f.hoods?.length) : !f.cats.length) ? ' on' : '')} onClick={showAll}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
               {pop === 'bairros' && cityNav
                 ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>

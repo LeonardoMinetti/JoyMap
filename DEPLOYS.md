@@ -60,3 +60,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 052 | 2026-11-27 15:39 | mapa | texto da Nathi, sem O que mais indica e demo igual ao dela | `deploy/mapa/052-texto-da-nathi-sem-o-que-mais-indica-e-d` |
 | 053 | 2026-11-27 15:42 | mapa | tira a contagem de lugares do cabecalho | `deploy/mapa/053-tira-a-contagem-de-lugares-do-cabecalho` |
 | 054 | 2026-11-27 15:51 | mapa | aba Lugares com Bairros e Categorias acoplados | `deploy/mapa/054-aba-lugares-com-bairros-e-categorias-aco` |
+| 055 | 2026-11-27 15:55 | ajuste | menu fecha quando o mouse sai do botao | `deploy/ajuste/055-menu-fecha-quando-o-mouse-sai-do-botao` |
