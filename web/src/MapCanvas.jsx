@@ -116,7 +116,8 @@ export default function MapCanvas({ places, theme, symbols, selectedId, onSelect
     const m = map.current
     if (!places.length) return
     // com `follow` (lista completa do mapa), o enquadramento acompanha o filtro: cidade, bairro, categoria ou busca
-    if (follow && path) { fitted.current = ''; return }
+    // com roteiro aberto, quem enquadra é o trajeto (acima)
+    if (path) { fitted.current = ''; return }
     const key = `${follow ? places.map((p) => p.id).join(',') : places.length}:${theme.start}:${theme.startView?.lat}`
     if (fitted.current === key) return
     fitted.current = key

@@ -1,9 +1,10 @@
 import { catsOf } from '../../../server/categories.js'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useMemo } from 'react'
 import { Link } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
+import GuidedRoute, { GuidedCard, guidedMap, isGuided, useDay, lastRoute, forgetRoute } from './GuidedRoute.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
 import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, RouteEmojis } from './shared.jsx'
@@ -45,7 +46,7 @@ function Panel({ title, onClose, children, tall, full, bottom = TAB }) {
   )
 }
 
-export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, onShare, onRequest, requested, near }) {
+export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect, openFicha, href, saved, preview, fake, snap: snap0 = 'half', tabs = true, openPanel: panel0 = null, routeId0 = null, onShare, onRequest, requested, near }) {
   const { creator } = data
   const brand = creator.showBrand !== false
   const head = HEAD + (brand ? BRAND : 0) // com a marca, o cabeçalho ganha uma linha
@@ -62,9 +63,14 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const tabRef = useRef(null)
   const [tabH, setTabH] = useState(TAB + (preview ? SAFE : 0))
   const [panel, setPanel] = useState(panel0)
-  const [routeId, setRouteId] = useState(null)
+  const [routeId, setRouteId] = useState(() => (preview ? null : routeId0 ?? lastRoute(creator.slug)?.id ?? null))
   const route = routeId != null ? data.routes?.find((r) => r.id === routeId) : null
   const shown = route ? shown0.filter((p) => route.placeIds.includes(p.id)) : shown0
+  const guided = isGuided(route) ? route : null
+  const [day, setDay] = useDay(creator.slug, route)
+  const [focus, setFocus] = useState(null)
+  const gmap = useMemo(() => (guided ? guidedMap(guided, places, day) : null), [guided, places, day])
+  const closeRoute = () => { forgetRoute(creator.slug); setRouteId(null) }
   const sel = shown.find((p) => p.id === selectedId)
   const hs = Math.max(200, hc - head - (tabs ? tabH : 0))
   const offs = { full: 0, half: Math.round(hs * 0.5), low: Math.round(hs * 0.64), peek: hs - PEEK }
@@ -116,8 +122,8 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
   // voltar à chegada: tocar no nome do criador
   // lista completa com um toque
-  const showAll = () => { setAll(true); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap('full') }
-  const home = (to = 'half') => { setAll(false); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap(to) }
+  const showAll = () => { setAll(true); setPanel(null); closeRoute(); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap('full') }
+  const home = (to = 'half') => { setAll(false); setPanel(null); closeRoute(); f.clear?.(); f.setHoods?.([]); f.setCities?.([]); f.setQ?.(''); f.setOpenNow?.(false); if (f.near) f.toggleNear?.(false); setSnap(to) }
   const filtered = !!(f.active || f.openNow || f.near || f.q || f.cats.length || f.hoods?.length === 1 || f.cities?.length === 1)
   useEffect(() => { if (filtered) setAll(true) }, [filtered])
   const found = f.q?.trim() ? shown0 : []
@@ -144,7 +150,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <div className="ms-map">
         {!ready ? null : fake || !places.length
           ? <FakeMap h="100%" tone={theme.tone} shape={theme.shape} colors={colors} acc={theme.accent} n={9} sel={2} lab={false} />
-          : <MapCanvas places={shown} follow={preview ? undefined : places} followZoom={f.cities?.length === 1 && f.hoods?.length !== 1 ? 12 : 14} path={route ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={selectedId} onSelect={preview ? undefined : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
+          : <MapCanvas places={gmap ? gmap.pins : shown} follow={preview || gmap ? undefined : places} followZoom={f.cities?.length === 1 && f.hoods?.length !== 1 ? 12 : 14} path={gmap ? gmap.path : route ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={gmap ? focus : selectedId} onSelect={preview ? undefined : gmap ? (id) => id > 0 && openFicha(id) : onSelect} extra={near} interactive={!preview} dim fitPad={fitPad} zoomPos="topright" style={{ height: '100%' }} />}
       </div>
       <header className={'ms-top' + (brand ? ' has-brand' : '')}>
         {brand && <div className="jm-strip"><BrandMark preview={preview} /><span className="jm-tag">{BRAND_LINE}</span></div>}
@@ -154,7 +160,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <AccountBtn slug={creator.slug} preview={preview} />
       </header>
       <div style={brand ? { top: 66 + BRAND } : undefined} className="ms-chips" role="group" aria-label="Filtros">
-        {route && <button type="button" className="ms-chip on" onClick={() => setRouteId(null)} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
+        {route && <button type="button" className="ms-chip on" onClick={closeRoute} aria-label={`Remover o roteiro ${route.name}`}><Icon n="route" s={14} c="currentColor" />{route.name}<Icon n="close" s={14} c="currentColor" /></button>}
         {hood && <button type="button" className="ms-chip on" onClick={() => f.setHoods([])} aria-label={`Remover o bairro ${hood}`}><Icon n="pin" s={14} c="currentColor" />{hood}<Icon n="close" s={14} c="currentColor" /></button>}
         {city && <button type="button" className="ms-chip on" onClick={() => f.setCities([])} aria-label={`Remover a cidade ${city}`}><Icon n="globe" s={14} c="currentColor" />{city}<Icon n="close" s={14} c="currentColor" /></button>}
         {multiCity && !cityNav && !city && <button type="button" className="ms-chip" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel('cidades')}><Icon n="globe" s={14} c="currentColor" />Cidades</button>}
@@ -172,13 +178,13 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
       <section className={'ms-sheet' + (drag ? ' drag' : '')} style={{ top: head, height: hs, transform: `translateY(${y}px)` }} aria-label="Lugares do mapa">
         <div className="ms-grab" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="button" tabIndex={preview ? -1 : 0} aria-label="Arrastar para abrir ou fechar a lista" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek') }}>
           <i className="ms-bar" />
-          <div className="ms-sh">{!(arriving && snap === 'full') && <><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span></>}<span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
+          <div className="ms-sh">{!(arriving && snap === 'full') && <><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{gmap ? gmap.pins.length : shown.length}</span></>}<span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         {!preview && !arriving && !route && <div className="ms-subnav" role="group" aria-label="Filtrar lugares">
           {[['bairros', cityNav ? city || 'Cidades' : hood || 'Bairros', cityNav ? 'globe' : 'map', cityNav ? !!city : !!hood], ['categorias', (f.cats.length === 1 && theme.categories.find((c) => c.id === f.cats[0])?.name) || 'Categorias', 'grid', f.cats.length === 1]].map(([k, label, icon, on]) => <button key={k} type="button" className={on ? 'on' : ''} aria-haspopup="dialog" onClick={() => setPanel(k)}><Icon n={icon} s={15} c="currentColor" /><span>{label}</span><i aria-hidden="true">▾</i></button>)}
         </div>}
         <div className="ms-scroll">
-          {arriving ? <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => { setAll(true); setSnap('full') }} onHood={(h) => { f.setHoods([h]); setSnap('half') }} /> : route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
+          {arriving ? <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => { setAll(true); setSnap('full') }} onHood={(h) => { f.setHoods([h]); setSnap('half') }} /> : guided ? <GuidedRoute key={guided.id} route={guided} places={places} theme={theme} creator={creator} day={day} onDay={setDay} openFicha={openFicha} onFocus={(id) => { setFocus(id); if (id != null) setSnap('half') }} focusId={focus} /> : route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
           {preview && theme.bio && <p className="ms-bio">{theme.bio}</p>}
           {preview && news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
           {shown.length === 0 && !preview && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : shown.length === 0 && !preview
@@ -213,7 +219,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         <Panel bottom={tabs ? tabH : 0} title="Roteiros" onClose={() => setPanel(null)} full>
           {(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}
           {(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
-            <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
+            isGuided(r) ? <GuidedCard key={r.id} route={r} onClick={() => pick(() => setRouteId(r.id))} /> : <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => pick(() => setRouteId(r.id))}>
               {r.sponsor && <span className="rc-top"><SponsorTag s={r.sponsor} /><SponsorMark s={r.sponsor} /></span>}
               <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack"><RouteEmojis places={rp} theme={theme} /><Icon n="next" s={20} c="currentColor" /></span></span>
               {r.note && <><hr /><p className="rc-note">{r.note}</p></>}

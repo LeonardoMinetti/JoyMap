@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
+import GuidedRoute, { GuidedCard, guidedMap, isGuided, useDay } from './GuidedRoute.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink, RouteEmojis } from './shared.jsx'
@@ -60,6 +61,10 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }) }, [fichaPlace?.id, view, routeId])
   const route = routeId != null ? data.routes.find((r) => r.id === routeId) : null
   const list = route && view === 'route' ? shown.filter((p) => route.placeIds.includes(p.id)) : shown
+  const guided = isGuided(route) && view === 'route' ? route : null
+  const [day, setDay] = useDay(creator.slug, route)
+  const [focus, setFocus] = useState(null)
+  const gmap = useMemo(() => (guided ? guidedMap(guided, places, day) : null), [guided, places, day])
   const usedCats = theme.categories.filter((c) => places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const cities = useMemo(() => citiesOf(places), [places])
   const multiCity = cities.length > 1
@@ -99,11 +104,12 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   let body
   if (fichaPlace) body = <DeskFicha place={fichaPlace} data={data} ctx={ctx} others={others} onOpen={openFicha} onBack={() => go('/')} />
   else if (view === 'roteiros') body = <>{(data.routes || []).length === 0 && <p className="ms-empty">Este criador ainda não montou roteiros.</p>}<div className="dk-routes">{(data.routes || []).map((r) => { const rp = r.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean); return (
-    <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => { setRouteId(r.id); setView('route') }}>
+    isGuided(r) ? <GuidedCard key={r.id} route={r} onClick={() => { setRouteId(r.id); setView('route') }} /> : <button key={r.id} type="button" className={'ms-route' + (r.sponsor ? ' has-sp' : '')} style={r.color && !r.sponsor ? { background: r.color, color: onColor(r.color) } : undefined} onClick={() => { setRouteId(r.id); setView('route') }}>
       {r.sponsor && <span className="rc-top"><SponsorTag s={r.sponsor} /><SponsorMark s={r.sponsor} /></span>}
       <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack"><RouteEmojis places={rp} theme={theme} /><Icon n="next" s={20} c="currentColor" /></span></span>
       {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
+  else if (guided) body = <><button type="button" className="ms-chip dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><GuidedRoute key={guided.id} route={guided} places={places} theme={theme} creator={creator} day={day} onDay={setDay} openFicha={openFicha} onFocus={setFocus} focusId={focus} /></>
   else if (view === 'route' && route) body = <><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
   else if (!all && !filtered) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onHood={(h) => f.setHoods([h])} />
@@ -169,7 +175,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
         </div>
       </section>
       <div className="dk-map">
-        <MapCanvas places={list} follow={places} followZoom={city && !hood ? 12 : 14} path={route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
+        <MapCanvas places={gmap ? gmap.pins : list} follow={gmap ? undefined : places} followZoom={city && !hood ? 12 : 14} path={gmap ? gmap.path : route && view === 'route' ? routePath(route) : undefined} theme={theme} symbols={creator.symbols} selectedId={fichaPlace ? fichaPlace.id : gmap ? focus : null} onSelect={(id) => openFicha(id)} extra={f.near} zoomPos="topright" fitPad={{ top: 50, bottom: 50 }} style={{ height: '100%', position: 'absolute', inset: 0 }} />
         {multiCity && !cityNav && (
           <div className="dk-cities" onMouseEnter={() => clearTimeout(cityT.current)} onMouseLeave={closeCities}>
             <button type="button" className={'ms-chip' + (city ? ' sel' : '')} aria-haspopup="true" aria-expanded={cityMenu} onMouseEnter={openCities} onClick={openCities}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}<span aria-hidden="true">▾</span></button>

@@ -3,6 +3,7 @@ import { googleSearchUrl } from '../../../server/placelinks.js'
 import VisitButton from './VisitButton.jsx'
 import MapSheet, { PubTabs } from './MapSheet.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
+import { isGuided } from './GuidedRoute.jsx'
 import { useOwnerIcon } from '../lib/favicon.js'
 import DeskMap from './Desk.jsx'
 import React, { useEffect, useMemo, useState } from 'react'
@@ -143,7 +144,8 @@ export default function Public({ slug, embed }) {
   const request = () => { t('request', { term: f.q.trim() }); setRequested(true); toast('Pedido enviado, de forma anônima') }
   const usedCats = theme.categories.filter((c) => places.some((p) => catsOf(p).includes(c.id))).sort((a, b) => a.name.localeCompare(b.name))
   const fichaMatch = rel.match(/^\/lugar\/(\d+)$/)
-  const fichaPlace = fichaMatch && places.find((p) => p.id === Number(fichaMatch[1]))
+  // paradas que só existem em um roteiro também abrem a ficha
+  const fichaPlace = fichaMatch && [...places, ...data.routes.flatMap((r) => r.extraPlaces || [])].find((p) => p.id === Number(fichaMatch[1]))
   const routeMatch = rel.match(/^\/roteiros\/(\d+)$/)
   const route = routeMatch && data.routes.find((r) => r.id === Number(routeMatch[1]))
   const videoPlace = places.find((p) => p.id === videoId)
@@ -182,7 +184,7 @@ export default function Public({ slug, embed }) {
     if (!fichaPlace) return page(<><Header title="Lugar não encontrado" back={href('/')} /><div className="pbody"><p className="mut">Este lugar não está mais no mapa.</p></div></>)
     return page(<><Header back={href('/mapa')} title="Voltar ao mapa" right={<button className="picon" aria-label="Salvar" style={{ border: 0 }} onClick={() => saved.toggle(fichaPlace.id)}><Icon n="heart" s={22} c={saved.ids.includes(fichaPlace.id) ? '#d93a1c' : 'currentColor'} /></button>} /><div style={{ flex: 1 }}><Ficha place={fichaPlace} data={data} ctx={ctx} /></div></>)
   }
-  if (route) {
+  if (route && !isGuided(route)) {
     const list = route ? route.placeIds.map((id) => places.find((p) => p.id === id)).filter(Boolean) : f.shown
     return page(<>
       <Header back={route ? href('/roteiros') : undefined} title={route ? route.name : `${list.length} lugares`} right={!route && <><Link to={href('/lista')} className="tag2 acc">Lista</Link><Link to={href('/mapa')} className="tag2">Mapa</Link></>} />
@@ -214,7 +216,7 @@ export default function Public({ slug, embed }) {
   return (
     <div className="stage" style={{ background: `color-mix(in srgb, ${theme.bg} 90%, #888)` }}>
       <div className="pub msroot" style={{ ...wrapStyle, width: '100%', maxWidth: 460, height: '100dvh', boxShadow: '0 0 0 1px var(--line)' }}>
-        <MapSheet data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' || ['sobre', 'lugares'].includes(search.get('p')) ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
+        <MapSheet routeId0={isGuided(route) ? route.id : null} data={data} shown={f.shown} f={f} selectedId={selectedId} onSelect={pickPlace} openFicha={openFicha} href={href} saved={saved} onShare={() => setOverlay({ kind: 'share' })} onRequest={request} requested={requested} near={f.near} snap={rel === '/lista' || ['sobre', 'lugares'].includes(search.get('p')) ? 'full' : 'half'} openPanel={['bairros', 'categorias', 'busca', 'roteiros', 'salvos'].includes(search.get('p')) ? search.get('p') : null} />
         {overlays}
       </div>
     </div>
