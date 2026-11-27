@@ -232,19 +232,3 @@ export async function demoCreatorApi(path, { method = 'GET', body = {} } = {}) {
   if (p === `/public/${DEMO_SLUG}/buy` && method === 'POST') { const id = Number(body.routeId); if (s.routes.some((r) => r.id === id) && !(s.unlocked || (s.unlocked = [])).includes(id)) s.unlocked.push(id); return out({ ok: true }) }
   return null // não é do painel: quem chamou segue o caminho padrão
 }
-
-// exportação dos dados da demonstração (mesmo conteúdo que o servidor entregaria), gerada no navegador
-export async function demoExport(format) {
-  const s = await S()
-  const places = s.places.filter((x) => x.status !== 'removed')
-  let text, type, name
-  if (format === 'csv') {
-    const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'postUrl', 'postedOn', 'ad', 'status']
-    const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
-    text = [cols.join(','), ...places.map((x) => cols.map((k) => esc(x[k])).join(','))].join('\n'); type = 'text/csv;charset=utf-8'; name = 'meus-lugares.csv'
-  } else {
-    text = JSON.stringify({ exportedAt: new Date().toISOString(), demonstracao: true, creator: s.creator, places, routes: s.routes, consentHistory: s.consentLog }, null, 2); type = 'application/json;charset=utf-8'; name = 'meus-dados.json'
-  }
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove()
-}

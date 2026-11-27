@@ -221,7 +221,7 @@ test('fluxo: candidatura → análise → aprovação → onboarding → posts �
   assert.equal((await (await call(app, a.cookie, '/api/me')).json()).notices.length, 1)
   assert.equal((await (await call(app, adm.cookie, '/api/admin/reports?status=resolved')).json()).groups.length, 1)
 
-  // slug, consentimentos com histórico, pausa, exportação e exclusão
+  // slug, consentimentos com histórico, pausa e exclusão
   assert.equal((await call(app, a.cookie, '/api/creator/slug', 'PUT', { slug: 'admin' })).status, 400)
   assert.equal((await call(app, a.cookie, '/api/creator/slug', 'PUT', { slug: 'estudio' })).status, 400)
   const cons = await (await call(app, a.cookie, '/api/creator/consents', 'PUT', { network: true })).json()
@@ -229,8 +229,8 @@ test('fluxo: candidatura → análise → aprovação → onboarding → posts �
   assert.equal((await (await call(app, a.cookie, '/api/creator/consents/log')).json()).log[0].key, 'network')
   await call(app, a.cookie, '/api/creator/publish', 'POST', { published: false })
   assert.equal((await app.request('/api/public/dudacomesp')).status, 404)
-  const exp = await call(app, a.cookie, '/api/creator/export?format=csv')
-  assert.match(await exp.text(), /Carola Restobar/)
+  // o criador não baixa a base de lugares
+  assert.equal((await call(app, a.cookie, '/api/creator/export')).status, 404)
   assert.equal((await call(app, a.cookie, '/api/creator/account', 'DELETE', { confirm: 'nao' })).status, 400)
   assert.equal((await call(app, a.cookie, '/api/creator/account', 'DELETE', { confirm: 'EXCLUIR' })).status, 200)
   assert.equal((await call(app, a.cookie, '/api/me')).status, 200)

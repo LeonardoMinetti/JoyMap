@@ -357,27 +357,6 @@ export default function creatorRoutes(app, x) {
   cr.get('/interest', (c) => c.json({ listas: !!db.prepare("SELECT 1 FROM interest WHERE creator_id=? AND kind='listas'").get(me(c).id) }))
   cr.post('/notices/seen', (c) => { db.prepare('UPDATE notices SET seen=1 WHERE creator_id=?').run(me(c).id); return c.json({ ok: true }) })
 
-  cr.get('/export', (c) => {
-    const row = fresh(c)
-    const places = db.prepare("SELECT * FROM places WHERE creator_id=? AND status!='removed'").all(row.id).map(x.placeOut)
-    if (c.req.query('format') === 'csv') {
-      const cols = ['name', 'address', 'municipality', 'neighborhood', 'lat', 'lon', 'category', 'googleUrl', 'instagramUrl', 'couponCode', 'couponNote', 'postUrl', 'postedOn', 'ad', 'status']
-      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
-      const csv = [cols.join(','), ...places.map((p) => cols.map((k) => esc(p[k])).join(','))].join('\n')
-      return c.body(csv, 200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="meus-lugares.csv"' })
-    }
-    const since = Date.now() - 30 * 86400000
-    const data = {
-      exportedAt: new Date().toISOString(), creator: x.view(row), places,
-      routes: db.prepare('SELECT name, note, place_ids, stops FROM routes WHERE creator_id=?').all(row.id),
-      consentHistory: db.prepare('SELECT key, value, terms_version, ts FROM consent_log WHERE creator_id=?').all(row.id),
-      aggregateStats30d: {
-        sessions: db.prepare('SELECT COUNT(DISTINCT sid) n FROM events WHERE creator_id=? AND ts>?').get(row.id, since).n,
-        events: db.prepare('SELECT type, COUNT(*) n FROM events WHERE creator_id=? AND ts>? GROUP BY type').all(row.id, since),
-      },
-    }
-    return c.body(JSON.stringify(data, null, 2), 200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="meus-dados.json"' })
-  })
   cr.delete('/account', async (c) => {
     const { confirm } = await c.req.json().catch(() => ({}))
     if (confirm !== 'EXCLUIR') return c.json({ error: 'confirmacao' }, 400)

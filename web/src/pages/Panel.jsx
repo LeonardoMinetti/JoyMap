@@ -25,8 +25,7 @@ import { logoUriFromSvg, cleanVideoUrl } from '../../../server/offers.js'
 import { withBase } from '../lib/base.js'
 import { termEmoji } from '../lib/termEmoji.js'
 import { PREVIEW_STOPS, PRICE_MIN, PRICE_MAX, MAX_PRODUCTS } from '../../../server/offers.js'
-import { demoExport } from '../lib/demoCreator.js'
-const dlDemo = (f) => (e) => { if (STATIC) { e.preventDefault(); demoExport(f) } }
+
 const useStats = (days = 30) => { const [s, setS] = useState(null); useEffect(() => { setS(null); api(`/creator/stats?days=${days}`).then(setS).catch(() => setS({ error: true })) }, [days]); return s }
 const usePlacesList = () => { const [p, setP] = useState(null); const load = () => api('/creator/places').then((d) => setP(d.places)); useEffect(() => { load() }, []); return [p, load] }
 const sampleTag = (n) => (n < 30 ? <span className="tag wn" title="Poucas visitas: os números ainda variam muito">Amostra pequena</span> : null)
@@ -588,8 +587,6 @@ export function Account() {
           <span className="sm mut trunc">{url}</span>
           <div className="sep" />
           <div className="row"><div className="sp"><b className="sm">Mapa no ar</b><div className="xs mut">Desligue para tirar do ar sem apagar nada. Seguidores veem "Mapa indisponível".{c.settings.adminPaused && ' (Pausado pela equipe: fale com a gente.)'}</div></div><Switch on={!paused} disabled={c.settings.adminPaused} onChange={togglePause} label="Mapa no ar" /></div>
-          <div className="sep" />
-          <div><b className="sm">Exportar meus dados</b><div className="xs mut" style={{ marginBottom: 8 }}>Lugares, categorias, estilo e métricas agregadas.</div><div className="row"><a className="btn sec sm" href="/api/creator/export" download onClick={dlDemo()}>JSON</a><a className="btn sec sm" href="/api/creator/export?format=csv" download onClick={dlDemo('csv')}>CSV</a></div></div>
         </div>
       </div>
       <div className="card col" style={{ borderColor: 'var(--bad)', gap: 10 }}><b className="acc">Zona de risco</b><div className="row wrap"><div className="sp"><b className="sm">Excluir conta e mapa</b><div className="sm mut">Remove o mapa e as fontes derivadas. Cópias técnicas somem no prazo da Política. Não dá para desfazer.</div></div><button className="btn bd2 sm" onClick={del}>Excluir</button></div></div>
