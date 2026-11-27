@@ -75,3 +75,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 067 | 2026-11-27 18:39 | site | favicon do site e foto do dono nos mapas | `deploy/site/067-favicon-do-site-e-foto-do-dono-nos-mapas` |
 | 068 | 2026-11-27 18:52 | admin | nova organizacao do admin em seis abas | `deploy/admin/068-nova-organizacao-do-admin-em-seis-abas` |
 | 069 | 2026-11-27 19:13 | ajuste | criador nao exporta mais os dados | `deploy/ajuste/069-criador-nao-exporta-mais-os-dados` |
+| 070 | 2026-11-27 19:27 | mapa | bloco fique por dentro em breve nos mapas | `deploy/mapa/070-bloco-fique-por-dentro-em-breve-nos-mapa` |

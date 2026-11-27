@@ -61,6 +61,14 @@ export default function Arrival({ data, theme, onOpen, onHood, onAll }) {
           {e.url && <a className="pb sec sm" href={e.url} target="_blank" rel="noopener noreferrer">Saber mais</a>}
         </li>)}</ul>
       </section>}
+
+      {/* aviso do que vem: ainda não coleta nenhum e-mail, por isso o campo fica desligado */}
+      <section className="arr-news" aria-label="Fique por dentro">
+        <span className="arr-soon">Em breve</span>
+        <h2 className="arr-h">Fique por dentro</h2>
+        <p>Novidades, roteiros e promoções {creator.demo && !creator.realProfile ? 'deste mapa' : `de ${first}`} no seu e-mail.</p>
+        <div className="arr-news-f"><input type="email" placeholder="seu@email.com" aria-label="Seu e-mail (em breve)" disabled /><button type="button" className="pb" disabled>Enviar</button></div>
+      </section>
     </div>
   )
 }
