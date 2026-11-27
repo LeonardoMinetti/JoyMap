@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
 import Arrival from './Arrival.jsx'
+import Crumbs from './Crumbs.jsx'
 import PlaceFicha from './PlaceFicha.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
@@ -92,7 +93,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
       <span className="rc-head"><b className="pt">{r.name}</b><span className="ms-stack">{rp.slice(0, 4).map((p) => <PlacePhoto key={p.id} place={p} theme={theme} size={44} />)}{rp.length > 4 && <em>+{rp.length - 4}</em>}<Icon n="next" s={20} c="currentColor" /></span></span>
       {r.note && <><hr /><p className="rc-note">{r.note}</p></>}
     </button>) })}</div></>
-  else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
+  else if (view === 'route' && route) body = <><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
   else if (!all && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onCategory={(id) => f.setCats([id])} onHood={(h) => f.setHoods([h])} />
   else body = (
@@ -150,7 +151,11 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           </div>
         </header>
         <div className="dk-scroll" ref={scroller}>
-          {!fichaPlace && view !== 'salvos' && (view !== 'home' || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <button type="button" className="pb sm sec all-back" onClick={showAll}><Icon n="back" s={14} c="currentColor" />Todos os {places.length} lugares</button>}
+          {!fichaPlace && view !== 'salvos' && (view !== 'home' || f.active || f.openNow || f.near || f.q || f.cats.length > 0 || hood || city) && <Crumbs items={[
+            ['Todos os lugares', showAll],
+            ...(view === 'roteiros' || view === 'route' ? [['Todos os roteiros', () => { setView('roteiros'); setRouteId(null) }]] : []),
+            ...(view === 'route' && route ? [[route.name]] : view === 'home' ? [[f.q?.trim() ? 'Busca' : hood || city || (f.cats.length === 1 ? theme.categories.find((c) => c.id === f.cats[0])?.name : 'Filtrados')]] : []),
+          ]} />}
           {body}
           {creator.showBrand !== false && <div className="pfoot">Mapa feito com <b>JoyMap</b></div>}
         </div>
