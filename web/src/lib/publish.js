@@ -54,12 +54,25 @@ export async function publishToMap({ token, handle, found, choices, fetcher = fe
   return { added, total: map.places.length }
 }
 
-export const saveAbouts = ({ token, handle, texts, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: (n) => `[conteudo] Mapa de @${handle}: ${n} descrições editadas no admin`,
-  change: (map) => {
-    let count = 0
-    const places = map.places.map((p) => { const t = texts[p.id]; if (t === undefined || t.trim() === (p.about || '')) return p; count++; return { ...p, about: t.trim().slice(0, 300), aboutSource: 'editado' } })
-    return { map: { ...map, places }, count }
-  } })
+// edições dos lugares já publicados: descrição, categoria principal e até duas extras
+export function applyPlaceEdits(map, edits) {
+  const known = new Set(map.creator.theme.categories.map((c) => c.id))
+  let count = 0
+  const places = map.places.map((p) => {
+    const e = edits[p.id]
+    if (!e) return p
+    const next = { ...p }
+    if (e.about !== undefined && e.about.trim() !== (p.about || '')) Object.assign(next, { about: e.about.trim().slice(0, 300), aboutSource: 'editado' })
+    if (e.category !== undefined && known.has(e.category)) next.category = e.category
+    if (e.tags !== undefined || next.category !== p.category) next.tags = [...new Set((e.tags ?? p.tags ?? []).filter((t) => known.has(t) && t !== next.category))].slice(0, 2)
+    if (JSON.stringify([next.about, next.category, next.tags || []]) === JSON.stringify([p.about, p.category, p.tags || []])) return p
+    count++
+    return next
+  })
+  return { map: { ...map, places }, count }
+}
+export const savePlaceEdits = ({ token, handle, edits, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: (n) => `[conteudo] Mapa de @${handle}: ${n} lugares editados no admin`,
+  change: (map) => applyPlaceEdits(map, edits) })
 
 // marcas e próximo evento da tela de chegada
 export const saveArrival = ({ token, handle, brands, event, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: () => `[conteudo] Mapa de @${handle}: marcas e evento da chegada`,

@@ -49,3 +49,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 041 | 2026-11-27 12:28 | mapa | Descricoes dos lugares e nova navegacao sem aba Inicio | `deploy/mapa/041-descricoes-dos-lugares-e-nova-navegacao-` |
 | 042 | 2026-11-27 12:43 | mapa | Tela de chegada com ultimos lugares, sobre, marcas e evento | `deploy/mapa/042-tela-de-chegada-com-ultimos-lugares-sobr` |
 | 043 | 2026-11-27 12:56 | mapa | Catalogo amplo de categorias com cozinhas | `deploy/mapa/043-catalogo-amplo-de-categorias-com-cozinha` |
+| 044 | 2026-11-27 12:59 | admin | Editar categorias e descricoes dos lugares no mapa | `deploy/admin/044-editar-categorias-e-descricoes-dos-lugar` |

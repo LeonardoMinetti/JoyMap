@@ -31,3 +31,13 @@ test('chave recusada vira mensagem clara e nada é gravado', async () => {
   await assert.rejects(publishToMap({ token: 'x', handle: 'eu', found, choices: { a: 'cafe' }, fetcher: async () => { n++; return reply(401, {}) } }), /recusou a chave/)
   assert.equal(n, 1)
 })
+
+test('edição de lugar: valida categorias, limita as extras e só conta o que mudou', async () => {
+  const { applyPlaceEdits } = await import('../web/src/lib/publish.js')
+  const m = { creator: { theme: { categories: ['a', 'b', 'c', 'd'].map((id) => ({ id })) } }, places: [{ id: 1, category: 'a', tags: ['b'], about: 'x' }] }
+  assert.equal(applyPlaceEdits(m, { 1: { about: 'x' } }).count, 0)
+  const r = applyPlaceEdits(m, { 1: { category: 'b', tags: ['b', 'c', 'zz', 'd', 'a'] } })
+  assert.equal(r.count, 1)
+  assert.deepEqual([r.map.places[0].category, r.map.places[0].tags, r.map.places[0].about], ['b', ['c', 'd'], 'x'])
+  assert.equal(applyPlaceEdits(m, { 1: { category: 'inexistente' } }).count, 0)
+})

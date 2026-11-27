@@ -9,7 +9,7 @@ import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
 import { safeLink } from '../lib/arrival.js'
 import { fileToLogo } from '../lib/logo.js'
-import { publishToMap, saveAbouts, saveArrival, hasPoint, REPO } from '../lib/publish.js'
+import { publishToMap, savePlaceEdits, applyPlaceEdits, saveArrival, hasPoint, REPO } from '../lib/publish.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
 import { instagramHandle } from '../lib/placeEdits.js'
 import { fmtDate, initial } from '../theme.jsx'
@@ -140,7 +140,7 @@ function Collections({ c, lock, password, back }) {
           <button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button>
         </div>} />
       <div className="row" role="group" aria-label="O que mostrar" style={{ gap: 8 }}>
-        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`], ['textos', 'Descrições'], ['chegada', 'Chegada']].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
+        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`], ['textos', 'No mapa'], ['chegada', 'Chegada']].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
       </div>
       {tab === 'lugares' ? <Found c={c} /> : tab === 'textos' ? <Abouts handle={c.usuario.toLowerCase()} /> : tab === 'chegada' ? <ArrivalEditor handle={c.usuario.toLowerCase()} /> : <>
       <Note>As marcações ficam guardadas só neste navegador. Lugares que você adicionar aparecem na tela Lugares, para exportar junto com as outras alterações.</Note>
@@ -265,45 +265,63 @@ function Publish({ handle, found, choices, onDone }) {
   )
 }
 
-// descrições que aparecem no mapa: saem em nome do criador, por isso passam por revisão
+// lugares já publicados: descrição (sai em nome do criador) e categorias, para revisar o que a IA fez
 function Abouts({ handle }) {
-  const [places, setPlaces] = useState(null)
-  const [texts, setTexts] = useState({})
+  const [map, setMap] = useState(null)
+  const [edits, setEdits] = useState({})
   const [q, setQ] = useState('')
+  const [only, setOnly] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [limit, setLimit] = useState(30)
-  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => setPlaces(m.places)).catch(() => setPlaces([])) }, [handle])
-  if (!places) return <p className="sm mut">Carregando…</p>
-  const changed = Object.keys(texts).filter((id) => texts[id].trim() !== (places.find((p) => String(p.id) === id)?.about || ''))
-  const shown = places.filter((p) => !q || fold(`${p.name} ${p.about}`).includes(fold(q)))
+  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then(setMap).catch(() => setMap(false)) }, [handle])
+  useEffect(() => setLimit(30), [q, only])
+  if (map === null) return <p className="sm mut">Carregando…</p>
+  if (!map) return <Note>Este criador ainda não tem mapa publicado.</Note>
+  const cats = [...map.creator.theme.categories].sort((a, b) => a.name.localeCompare(b.name))
+  const name = (id) => cats.find((c) => c.id === id)?.name || id
+  const now = (p) => ({ about: p.about || '', category: p.category, tags: p.tags || [], ...edits[p.id] })
+  const set = (p, patch) => setEdits({ ...edits, [p.id]: { ...edits[p.id], ...patch } })
+  const changed = applyPlaceEdits(map, edits).count
+  const used = cats.filter((c) => map.places.some((p) => p.category === c.id || p.tags?.includes(c.id)))
+  const shown = map.places.filter((p) => (!only || p.category === only || p.tags?.includes(only)) && (!q || fold(`${p.name} ${p.about}`).includes(fold(q))))
   const save = async () => {
     const token = getToken()
     if (!token) return setMsg('Conecte a chave do GitHub na aba Lugares para salvar.')
     setBusy(true); setMsg('')
     try {
-      const { count } = await saveAbouts({ token, handle, texts })
-      setPlaces(places.map((p) => (texts[p.id] !== undefined ? { ...p, about: texts[p.id].trim(), aboutSource: 'editado' } : p)))
-      setTexts({})
-      setMsg(`${count} descrições enviadas. O mapa se atualiza em alguns minutos.`)
+      const r = await savePlaceEdits({ token, handle, edits })
+      setMap(r.map)
+      setEdits({})
+      setMsg(`${r.count} lugares enviados. O mapa se atualiza em alguns minutos.`)
     } catch (e) { setMsg(e.message) }
     setBusy(false)
   }
   return (
     <>
-      <Note>Escritas pela IA só com o que está nas legendas. “Básica” quer dizer que a legenda não dizia nada sobre o lugar.</Note>
+      <Note>Descrições e categorias foram sugeridas pela IA. Revise antes de divulgar.</Note>
       <div className="row wrap" style={{ gap: 8 }}>
         <div className="in cl-search sp"><Icon n="search" s={18} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar lugar" aria-label="Buscar lugar" /></div>
-        <button type="button" className="btn sm" disabled={!changed.length || busy} onClick={save}>{busy ? 'Salvando…' : `Salvar no mapa (${changed.length})`}</button>
+        <select className="selbox" aria-label="Filtrar por categoria" value={only} onChange={(e) => setOnly(e.target.value)}><option value="">Todas as categorias</option>{used.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <button type="button" className="btn sm" disabled={!changed || busy} onClick={save}>{busy ? 'Salvando…' : `Salvar no mapa (${changed})`}</button>
       </div>
       {msg && <Note>{msg}</Note>}
       <div className="col" style={{ gap: 12 }}>
-        {shown.slice(0, limit).map((p) => (
-          <label key={p.id} className="card col" style={{ gap: 8 }}>
-            <div className="row" style={{ gap: 8 }}><b className="sm sp">{p.name}</b><span className={'tag ' + (p.aboutSource === 'basico' ? 'wn' : p.aboutSource === 'editado' ? 'ok' : '')}>{p.aboutSource === 'basico' ? 'Básica' : p.aboutSource === 'editado' ? 'Editada' : 'Pelas legendas'}</span></div>
-            <textarea className="in" rows={2} maxLength={300} value={texts[p.id] ?? p.about ?? ''} onChange={(e) => setTexts({ ...texts, [p.id]: e.target.value })} />
-          </label>))}
+        {shown.slice(0, limit).map((p) => {
+          const v = now(p)
+          return (
+            <div key={p.id} className="card col" style={{ gap: 10 }}>
+              <div className="row wrap" style={{ gap: 8 }}><b className="sm sp">{p.name}</b><span className={'tag ' + (p.aboutSource === 'basico' ? 'wn' : p.aboutSource === 'editado' ? 'ok' : '')}>{p.aboutSource === 'basico' ? 'Descrição básica' : p.aboutSource === 'editado' ? 'Editada' : 'Pelas legendas'}</span></div>
+              <textarea className="in" rows={2} maxLength={300} aria-label={`Descrição de ${p.name}`} value={v.about} onChange={(e) => set(p, { about: e.target.value })} />
+              <div className="row wrap" style={{ gap: 8 }}>
+                <label className="col" style={{ gap: 4 }}><span className="lb">Categoria principal</span><select className="selbox" value={v.category} onChange={(e) => set(p, { category: e.target.value, tags: v.tags.filter((t) => t !== e.target.value) })}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+                <label className="col" style={{ gap: 4 }}><span className="lb">Extras (até 2)</span><select className="selbox" value="" disabled={v.tags.length >= 2} onChange={(e) => e.target.value && set(p, { tags: [...v.tags, e.target.value] })}><option value="">Adicionar…</option>{cats.filter((c) => c.id !== v.category && !v.tags.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+                <div className="row wrap" style={{ gap: 6, alignSelf: 'flex-end' }}>{v.tags.map((t) => <button key={t} type="button" className="chip on" aria-label={`Tirar ${name(t)}`} onClick={() => set(p, { tags: v.tags.filter((x) => x !== t) })}>{name(t)} ×</button>)}</div>
+              </div>
+            </div>)
+        })}
         {shown.length > limit && <button type="button" className="btn ln sm" style={{ alignSelf: 'center' }} onClick={() => setLimit(limit + 60)}>Mostrar mais ({shown.length - limit})</button>}
+        {!shown.length && <p className="sm mut">Nada encontrado.</p>}
       </div>
     </>
   )
