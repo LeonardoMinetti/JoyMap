@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '../lib/router.jsx'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
+import Arrival from './Arrival.jsx'
 import FakeMap from '../FakeMap.jsx'
 import { initial, catOf, symOf, onColor } from '../theme.jsx'
 import { PlacePhoto, sub, useMemoColors, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink } from './shared.jsx'
@@ -56,6 +57,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const [snap, setSnap] = useState(snap0)
   const [y, setY] = useState(0)
   const [ready, setReady] = useState(false)
+  const [all, setAll] = useState(false) // “ver todos” na chegada
   const [drag, setDrag] = useState(false)
   const tabRef = useRef(null)
   const [tabH, setTabH] = useState(TAB + (preview ? SAFE : 0))
@@ -109,9 +111,11 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
   const news = !f.active && !route ? newest(places) : []
   const catCount = (id) => places.filter((p) => p.category === id).length
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
+  // chegada: nada filtrado ainda (as prévias do site continuam mostrando a lista)
+  const arriving = !preview && !all && !route && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city
   const pick = (fn) => { fn(); setPanel(null); setSnap('half') }
   // voltar à chegada: tocar no nome do criador
-  const home = () => { setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); setSnap('half') }
+  const home = () => { setAll(false); setPanel(null); setRouteId(null); f.clear?.(); f.setHoods?.([]); setSnap('half') }
   const found = f.q?.trim() ? shown0 : []
   const visible = hs - y
   const fitPad = { top: CHIPS_BOTTOM + head - HEAD, bottom: Math.max(40, hc - head - (drag ? y : offs[snap])) }
@@ -152,7 +156,7 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
         {multiCity && !cityNav && !city && <button type="button" className="ms-chip" tabIndex={preview ? -1 : 0} onClick={() => !preview && setPanel('cidades')}><Icon n="globe" s={14} c="currentColor" />Cidades</button>}
         {anyHours && <button type="button" className={'ms-chip' + (f.openNow ? ' on' : '')} aria-pressed={!!f.openNow} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.setOpenNow(!f.openNow)}><span className="opn"><i aria-hidden="true" />Abertos agora</span></button>}
         {f.toggleNear && <button type="button" className={'ms-chip' + (f.near ? ' on' : '')} aria-pressed={!!f.near} tabIndex={preview ? -1 : 0} onClick={() => !preview && f.toggleNear(!f.near)}><Icon n="route" s={14} c="currentColor" />Ao meu redor</button>}
-        <button type="button" className={'ms-chip' + (!f.cats.length ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([])}>Todos</button>
+        <button type="button" className={'ms-chip' + (!f.cats.length && !arriving ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => { f.setCats([]); setAll(true) }}>Todos</button>
         {usedCats.map((c) => <button key={c.id} type="button" className={'ms-chip' + (f.cats.length === 1 && f.cats[0] === c.id ? ' on' : '')} tabIndex={preview ? -1 : 0} onClick={() => f.setCats([c.id])}><span className="ms-dot" style={{ background: c.color }} />{c.name}</button>)}
       </div>
       {sel && snap !== 'full' && (
@@ -167,9 +171,9 @@ export default function MapSheet({ data, shown: shown0, f, selectedId, onSelect,
           <div className="ms-sh"><b className="pt">{route ? route.name : hood || 'Lugares'}</b><span className="ms-count">{shown.length}</span><span className="sp" /><span className="ms-hint">{snap === 'full' ? 'Ver mapa' : 'Ver lista'}</span></div>
         </div>
         <div className="ms-scroll">
-          {route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
-          {theme.bio && <p className="ms-bio">{theme.bio}</p>}
-          {news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
+          {arriving ? <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => { setAll(true); setSnap('full') }} onCategory={(id) => { f.setCats([id]); setSnap('half') }} onHood={(h) => { f.setHoods([h]); setSnap('half') }} /> : route ? <RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} preview={preview} onMap={() => setSnap('peek')} renderList={() => <div className="ms-list">{shown.map(row)}</div>} /> : <>
+          {preview && theme.bio && <p className="ms-bio">{theme.bio}</p>}
+          {preview && news.length > 0 && <section className="ms-new" aria-label="Últimos lugares"><div className="ms-sec" style={{ marginTop: 0 }}>Últimos lugares</div><div className="ms-newrow">{news.map((p) => <button key={p.id} type="button" className="ms-nc" tabIndex={preview ? -1 : 0} onClick={() => !preview && openFicha(p.id)}><PlacePhoto place={p} theme={theme} aspect="4/3" style={{ width: '100%', borderRadius: 'var(--r)' }} /><b className="pt" style={{ '--fs': '16px' }}>{p.name}</b><span className="ms-s">{p.neighborhood || p.municipality || 'São Paulo'}</span></button>)}</div></section>}
           {shown.length === 0 && !preview && f.openNow ? <NoneOpen onClear={() => f.setOpenNow(false)} /> : shown.length === 0 && !preview
             ? <NoResult term={f.q?.trim()} cats={usedCats.slice(0, 4)} onPick={(id) => { f.clear(); f.setCats([id]) }} onRequest={f.q?.trim() ? onRequest : null} requested={requested} />
             : <div className="ms-list">{shown.map(row)}</div>}</>}

@@ -7,7 +7,9 @@ import { VaultGate } from '../lib/VaultGate.jsx'
 import { open } from '../lib/vault.js'
 import { withBase } from '../lib/base.js'
 import { embedOf } from '../pub/embed.js'
-import { publishToMap, saveAbouts, hasPoint, REPO } from '../lib/publish.js'
+import { safeLink } from '../lib/arrival.js'
+import { fileToLogo } from '../lib/logo.js'
+import { publishToMap, saveAbouts, saveArrival, hasPoint, REPO } from '../lib/publish.js'
 import { findInMap } from '../../../scripts/lib/fluxo.js'
 import { instagramHandle } from '../lib/placeEdits.js'
 import { fmtDate, initial } from '../theme.jsx'
@@ -138,9 +140,9 @@ function Collections({ c, lock, password, back }) {
           <button className="btn sec sm" onClick={lock}><Icon n="lock" s={14} c="currentColor" />Fechar</button>
         </div>} />
       <div className="row" role="group" aria-label="O que mostrar" style={{ gap: 8 }}>
-        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`], ['textos', 'Descrições']].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
+        {[['lugares', `Lugares${c.lugares ? ` · ${c.lugares.length}` : ''}`], ['posts', `Postagens · ${c.posts.length}`], ['textos', 'Descrições'], ['chegada', 'Chegada']].map(([k, l]) => <button key={k} type="button" className={'btn sm' + (tab === k ? '' : ' sec')} aria-pressed={tab === k} onClick={() => setTab(k)}>{l}</button>)}
       </div>
-      {tab === 'lugares' ? <Found c={c} /> : tab === 'textos' ? <Abouts handle={c.usuario.toLowerCase()} /> : <>
+      {tab === 'lugares' ? <Found c={c} /> : tab === 'textos' ? <Abouts handle={c.usuario.toLowerCase()} /> : tab === 'chegada' ? <ArrivalEditor handle={c.usuario.toLowerCase()} /> : <>
       <Note>As marcações ficam guardadas só neste navegador. Lugares que você adicionar aparecem na tela Lugares, para exportar junto com as outras alterações.</Note>
       <div className="row wrap" role="group" aria-label="Filtrar as postagens" style={{ gap: 8 }}>
         {VIEWS.map(([k, l]) => <button key={k} type="button" className={'chip' + (view === k ? ' on' : '')} aria-pressed={view === k} onClick={() => setView(k)}>{l} · {counts[k]}</button>)}
@@ -303,6 +305,58 @@ function Abouts({ handle }) {
           </label>))}
         {shown.length > limit && <button type="button" className="btn ln sm" style={{ alignSelf: 'center' }} onClick={() => setLimit(limit + 60)}>Mostrar mais ({shown.length - limit})</button>}
       </div>
+    </>
+  )
+}
+
+// o que o criador informa para a tela de chegada; blocos vazios não aparecem no mapa
+function ArrivalEditor({ handle }) {
+  const [brands, setBrands] = useState(null)
+  const [event, setEvent] = useState({ title: '', date: '', place: '', url: '' })
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { fetch(withBase(`/maps/${handle}.json`), { cache: 'no-store' }).then((r) => r.json()).then((m) => { setBrands(m.creator.brands || []); if (m.creator.event) setEvent({ title: '', date: '', place: '', url: '', ...m.creator.event }) }).catch(() => setBrands([])) }, [handle])
+  if (!brands) return <p className="sm mut">Carregando…</p>
+  const setBrand = (i, patch) => setBrands(brands.map((b, j) => (j === i ? { ...b, ...patch } : b)))
+  const pickLogo = async (i, file) => { if (!file) return; try { setBrand(i, { logo: await fileToLogo(file) }) } catch { setMsg('Não consegui ler essa imagem. Use PNG, JPG ou WebP.') } }
+  const save = async () => {
+    const token = getToken()
+    if (!token) return setMsg('Conecte a chave do GitHub na aba Lugares para salvar.')
+    const list = brands.filter((b) => b.name?.trim())
+    if (list.some((b) => b.url && !safeLink(b.url)) || (event.url && !safeLink(event.url))) return setMsg('Os links precisam começar com https://')
+    if (event.title && !event.date) return setMsg('Informe a data do evento.')
+    setBusy(true); setMsg('')
+    try {
+      await saveArrival({ token, handle, brands: list, event: event.title ? event : null })
+      setBrands(list)
+      setMsg('Salvo. O mapa se atualiza em alguns minutos.')
+    } catch (e) { setMsg(e.message) }
+    setBusy(false)
+  }
+  const field = (label, value, onChange, extra) => <label className="col" style={{ gap: 4 }}><span className="lb">{label}</span><input className="in" value={value || ''} onChange={(e) => onChange(e.target.value)} {...extra} /></label>
+  return (
+    <>
+      <Note>Só inclua marcas com quem o criador trabalhou de fato e que autorizem o uso do logo. O que ficar vazio não aparece.</Note>
+      <div className="card col">
+        <b>Marcas parceiras</b>
+        {brands.map((b, i) => (
+          <div key={i} className="col cl-brand">
+            <div className="g2">{field('Nome', b.name, (v) => setBrand(i, { name: v }), { maxLength: 40 })}{field('Link (opcional)', b.url, (v) => setBrand(i, { url: v }), { placeholder: 'https://' })}</div>
+            <div className="row wrap" style={{ gap: 10 }}>
+              {b.logo && <img src={b.logo} alt="" className="cl-logo" />}
+              <label className="btn ln sm">{b.logo ? 'Trocar logo' : 'Enviar logo'}<input type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => pickLogo(i, e.target.files[0])} /></label>
+              <button type="button" className="btn sec sm" onClick={() => setBrands(brands.filter((_, j) => j !== i))}>Remover</button>
+            </div>
+          </div>))}
+        {brands.length < 12 && <button type="button" className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => setBrands([...brands, { name: '', url: '', logo: '' }])}><Icon n="plus" s={14} c="currentColor" />Adicionar marca</button>}
+      </div>
+      <div className="card col">
+        <b>Próximo evento</b>
+        <div className="g2">{field('Nome do evento', event.title, (v) => setEvent({ ...event, title: v }), { maxLength: 80 })}{field('Data', event.date, (v) => setEvent({ ...event, date: v }), { type: 'date' })}{field('Local', event.place, (v) => setEvent({ ...event, place: v }), { maxLength: 80 })}{field('Link (opcional)', event.url, (v) => setEvent({ ...event, url: v }), { placeholder: 'https://' })}</div>
+        <span className="xs mut">Depois da data, o evento some sozinho.</span>
+      </div>
+      {msg && <Note>{msg}</Note>}
+      <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={save}>{busy ? 'Salvando…' : 'Salvar no mapa'}</button>
     </>
   )
 }

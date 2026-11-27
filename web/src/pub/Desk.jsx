@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Icon } from '../lib/icons.jsx'
 import MapCanvas from '../MapCanvas.jsx'
+import Arrival from './Arrival.jsx'
 import { catOf, fmtDate, initial, onColor, symOf } from '../theme.jsx'
 import { PlacePhoto, NoResult, RouteBody, SponsorMark, SponsorTag, OpenTag, HoursBlock, NoneOpen, SavedNote, AccountBtn, BrandMark, BRAND_LINE, InstaLink, sub, PostLink } from './shared.jsx'
 import { cityOf, citiesOf, byCity, routePath, hasHours, newest } from './extras.js'
@@ -96,13 +97,14 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
   const anyHours = hasHours(places)
   const [cityMenu, setCityMenu] = useState(false)
   const hoods = useMemo(() => Object.entries(places.filter((p) => !city || cityOf(p) === city).reduce((m, p) => { const h = p.neighborhood || p.municipality || 'São Paulo'; m[h] = (m[h] || 0) + 1; return m }, {})).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])), [places, city])
-  const news = !f.active && view === 'home' ? newest(places) : []
+  const news = [] // os últimos lugares agora abrem a tela de chegada
   const newIds = new Set(news.map((p) => p.id))
   const hood = f.hoods?.length === 1 ? f.hoods[0] : null
   const savedPlaces = places.filter((p) => saved.ids.includes(p.id))
+  const [all, setAll] = useState(false) // “ver todos” na chegada
   const nav = (v) => { setView(v); setRouteId(null); if (fichaPlace) go('/') }
   // voltar à chegada: tocar no nome do criador
-  const home = () => { setPop(null); nav('home'); f.clear?.(); f.setHoods?.([]) }
+  const home = () => { setPop(null); setAll(false); nav('home'); f.clear?.(); f.setHoods?.([]) }
   const others = fichaPlace ? places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) === (fichaPlace.neighborhood || fichaPlace.municipality)).concat(places.filter((p) => p.id !== fichaPlace.id && (p.neighborhood || p.municipality) !== (fichaPlace.neighborhood || fichaPlace.municipality) && p.category === fichaPlace.category)).slice(0, 4) : []
   const grid = (arr) => <div className="dk-grid">{arr.map((p) => <Card key={p.id} p={p} theme={theme} saved={saved} onOpen={openFicha} />)}</div>
   const sechead = (title, count, right) => <div className="dk-sech"><b className="pt" style={{ '--fs': '24px' }}>{title}</b>{count != null && <span className="ms-count">{count}</span>}<span className="sp" />{right}</div>
@@ -117,6 +119,7 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
     </button>) })}</div></>
   else if (view === 'route' && route) body = <><button type="button" className="pb sm sec dk-back" onClick={() => { setView('roteiros'); setRouteId(null) }}><Icon n="back" s={14} c="currentColor" />Roteiros</button><h2 className="pt" style={{ '--fs': '34px', margin: '6px 0 0' }}>{route.name}</h2><RouteBody creator={data.creator} key={route.id} route={route} places={places} theme={theme} openFicha={openFicha} renderList={() => grid(list)} /></>
   else if (view === 'salvos') body = <>{sechead(saved.logged ? 'Salvos na sua conta' : 'Salvos neste aparelho', savedPlaces.length)}{savedPlaces.length ? grid(savedPlaces) : <p className="ms-empty">Toque no coração de um lugar para salvar.</p>}<SavedNote saved={saved} slug={creator.slug} /></>
+  else if (!all && !f.active && !f.openNow && !f.near && !f.q && !f.cats.length && !hood && !city) body = <Arrival data={data} theme={theme} onOpen={openFicha} onAll={() => setAll(true)} onCategory={(id) => f.setCats([id])} onHood={(h) => f.setHoods([h])} />
   else body = (
     <>
       {theme.bio && <p className="dk-lead">{theme.bio}</p>}

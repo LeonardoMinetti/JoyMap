@@ -60,3 +60,7 @@ export const saveAbouts = ({ token, handle, texts, fetcher = fetch }) => updateM
     const places = map.places.map((p) => { const t = texts[p.id]; if (t === undefined || t.trim() === (p.about || '')) return p; count++; return { ...p, about: t.trim().slice(0, 300), aboutSource: 'editado' } })
     return { map: { ...map, places }, count }
   } })
+
+// marcas e próximo evento da tela de chegada
+export const saveArrival = ({ token, handle, brands, event, fetcher = fetch }) => updateMap({ token, handle, fetcher, message: () => `[conteudo] Mapa de @${handle}: marcas e evento da chegada`,
+  change: (map) => ({ map: { ...map, creator: { ...map.creator, brands, event } }, count: 1 }) })
