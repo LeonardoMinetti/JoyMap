@@ -53,3 +53,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 045 | 2026-11-27 13:06 | mapa | Ficha do lugar sem o arroba do criador e sem Quem indicou | `deploy/mapa/045-ficha-do-lugar-sem-o-arroba-do-criador-e` |
 | 046 | 2026-11-27 13:09 | mapa | Ficha do lugar reorganizada com nota, horario e contato | `deploy/mapa/046-ficha-do-lugar-reorganizada-com-nota-hor` |
 | 047 | 2026-11-27 13:13 | mapa | Ficha sem a etiqueta Publi | `deploy/mapa/047-ficha-sem-a-etiqueta-publi` |
+| 048 | 2026-11-27 13:19 | mapa | Menus de bairros e categorias em maiusculas, todos primeiro | `deploy/mapa/048-menus-de-bairros-e-categorias-em-maiuscu` |

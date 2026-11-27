@@ -353,3 +353,9 @@
 .pub .fx-foot{margin:0;font:500 12px/1.5 var(--pf);color:var(--mut)}
 .pub .fx-foot button{background:none;border:0;padding:0;color:var(--fg);font:700 12px var(--pf);text-decoration:underline;cursor:pointer}
 @container (min-width:520px){.pub .fx-top{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:28px;align-items:start}}
+/* menus de bairros, cidades e categorias: maiúsculas, destaque na cor das letras e "todos" primeiro.
+   A cor do criador é escurecida com a cor do texto para continuar legível (amarelo puro sobre branco não se lê). */
+.pub .dk-pop button:not(.all),.pub .dk-pop button.all{margin-left:0;text-transform:uppercase;letter-spacing:.02em;font-weight:800;font-size:12.5px;background:color-mix(in srgb,var(--acc) 13%,var(--bg));color:color-mix(in srgb,var(--acc) 48%,var(--fg))}
+.pub .dk-pop button.on{background:var(--acc);color:var(--onacc)}
+.pub .ms-panel .ms-opt .sp{text-transform:uppercase;letter-spacing:.02em;font-weight:800;color:color-mix(in srgb,var(--acc) 48%,var(--fg))}
+.pub .dk-find button.all{margin-left:0}

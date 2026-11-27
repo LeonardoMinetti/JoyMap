@@ -138,12 +138,12 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
               {f.q && <button type="button" className="all" onClick={() => { f.setQ?.(''); setPop(null) }}>Limpar</button>}
             </div>}
             {pop && pop !== 'busca' && <div className="dk-pop" role="menu" aria-label={pop === 'bairros' ? (cityNav ? 'Cidades' : 'Bairros') : 'Categorias'}>
+              <button type="button" role="menuitem" className={'all' + ((pop === 'bairros' ? (cityNav ? !city : !f.hoods?.length) : !f.cats.length) ? ' on' : '')} onClick={() => pickMenu(() => (pop === 'bairros' ? (cityNav ? f.setCities([]) : f.setHoods([])) : f.setCats([])))}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
               {pop === 'bairros' && cityNav
                 ? <>{cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { setPop(null); pickCity(c) }}>{c}<i>{n}</i></button>)}</>
                 : pop === 'bairros'
                 ? <>{hoods.map(([h, n]) => <button key={h} type="button" role="menuitem" className={f.hoods?.length === 1 && f.hoods[0] === h ? 'on' : ''} onClick={() => pickMenu(() => f.setHoods([h]))}>{h}<i>{n}</i></button>)}</>
                 : <>{usedCats.map((c) => <button key={c.id} type="button" role="menuitem" className={f.cats.length === 1 && f.cats[0] === c.id ? 'on' : ''} onClick={() => pickMenu(() => f.setCats([c.id]))}>{c.name}<i>{places.filter((p) => catsOf(p).includes(c.id)).length}</i></button>)}</>}
-              <button type="button" role="menuitem" className="all" onClick={() => pickMenu(() => (pop === 'bairros' ? (cityNav ? f.setCities([]) : f.setHoods([])) : f.setCats([])))}>{pop === 'bairros' ? (cityNav ? 'Todas as cidades' : 'Todos os bairros') : 'Todas as categorias'}</button>
             </div>}
           </div>
         </header>
@@ -158,8 +158,8 @@ export default function DeskMap({ data, f, shown, openFicha, go, saved, ctx, fic
           <div className="dk-cities" onMouseLeave={() => setCityMenu(false)}>
             <button type="button" className="ms-chip" aria-haspopup="true" aria-expanded={cityMenu} onClick={() => setCityMenu(!cityMenu)}><Icon n="globe" s={16} c="currentColor" />{city || 'Cidades'}</button>
             {cityMenu && <div className="dk-pop dk-citypop" role="menu" aria-label="Cidades">
-              {cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { f.setCities([c]); f.setHoods?.([]); setCityMenu(false); setView('home'); setRouteId(null); if (fichaPlace) go('/') }}>{c}<i>{n}</i></button>)}
               <button type="button" role="menuitem" className="all" onClick={() => { f.setCities([]); setCityMenu(false) }}>Todas as cidades</button>
+              {cities.map(([c, n]) => <button key={c} type="button" role="menuitem" className={city === c ? 'on' : ''} onClick={() => { f.setCities([c]); f.setHoods?.([]); setCityMenu(false); setView('home'); setRouteId(null); if (fichaPlace) go('/') }}>{c}<i>{n}</i></button>)}
             </div>}
           </div>)}
         <div className="dk-pills">
