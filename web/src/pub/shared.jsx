@@ -368,7 +368,7 @@ export function RouteBody({ route, places, theme, openFicha, renderList, onMap, 
   const opts = [['timeline', 'Linha do tempo'], ['list', 'Lista'], ...(onMap ? [['map', 'Mapa']] : [])]
   return (
     <>
-      {route.sponsor && <div className="sp-bar"><SponsorTag s={route.sponsor} /><span>Em parceria com <b>{route.sponsor.brand}</b></span><SponsorMark s={route.sponsor} /></div>}
+      {route.sponsor && <div className="sp-bar"><span>Em parceria com</span><SponsorMark s={route.sponsor} /></div>}
       {route.note && <p className="ms-bio">{route.note}</p>}
       <div className="rt-bar">
         <div className="rt-seg" role="group" aria-label="Como ver o roteiro">{opts.map(([k, l]) => <button key={k} type="button" className={view === k ? 'on' : ''} aria-pressed={view === k} tabIndex={preview ? -1 : 0} onClick={() => { if (k === 'map') onMap(); else setView(k) }}>{l}</button>)}</div>

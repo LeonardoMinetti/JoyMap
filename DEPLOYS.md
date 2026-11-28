@@ -81,3 +81,4 @@ Os deploys anteriores a esta convenção (repositório antigo `wagli-demo`) não
 | 073 | 2026-11-27 20:20 | conteudo | roteiro canions e cachoeiras com patrocinio demonstrativo | `deploy/conteudo/073-roteiro-canions-e-cachoeiras-com-patroci` |
 | 074 | 2026-11-27 20:28 | ajuste | roteiro canions volta ao padrao dos roteiros patrocinados | `deploy/ajuste/074-roteiro-canions-volta-ao-padrao-dos-rote` |
 | 075 | 2026-11-27 20:56 | ajuste | quadro com emoji nas paradas sem lugar | `deploy/ajuste/075-quadro-com-emoji-nas-paradas-sem-lugar` |
+| 076 | 2026-11-27 21:06 | ajuste | faixa de patrocinio so com em parceria com e o logo | `deploy/ajuste/076-faixa-de-patrocinio-so-com-em-parceria-c` |
